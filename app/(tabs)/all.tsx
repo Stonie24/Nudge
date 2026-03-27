@@ -7,13 +7,14 @@ import {
   FlatList,
   StyleSheet,
   Platform,
-  Alert,
   SafeAreaView,
 } from 'react-native'
 import { useTasks, useCompleteTask, useUncompleteTask, useDeleteTask, useUpdateTask } from '../../hooks/useTasks'
 import { useLayout } from '../../hooks/useLayout'
 import { TagBadge } from '../../components/TagPicker'
 import { KanbanBoard } from '../../components/KanbanBoard'
+import { AddBacklogTaskSheet } from '../../components/AddBacklogTaskSheet'
+import { showAlert } from '../../lib/alert'
 import type { Task } from '../../types'
 
 type Filter = 'all' | 'pending' | 'completed'
@@ -26,11 +27,12 @@ function TaskItem({ task, onComplete, onUncomplete, onDelete }: {
   onDelete: (id: string) => void
 }) {
   function handleLongPress() {
-    Alert.alert('Delete task', `Remove "${task.title}"?`, [
+    showAlert('Delete task', `Remove "${task.title}"?`, [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Delete', style: 'destructive', onPress: () => onDelete(task.id) },
     ])
   }
+
   return (
     <TouchableOpacity
       style={styles.taskRow}
@@ -58,6 +60,7 @@ export default function AllTasksScreen() {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<Filter>('all')
   const [sort, setSort] = useState<Sort>('newest')
+  const [sheetOpen, setSheetOpen] = useState(false)
   const { isDesktop } = useLayout()
 
   const { data: tasks, isLoading } = useTasks()
@@ -95,8 +98,19 @@ export default function AllTasksScreen() {
   const controls = (
     <View style={[styles.controls, isDesktop && styles.controlsDesktop]}>
       <View style={styles.header}>
-        <Text style={styles.title}>All tasks</Text>
-        <Text style={styles.subtitle}>{pendingCount} pending · {total} total</Text>
+        <View style={styles.headerRow}>
+          <View>
+            <Text style={styles.title}>All tasks</Text>
+            <Text style={styles.subtitle}>{pendingCount} pending · {total} total</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.addBtn}
+            onPress={() => setSheetOpen(true)}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.addBtnText}>+ New task</Text>
+          </TouchableOpacity>
+        </View>
       </View>
       <View style={styles.searchRow}>
         <TextInput
@@ -156,7 +170,7 @@ export default function AllTasksScreen() {
                   onUpdateTag={(id, tag) => updateTask.mutate({ id, tag })}
                 />
               : <Text style={styles.emptyText}>
-                  {search ? 'No tasks match your search.' : 'No tasks yet.'}
+                  {search ? 'No tasks match your search.' : 'No tasks yet — add one above!'}
                 </Text>
           }
         </View>
@@ -171,7 +185,7 @@ export default function AllTasksScreen() {
               {isLoading && <Text style={styles.emptyText}>Loading...</Text>}
               {!isLoading && filtered.length === 0 && (
                 <Text style={styles.emptyText}>
-                  {search ? 'No tasks match your search.' : 'No tasks yet.'}
+                  {search ? 'No tasks match your search.' : 'No tasks yet — add one above!'}
                 </Text>
               )}
             </View>
@@ -196,6 +210,11 @@ export default function AllTasksScreen() {
           )}
         />
       )}
+
+      <AddBacklogTaskSheet
+        visible={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+      />
     </SafeAreaView>
   )
 }
@@ -207,12 +226,28 @@ const styles = StyleSheet.create({
   controls: { paddingHorizontal: 24 },
   controlsDesktop: { paddingVertical: 8 },
   header: { marginTop: 32, marginBottom: 20 },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   title: {
     fontSize: 28, fontWeight: '700', color: '#1C1917',
     letterSpacing: -0.5,
     fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
   },
   subtitle: { fontSize: 14, color: '#A8A29E', marginTop: 4, fontWeight: '300' },
+  addBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    backgroundColor: '#1C1917',
+    borderRadius: 100,
+  },
+  addBtnText: {
+    color: '#FAF8F4',
+    fontSize: 14,
+    fontWeight: '500',
+  },
   searchRow: { marginBottom: 16 },
   searchInput: {
     height: 44, backgroundColor: '#FFFFFF',

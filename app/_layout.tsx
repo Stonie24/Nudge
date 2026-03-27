@@ -20,7 +20,7 @@ function AuthGate() {
     } else if (user && inAuthGroup) {
       router.replace('/(tabs)/')
     }
-  }, [user, loading, segments])
+  }, [user, loading]) // segments intentionally omitted — we only want to react to auth changes
 
   return <Slot />
 }

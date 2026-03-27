@@ -5,12 +5,12 @@ import {
   TouchableOpacity,
   StyleSheet,
   Platform,
-  Alert,
   SafeAreaView,
   ScrollView,
 } from 'react-native'
 import { useAuth } from '../../hooks/useAuth'
 import { useTasks } from '../../hooks/useTasks'
+import { showAlert } from '../../lib/alert'
 
 function SettingRow({
   label,
@@ -48,10 +48,20 @@ export default function SettingsScreen() {
   const pendingTasks = totalTasks - completedTasks
 
   function handleSignOut() {
-    Alert.alert('Sign out', 'Are you sure you want to sign out?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Sign out', style: 'destructive', onPress: signOut },
-    ])
+    showAlert(
+      'Sign out',
+      'Are you sure you want to sign out?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Sign out',
+          style: 'destructive',
+          onPress: async () => {
+            await signOut()
+          },
+        },
+      ]
+    )
   }
 
   return (
@@ -97,7 +107,10 @@ export default function SettingsScreen() {
           <Text style={styles.sectionLabel}>Account</Text>
           <View style={styles.sectionCard}>
             <SettingRow label="Email" value={user?.email} />
-            <SettingRow label="Change password" onPress={() => Alert.alert('Coming soon', 'This feature is on the roadmap!')} />
+            <SettingRow
+              label="Change password"
+              onPress={() => showAlert('Coming soon', 'This feature is on the roadmap!')}
+            />
           </View>
         </View>
 
@@ -106,8 +119,14 @@ export default function SettingsScreen() {
           <Text style={styles.sectionLabel}>About</Text>
           <View style={styles.sectionCard}>
             <SettingRow label="Version" value="0.2.0" />
-            <SettingRow label="Roadmap" onPress={() => Alert.alert('Coming soon', 'Public roadmap coming soon!')} />
-            <SettingRow label="Send feedback" onPress={() => Alert.alert('Coming soon', 'Feedback form coming soon!')} />
+            <SettingRow
+              label="Roadmap"
+              onPress={() => showAlert('Coming soon', 'Public roadmap coming soon!')}
+            />
+            <SettingRow
+              label="Send feedback"
+              onPress={() => showAlert('Coming soon', 'Feedback form coming soon!')}
+            />
           </View>
         </View>
 

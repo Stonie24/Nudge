@@ -5,10 +5,10 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  Alert,
 } from 'react-native'
 import { getTagColor } from '../lib/tagColor'
 import { TagPicker } from './TagPicker'
+import { showAlert } from '../lib/alert'
 import type { Task } from '../types'
 
 function KanbanCard({
@@ -25,7 +25,7 @@ function KanbanCard({
   onUpdateTag?: (id: string, tag?: string) => void
 }) {
   function handleLongPress() {
-    Alert.alert('Delete task', `Remove "${task.title}"?`, [
+    showAlert('Delete task', `Remove "${task.title}"?`, [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Delete', style: 'destructive', onPress: () => onDelete(task.id) },
     ])
@@ -74,7 +74,6 @@ export function KanbanBoard({
   onDelete: (id: string) => void
   onUpdateTag?: (id: string, tag?: string) => void
 }) {
-  // Group tasks by tag
   const groups: Record<string, Task[]> = {}
   for (const task of tasks) {
     const key = task.tag ?? 'No tag'
@@ -97,7 +96,6 @@ export function KanbanBoard({
 
         return (
           <View key={tag} style={styles.column}>
-            {/* Column header */}
             <View style={styles.columnHeader}>
               <View style={[
                 styles.columnTag,
@@ -110,7 +108,6 @@ export function KanbanBoard({
               <Text style={styles.columnCount}>{done}/{total}</Text>
             </View>
 
-            {/* Progress bar */}
             <View style={styles.progressBar}>
               <View
                 style={[
@@ -123,7 +120,6 @@ export function KanbanBoard({
               />
             </View>
 
-            {/* Cards */}
             <ScrollView
               showsVerticalScrollIndicator={false}
               contentContainerStyle={styles.cards}

@@ -6,7 +6,6 @@ import {
   FlatList,
   StyleSheet,
   Platform,
-  Alert,
   SafeAreaView,
 } from 'react-native'
 import {
@@ -21,6 +20,7 @@ import { useLayout } from '../../hooks/useLayout'
 import { TagPicker } from '../../components/TagPicker'
 import { KanbanBoard } from '../../components/KanbanBoard'
 import { AddTaskSheet } from '../../components/Addtasksheet'
+import { showAlert } from '../../lib/alert'
 import type { Task } from '../../types'
 
 function getGreeting() {
@@ -59,7 +59,7 @@ function TaskItem({
   onUpdateTag: (id: string, tag?: string) => void
 }) {
   function handleLongPress() {
-    Alert.alert('Delete task', `Remove "${task.title}"?`, [
+    showAlert('Delete task', `Remove "${task.title}"?`, [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Delete', style: 'destructive', onPress: () => onDelete(task.id) },
     ])
@@ -136,7 +136,6 @@ export default function TodayScreen() {
     }
   }
 
-  // Build augmented tasks for kanban (recurring uses completedToday for completed state)
   const augmentedTasks = tasks?.map(t => ({
     ...t,
     completed: t.recurring ? completedTodayIds.has(t.id) : t.completed,

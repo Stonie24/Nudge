@@ -8,13 +8,13 @@ import {
   ScrollView,
   TextInput,
   StyleSheet,
-  Alert,
   Platform,
 } from 'react-native'
 import { useAddEvent, useDeleteEvent } from '../hooks/useCalendar'
 import { useCompleteTask, useUncompleteTask } from '../hooks/useTasks'
 import { useCompleteRecurring, useUncompleteRecurring } from '../hooks/useToday'
 import { TagBadge } from './TagPicker'
+import { showAlert } from '../lib/alert'
 import type { CalendarEvent, Task } from '../types'
 
 function EventRow({
@@ -200,7 +200,7 @@ export function DaySheet({
     .sort((a, b) => a.start_time.localeCompare(b.start_time))
 
   function handleDeleteEvent(event: CalendarEvent) {
-    Alert.alert('Delete event', `Remove "${event.title}"?`, [
+    showAlert('Delete event', `Remove "${event.title}"?`, [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Delete', style: 'destructive', onPress: () => deleteEvent.mutate(event.id) },
     ])
@@ -232,7 +232,6 @@ export function DaySheet({
           )}
 
           <ScrollView showsVerticalScrollIndicator={false} style={styles.scroll}>
-            {/* All day events */}
             {allDayEvents.length > 0 && (
               <View style={styles.section}>
                 <Text style={styles.sectionLabel}>All day</Text>
@@ -242,7 +241,6 @@ export function DaySheet({
               </View>
             )}
 
-            {/* Timed events */}
             {timedEvents.length > 0 && (
               <View style={styles.section}>
                 <Text style={styles.sectionLabel}>Events</Text>
@@ -252,7 +250,6 @@ export function DaySheet({
               </View>
             )}
 
-            {/* Tasks */}
             {tasks.length > 0 && (
               <View style={styles.section}>
                 <Text style={styles.sectionLabel}>Tasks & habits</Text>

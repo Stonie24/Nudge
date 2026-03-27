@@ -13,6 +13,11 @@
 - [x] Settings screen (account info, stats, sign out)
 - [x] Responsive layout (list on mobile, kanban on desktop)
 
+## v0.21 — Polish & experience ← we are here
+- [x] Add tasks to backlog
+- [ ] Search for tasks in backlog with Tags aswell
+- [ ] Daily tasks should be a diffrent color node in caldendar
+
 ## v0.2 — Polish & experience ← we are here
 - [ ] Dark mode
 - [ ] Animations & micro-interactions
