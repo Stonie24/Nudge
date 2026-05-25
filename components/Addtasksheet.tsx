@@ -51,8 +51,9 @@ export function AddTaskSheet({
     }, [backlog])
 
     const filteredBacklog = useMemo(() => {
+        const normalizedSearch = search.trim().toLowerCase()
         let result = backlog
-        if (search.trim()) result = result.filter(t => t.title.toLowerCase().includes(search.toLowerCase()))
+        if (normalizedSearch) result = result.filter(t => t.title.toLowerCase().includes(normalizedSearch))
         if (selectedTag) result = result.filter(t => t.tag === selectedTag)
         return result
     }, [backlog, search, selectedTag])
