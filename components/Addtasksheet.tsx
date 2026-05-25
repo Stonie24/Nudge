@@ -40,9 +40,11 @@ export function AddTaskSheet({
     const scheduleForToday = useScheduleForToday()
     const { data: allTasks, isLoading } = useTasks()
 
-    const backlog = allTasks?.filter(t =>
-        !t.recurring && !todayTaskIds.includes(t.id) && !t.completed
-    ) ?? []
+    const backlog = useMemo(() => (
+        allTasks?.filter(t =>
+            !t.recurring && !todayTaskIds.includes(t.id) && !t.completed
+        ) ?? []
+    ), [allTasks, todayTaskIds])
 
     const backlogTags = useMemo(() => {
         const seen = new Set<string>()
