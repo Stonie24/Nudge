@@ -4,7 +4,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 const GITHUB_TOKEN = Deno.env.get('GITHUB_TOKEN')
 const GITHUB_REPO = 'Stonie24/Nudge'
 const ALLOWED_ORIGIN = Deno.env.get('FEEDBACK_ALLOWED_ORIGIN')
-const JWT_PART_REGEX = /^[A-Za-z0-9_-]+$/
+const JWT_BASE64URL_PART_REGEX = /^[A-Za-z0-9_-]+$/
 
 if (!ALLOWED_ORIGIN) {
   console.warn(
@@ -14,7 +14,8 @@ if (!ALLOWED_ORIGIN) {
 
 function hasJwtShape(token: string) {
   const parts = token.split('.')
-  return parts.length === 3 && parts.every((part) => part.length > 0 && JWT_PART_REGEX.test(part))
+  return parts.length === 3 &&
+    parts.every((part) => part.length > 0 && JWT_BASE64URL_PART_REGEX.test(part))
 }
 
 function getCorsHeaders(origin: string | null, includeOrigin = true) {
@@ -25,7 +26,7 @@ function getCorsHeaders(origin: string | null, includeOrigin = true) {
 
   if (!includeOrigin) return headers
 
-  headers['Access-Control-Allow-Origin'] = ALLOWED_ORIGIN || origin || '*'
+  headers['Access-Control-Allow-Origin'] = ALLOWED_ORIGIN || '*'
   return headers
 }
 
@@ -65,8 +66,11 @@ serve(async (req) => {
 
   try {
     const authHeader = req.headers.get('Authorization')
-    const jwt = authHeader?.replace(/^Bearer\s+/i, '')
-    if (!jwt || !hasJwtShape(jwt)) {
+    if (!authHeader?.startsWith('Bearer ')) {
+      return json({ error: 'Unauthorized' }, 401, origin)
+    }
+    const jwt = authHeader.slice('Bearer '.length)
+    if (!hasJwtShape(jwt)) {
       return json({ error: 'Unauthorized' }, 401, origin)
     }
 
