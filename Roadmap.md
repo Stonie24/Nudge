@@ -21,11 +21,13 @@
 ## v0.22 — Polish & experience ← we are here
 - [x] Dark mode
 - [x] GitHub issue feedback integration
-- [ ] Animations & micro-interactions
+- [x] Animations & micro-interactions
 - [ ] Onboarding flow for new users
 - [ ] Push notifications / gentle nudge reminders
 - [ ] Offline support
 - [ ] Streak tracking for recurring tasks
+- [ ] Make it possible to log in with OAuth for both mobile and desktop
+- [ ] Costum profile picture thats get saved in the database, or pull the picture from the login service, if none of these still use defualt.
 
 ## v0.3 — Growth
 - [ ] iOS App Store submission
