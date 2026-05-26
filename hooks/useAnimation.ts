@@ -27,16 +27,58 @@ export function useEntranceAnimation(delay = 0) {
   return { opacity, translateY }
 }
 
-/** Spring scale bounce — trigger on checkbox tap. */
+/**
+ * Checkbox animation with two modes:
+ *  - triggerComplete: big bounce + expanding ripple ring (rewarding)
+ *  - triggerUncomplete: small nudge (neutral)
+ */
 export function useCheckboxAnimation() {
   const scale = useRef(new Animated.Value(1)).current
+  const ringScale = useRef(new Animated.Value(0)).current
+  const ringOpacity = useRef(new Animated.Value(0)).current
 
-  function trigger() {
+  function triggerComplete() {
+    ringScale.setValue(0)
+    ringOpacity.setValue(0.7)
+    Animated.parallel([
+      // Bigger, snappier bounce
+      Animated.sequence([
+        Animated.spring(scale, {
+          toValue: 1.45,
+          tension: 220,
+          friction: 3,
+          useNativeDriver: true,
+        }),
+        Animated.spring(scale, {
+          toValue: 1,
+          tension: 180,
+          friction: 8,
+          useNativeDriver: true,
+        }),
+      ]),
+      // Ripple ring expands and fades
+      Animated.parallel([
+        Animated.spring(ringScale, {
+          toValue: 2.6,
+          tension: 60,
+          friction: 8,
+          useNativeDriver: true,
+        }),
+        Animated.timing(ringOpacity, {
+          toValue: 0,
+          duration: 450,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start()
+  }
+
+  function triggerUncomplete() {
     Animated.sequence([
       Animated.spring(scale, {
-        toValue: 1.28,
+        toValue: 1.15,
         tension: 250,
-        friction: 4,
+        friction: 6,
         useNativeDriver: true,
       }),
       Animated.spring(scale, {
@@ -48,7 +90,7 @@ export function useCheckboxAnimation() {
     ]).start()
   }
 
-  return { scale, trigger }
+  return { scale, ringScale, ringOpacity, triggerComplete, triggerUncomplete }
 }
 
 /** Scale-down on press for primary buttons. */

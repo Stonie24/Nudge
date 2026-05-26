@@ -36,7 +36,7 @@ function TaskItem({ task, onComplete, onUncomplete, onDelete, colors, index = 0 
 }) {
   const styles = useMemo(() => createStyles(colors), [colors])
   const { opacity, translateY } = useEntranceAnimation(Math.min(index * 35, 180))
-  const { scale: checkboxScale, trigger: triggerCheckbox } = useCheckboxAnimation()
+  const { scale: checkboxScale, ringScale, ringOpacity, triggerComplete, triggerUncomplete } = useCheckboxAnimation()
 
   function handleLongPress() {
     showAlert('Delete task', `Remove "${task.title}"?`, [
@@ -46,10 +46,15 @@ function TaskItem({ task, onComplete, onUncomplete, onDelete, colors, index = 0 
   }
 
   function handlePress() {
-    triggerCheckbox()
-    triggerHaptic('light')
-    if (task.completed) onUncomplete(task.id)
-    else onComplete(task.id)
+    if (task.completed) {
+      triggerUncomplete()
+      triggerHaptic('light')
+      onUncomplete(task.id)
+    } else {
+      triggerComplete()
+      triggerHaptic('medium')
+      onComplete(task.id)
+    }
   }
 
   return (
@@ -60,11 +65,16 @@ function TaskItem({ task, onComplete, onUncomplete, onDelete, colors, index = 0 
         onLongPress={handleLongPress}
         activeOpacity={0.7}
       >
-        <Animated.View style={{ transform: [{ scale: checkboxScale }] }}>
-          <View style={[styles.checkbox, task.completed && styles.checkboxDone]}>
-            {task.completed && <View style={styles.checkmark} />}
-          </View>
-        </Animated.View>
+        <View style={styles.checkboxWrap}>
+          <Animated.View
+            style={[styles.checkboxRing, { transform: [{ scale: ringScale }], opacity: ringOpacity }]}
+          />
+          <Animated.View style={{ transform: [{ scale: checkboxScale }] }}>
+            <View style={[styles.checkbox, task.completed && styles.checkboxDone]}>
+              {task.completed && <View style={styles.checkmark} />}
+            </View>
+          </Animated.View>
+        </View>
         <View style={styles.taskContent}>
           <Text style={[styles.taskTitle, task.completed && styles.taskTitleDone]}>
             {task.title}
@@ -385,6 +395,15 @@ function createStyles(c: Colors) {
       flexDirection: 'row', alignItems: 'center',
       paddingVertical: 13, borderBottomWidth: 1,
       borderBottomColor: c.borderLight, gap: 14,
+    },
+    checkboxWrap: {
+      width: 22, height: 22,
+      alignItems: 'center', justifyContent: 'center',
+    },
+    checkboxRing: {
+      position: 'absolute',
+      width: 22, height: 22, borderRadius: 11,
+      borderWidth: 2, borderColor: c.accent,
     },
     checkbox: {
       width: 22, height: 22, borderRadius: 11,

@@ -76,13 +76,18 @@ function TaskItem({
   const isDone = task.recurring ? completedToday : task.completed
   const styles = useMemo(() => createStyles(colors), [colors])
   const { opacity, translateY } = useEntranceAnimation(Math.min(index * 40, 200))
-  const { scale: checkboxScale, trigger: triggerCheckbox } = useCheckboxAnimation()
+  const { scale: checkboxScale, ringScale, ringOpacity, triggerComplete, triggerUncomplete } = useCheckboxAnimation()
 
   function handlePress() {
-    triggerCheckbox()
-    triggerHaptic('light')
-    if (isDone) onUncomplete(task.id)
-    else onComplete(task.id)
+    if (isDone) {
+      triggerUncomplete()
+      triggerHaptic('light')
+      onUncomplete(task.id)
+    } else {
+      triggerComplete()
+      triggerHaptic('medium')
+      onComplete(task.id)
+    }
   }
 
   return (
@@ -93,11 +98,17 @@ function TaskItem({
         onLongPress={handleLongPress}
         activeOpacity={0.7}
       >
-        <Animated.View style={{ transform: [{ scale: checkboxScale }] }}>
-          <View style={[styles.checkbox, isDone && styles.checkboxDone]}>
-            {isDone && <View style={styles.checkmark} />}
-          </View>
-        </Animated.View>
+        <View style={styles.checkboxWrap}>
+          {/* Ripple ring — only visible during completion burst */}
+          <Animated.View
+            style={[styles.checkboxRing, { transform: [{ scale: ringScale }], opacity: ringOpacity }]}
+          />
+          <Animated.View style={{ transform: [{ scale: checkboxScale }] }}>
+            <View style={[styles.checkbox, isDone && styles.checkboxDone]}>
+              {isDone && <View style={styles.checkmark} />}
+            </View>
+          </Animated.View>
+        </View>
         <View style={styles.taskContent}>
           <Text style={[styles.taskTitle, isDone && styles.taskTitleDone]}>
             {task.title}
@@ -301,6 +312,15 @@ function createStyles(c: Colors) {
       flexDirection: 'row', alignItems: 'center',
       paddingVertical: 13, borderBottomWidth: 1,
       borderBottomColor: c.borderLight, gap: 14,
+    },
+    checkboxWrap: {
+      width: 22, height: 22,
+      alignItems: 'center', justifyContent: 'center',
+    },
+    checkboxRing: {
+      position: 'absolute',
+      width: 22, height: 22, borderRadius: 11,
+      borderWidth: 2, borderColor: c.accent,
     },
     checkbox: {
       width: 22, height: 22, borderRadius: 11,
