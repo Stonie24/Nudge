@@ -1,7 +1,10 @@
 
 [functions.submit-feedback]
 enabled = true
-verify_jwt = true
+# verify_jwt must be false so Supabase doesn't block the CORS OPTIONS preflight
+# (no JWT is sent on preflight requests). Auth is enforced inside the function
+# via supabase.auth.getUser() — unauthenticated POST requests get a 401.
+verify_jwt = false
 import_map = "./functions/submit-feedback/deno.json"
 entrypoint = "./functions/submit-feedback/index.ts"
 
