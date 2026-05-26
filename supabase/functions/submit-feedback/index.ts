@@ -4,6 +4,18 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 const GITHUB_TOKEN = Deno.env.get('GITHUB_TOKEN')
 const GITHUB_REPO = 'Stonie24/Nudge'
 const ALLOWED_ORIGIN = Deno.env.get('FEEDBACK_ALLOWED_ORIGIN')
+const JWT_PART_REGEX = /^[A-Za-z0-9_-]+$/
+
+if (!ALLOWED_ORIGIN) {
+  console.warn(
+    'submit-feedback: FEEDBACK_ALLOWED_ORIGIN is not set; CORS origin is permissive ("*").'
+  )
+}
+
+function hasJwtShape(token: string) {
+  const parts = token.split('.')
+  return parts.length === 3 && parts.every((part) => part.length > 0 && JWT_PART_REGEX.test(part))
+}
 
 function getCorsHeaders(origin: string | null) {
   return {
@@ -35,7 +47,7 @@ serve(async (req) => {
     })
   }
 
-  if (ALLOWED_ORIGIN && origin && origin !== ALLOWED_ORIGIN) {
+  if (ALLOWED_ORIGIN && origin !== ALLOWED_ORIGIN) {
     return json({ error: 'Forbidden' }, 403, origin)
   }
 
@@ -48,7 +60,7 @@ serve(async (req) => {
   try {
     const authHeader = req.headers.get('Authorization')
     const jwt = authHeader?.replace(/^Bearer\s+/i, '')
-    if (!jwt || jwt.split('.').length !== 3) {
+    if (!jwt || !hasJwtShape(jwt)) {
       return json({ error: 'Unauthorized' }, 401, origin)
     }
 
