@@ -1,7 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const GITHUB_TOKEN = Deno.env.get('GITHUB_TOKEN') ?? ''
+const GITHUB_TOKEN = Deno.env.get('GITHUB_TOKEN')
 const GITHUB_REPO = 'Stonie24/Nudge'
 
 const corsHeaders = {
@@ -9,20 +9,27 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+function json(data: unknown, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  })
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
+  // Fail fast if misconfigured — logged server-side only
+  if (!GITHUB_TOKEN) {
+    console.error('submit-feedback: GITHUB_TOKEN secret is not set')
+    return json({ error: 'Service misconfigured' }, 500)
+  }
+
   try {
-    // Verify the caller is an authenticated Nudge user
     const authHeader = req.headers.get('Authorization')
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
+    if (!authHeader) return json({ error: 'Unauthorized' }, 401)
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -31,23 +38,14 @@ serve(async (req) => {
     )
 
     const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
+    if (authError || !user) return json({ error: 'Unauthorized' }, 401)
 
     const { title, body } = await req.json()
-    if (!body?.trim()) {
-      return new Response(
-        JSON.stringify({ error: 'Feedback body is required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
+    if (!body?.trim()) return json({ error: 'Feedback body is required' }, 400)
 
     const issueTitle = title?.trim() || 'User feedback'
-    const issueBody = `${body.trim()}\n\n---\n_Submitted via Nudge app by ${user.email}_`
+    // user.id is a UUID — no PII exposed in the public issue
+    const issueBody = `${body.trim()}\n\n---\n_Submitted via Nudge app · user ${user.id}_`
 
     const ghRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/issues`, {
       method: 'POST',
@@ -57,31 +55,18 @@ serve(async (req) => {
         'Content-Type': 'application/json',
         'X-GitHub-Api-Version': '2022-11-28',
       },
-      body: JSON.stringify({
-        title: issueTitle,
-        body: issueBody,
-        labels: ['feedback'],
-      }),
+      body: JSON.stringify({ title: issueTitle, body: issueBody, labels: ['feedback'] }),
     })
 
     if (!ghRes.ok) {
-      const err = await ghRes.text()
-      console.error('GitHub API error:', err)
-      return new Response(
-        JSON.stringify({ error: 'Failed to create issue' }),
-        { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+      console.error('submit-feedback: GitHub API error', ghRes.status, await ghRes.text())
+      return json({ error: 'Failed to create issue' }, 502)
     }
 
     const issue = await ghRes.json()
-    return new Response(
-      JSON.stringify({ url: issue.html_url, number: issue.number }),
-      { status: 201, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+    return json({ url: issue.html_url, number: issue.number }, 201)
   } catch (e) {
-    return new Response(
-      JSON.stringify({ error: String(e) }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+    console.error('submit-feedback: unhandled error', e)
+    return json({ error: 'Internal server error' }, 500)
   }
 })
