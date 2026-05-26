@@ -15,7 +15,22 @@ if (!ALLOWED_ORIGIN) {
 function hasJwtShape(token: string) {
   const parts = token.split('.')
   return parts.length === 3 &&
-    parts.every((part) => part.length > 0 && JWT_BASE64URL_PART_REGEX.test(part))
+    parts.every((part) =>
+      part.length > 0 &&
+      JWT_BASE64URL_PART_REGEX.test(part) &&
+      isBase64UrlDecodable(part)
+    )
+}
+
+function isBase64UrlDecodable(part: string) {
+  try {
+    const padded = part.replace(/-/g, '+').replace(/_/g, '/')
+      .padEnd(Math.ceil(part.length / 4) * 4, '=')
+    atob(padded)
+    return true
+  } catch {
+    return false
+  }
 }
 
 function getCorsHeaders(origin: string | null, includeOrigin = true) {
@@ -54,7 +69,7 @@ serve(async (req) => {
   if (ALLOWED_ORIGIN && origin !== ALLOWED_ORIGIN) {
     return new Response(JSON.stringify({ error: 'Forbidden' }), {
       status: 403,
-      headers: { ...getCorsHeaders(origin, false), 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
     })
   }
 
@@ -70,7 +85,7 @@ serve(async (req) => {
       return json({ error: 'Unauthorized' }, 401, origin)
     }
     const jwt = authHeader.slice('Bearer '.length)
-    if (!hasJwtShape(jwt)) {
+    if (!jwt || !hasJwtShape(jwt)) {
       return json({ error: 'Unauthorized' }, 401, origin)
     }
 
