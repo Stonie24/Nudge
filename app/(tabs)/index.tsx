@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Platform,
   SafeAreaView,
+  Animated,
 } from 'react-native'
 import {
   useTodayTasks,
@@ -22,6 +23,7 @@ import { TagPicker } from '../../components/TagPicker'
 import { KanbanBoard } from '../../components/KanbanBoard'
 import { AddTaskSheet } from '../../components/Addtasksheet'
 import { showAlert } from '../../lib/alert'
+import { useEntranceAnimation, useCheckboxAnimation, usePressAnimation, triggerHaptic } from '../../hooks/useAnimation'
 import type { Colors } from '../../lib/theme'
 import type { Task } from '../../types'
 
@@ -53,6 +55,7 @@ function TaskItem({
   onDelete,
   onUpdateTag,
   colors,
+  index = 0,
 }: {
   task: Task
   completedToday: boolean
@@ -61,6 +64,7 @@ function TaskItem({
   onDelete: (id: string) => void
   onUpdateTag: (id: string, tag?: string) => void
   colors: Colors
+  index?: number
 }) {
   function handleLongPress() {
     showAlert('Delete task', `Remove "${task.title}"?`, [
@@ -71,27 +75,40 @@ function TaskItem({
 
   const isDone = task.recurring ? completedToday : task.completed
   const styles = useMemo(() => createStyles(colors), [colors])
+  const { opacity, translateY } = useEntranceAnimation(Math.min(index * 40, 200))
+  const { scale: checkboxScale, trigger: triggerCheckbox } = useCheckboxAnimation()
+
+  function handlePress() {
+    triggerCheckbox()
+    triggerHaptic('light')
+    if (isDone) onUncomplete(task.id)
+    else onComplete(task.id)
+  }
 
   return (
-    <TouchableOpacity
-      style={styles.taskRow}
-      onPress={() => isDone ? onUncomplete(task.id) : onComplete(task.id)}
-      onLongPress={handleLongPress}
-      activeOpacity={0.7}
-    >
-      <View style={[styles.checkbox, isDone && styles.checkboxDone]}>
-        {isDone && <View style={styles.checkmark} />}
-      </View>
-      <View style={styles.taskContent}>
-        <Text style={[styles.taskTitle, isDone && styles.taskTitleDone]}>
-          {task.title}
-        </Text>
-        {task.recurring && (
-          <Text style={styles.recurringBadge}>↻ daily</Text>
-        )}
-      </View>
-      <TagPicker value={task.tag} onChange={tag => onUpdateTag(task.id, tag)} />
-    </TouchableOpacity>
+    <Animated.View style={{ opacity, transform: [{ translateY }] }}>
+      <TouchableOpacity
+        style={styles.taskRow}
+        onPress={handlePress}
+        onLongPress={handleLongPress}
+        activeOpacity={0.7}
+      >
+        <Animated.View style={{ transform: [{ scale: checkboxScale }] }}>
+          <View style={[styles.checkbox, isDone && styles.checkboxDone]}>
+            {isDone && <View style={styles.checkmark} />}
+          </View>
+        </Animated.View>
+        <View style={styles.taskContent}>
+          <Text style={[styles.taskTitle, isDone && styles.taskTitleDone]}>
+            {task.title}
+          </Text>
+          {task.recurring && (
+            <Text style={styles.recurringBadge}>↻ daily</Text>
+          )}
+        </View>
+        <TagPicker value={task.tag} onChange={tag => onUpdateTag(task.id, tag)} />
+      </TouchableOpacity>
+    </Animated.View>
   )
 }
 
@@ -100,6 +117,7 @@ export default function TodayScreen() {
   const { isDesktop } = useLayout()
   const { colors } = useTheme()
   const styles = useMemo(() => createStyles(colors), [colors])
+  const addBtn = usePressAnimation()
 
   const { data: tasks, isLoading } = useTodayTasks()
   const { data: completions } = useTodayCompletions()
@@ -157,13 +175,17 @@ export default function TodayScreen() {
       <View style={styles.nudgeBanner}>
         <Text style={styles.nudgeText}>{getNudgeMessage(total, completed)}</Text>
       </View>
-      <TouchableOpacity
-        style={styles.addBtn}
-        onPress={() => setSheetOpen(true)}
-        activeOpacity={0.85}
-      >
-        <Text style={styles.addBtnText}>+ Add task</Text>
-      </TouchableOpacity>
+      <Animated.View style={{ transform: [{ scale: addBtn.scale }] }}>
+        <TouchableOpacity
+          style={styles.addBtn}
+          onPress={() => setSheetOpen(true)}
+          onPressIn={addBtn.onPressIn}
+          onPressOut={addBtn.onPressOut}
+          activeOpacity={1}
+        >
+          <Text style={styles.addBtnText}>+ Add task</Text>
+        </TouchableOpacity>
+      </Animated.View>
     </View>
   )
 
@@ -197,7 +219,7 @@ export default function TodayScreen() {
               {isLoading && <Text style={styles.emptyText}>Loading...</Text>}
             </View>
           }
-          renderItem={({ item }) => (
+          renderItem={({ item, index }) => (
             <TaskItem
               task={item}
               completedToday={completedTodayIds.has(item.id)}
@@ -206,13 +228,14 @@ export default function TodayScreen() {
               onDelete={id => deleteTask.mutate(id)}
               onUpdateTag={(id, tag) => updateTask.mutate({ id, tag })}
               colors={colors}
+              index={index}
             />
           )}
           ListFooterComponent={
             done.length > 0 ? (
               <View>
                 <Text style={styles.sectionLabel}>Done</Text>
-                {done.map(task => (
+                {done.map((task, i) => (
                   <TaskItem
                     key={task.id}
                     task={task}
@@ -222,6 +245,7 @@ export default function TodayScreen() {
                     onDelete={id => deleteTask.mutate(id)}
                     onUpdateTag={(id, tag) => updateTask.mutate({ id, tag })}
                     colors={colors}
+                    index={i}
                   />
                 ))}
               </View>

@@ -9,6 +9,7 @@ import {
   Platform,
   SafeAreaView,
   ScrollView,
+  Animated,
 } from 'react-native'
 import { useTasks, useCompleteTask, useUncompleteTask, useDeleteTask, useUpdateTask } from '../../hooks/useTasks'
 import { useLayout } from '../../hooks/useLayout'
@@ -18,20 +19,24 @@ import { KanbanBoard } from '../../components/KanbanBoard'
 import { AddBacklogTaskSheet } from '../../components/AddBacklogTaskSheet'
 import { showAlert } from '../../lib/alert'
 import { getTagColor } from '../../lib/tagColor'
+import { useEntranceAnimation, useCheckboxAnimation, usePressAnimation, triggerHaptic } from '../../hooks/useAnimation'
 import type { Colors } from '../../lib/theme'
 import type { Task } from '../../types'
 
 type Filter = 'all' | 'pending' | 'completed'
 type Sort = 'newest' | 'oldest'
 
-function TaskItem({ task, onComplete, onUncomplete, onDelete, colors }: {
+function TaskItem({ task, onComplete, onUncomplete, onDelete, colors, index = 0 }: {
   task: Task
   onComplete: (id: string) => void
   onUncomplete: (id: string) => void
   onDelete: (id: string) => void
   colors: Colors
+  index?: number
 }) {
   const styles = useMemo(() => createStyles(colors), [colors])
+  const { opacity, translateY } = useEntranceAnimation(Math.min(index * 35, 180))
+  const { scale: checkboxScale, trigger: triggerCheckbox } = useCheckboxAnimation()
 
   function handleLongPress() {
     showAlert('Delete task', `Remove "${task.title}"?`, [
@@ -40,26 +45,37 @@ function TaskItem({ task, onComplete, onUncomplete, onDelete, colors }: {
     ])
   }
 
+  function handlePress() {
+    triggerCheckbox()
+    triggerHaptic('light')
+    if (task.completed) onUncomplete(task.id)
+    else onComplete(task.id)
+  }
+
   return (
-    <TouchableOpacity
-      style={styles.taskRow}
-      onPress={() => task.completed ? onUncomplete(task.id) : onComplete(task.id)}
-      onLongPress={handleLongPress}
-      activeOpacity={0.7}
-    >
-      <View style={[styles.checkbox, task.completed && styles.checkboxDone]}>
-        {task.completed && <View style={styles.checkmark} />}
-      </View>
-      <View style={styles.taskContent}>
-        <Text style={[styles.taskTitle, task.completed && styles.taskTitleDone]}>
-          {task.title}
+    <Animated.View style={{ opacity, transform: [{ translateY }] }}>
+      <TouchableOpacity
+        style={styles.taskRow}
+        onPress={handlePress}
+        onLongPress={handleLongPress}
+        activeOpacity={0.7}
+      >
+        <Animated.View style={{ transform: [{ scale: checkboxScale }] }}>
+          <View style={[styles.checkbox, task.completed && styles.checkboxDone]}>
+            {task.completed && <View style={styles.checkmark} />}
+          </View>
+        </Animated.View>
+        <View style={styles.taskContent}>
+          <Text style={[styles.taskTitle, task.completed && styles.taskTitleDone]}>
+            {task.title}
+          </Text>
+          {task.tag && <TagBadge tag={task.tag} />}
+        </View>
+        <Text style={styles.taskDate}>
+          {new Date(task.created_at).toLocaleDateString('en-SE', { month: 'short', day: 'numeric' })}
         </Text>
-        {task.tag && <TagBadge tag={task.tag} />}
-      </View>
-      <Text style={styles.taskDate}>
-        {new Date(task.created_at).toLocaleDateString('en-SE', { month: 'short', day: 'numeric' })}
-      </Text>
-    </TouchableOpacity>
+      </TouchableOpacity>
+    </Animated.View>
   )
 }
 
@@ -72,6 +88,7 @@ export default function AllTasksScreen() {
   const { isDesktop } = useLayout()
   const { colors } = useTheme()
   const styles = useMemo(() => createStyles(colors), [colors])
+  const addBtn = usePressAnimation()
 
   const { data: tasks, isLoading } = useTasks()
   const completeTask = useCompleteTask()
@@ -130,13 +147,17 @@ export default function AllTasksScreen() {
             <Text style={styles.title}>All tasks</Text>
             <Text style={styles.subtitle}>{pendingCount} pending · {total} total</Text>
           </View>
-          <TouchableOpacity
-            style={styles.addBtn}
-            onPress={() => setSheetOpen(true)}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.addBtnText}>+ New task</Text>
-          </TouchableOpacity>
+          <Animated.View style={{ transform: [{ scale: addBtn.scale }] }}>
+            <TouchableOpacity
+              style={styles.addBtn}
+              onPress={() => setSheetOpen(true)}
+              onPressIn={addBtn.onPressIn}
+              onPressOut={addBtn.onPressOut}
+              activeOpacity={1}
+            >
+              <Text style={styles.addBtnText}>+ New task</Text>
+            </TouchableOpacity>
+          </Animated.View>
         </View>
       </View>
       <View style={styles.searchRow}>
@@ -263,7 +284,7 @@ export default function AllTasksScreen() {
                 <Text style={styles.groupLabel}>{tag}</Text>
                 <Text style={styles.groupCount}>{tagTasks.length}</Text>
               </View>
-              {tagTasks.map(task => (
+              {tagTasks.map((task, i) => (
                 <TaskItem
                   key={task.id}
                   task={task}
@@ -271,6 +292,7 @@ export default function AllTasksScreen() {
                   onUncomplete={id => uncompleteTask.mutate(id)}
                   onDelete={id => deleteTask.mutate(id)}
                   colors={colors}
+                  index={i}
                 />
               ))}
             </View>
