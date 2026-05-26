@@ -16,7 +16,7 @@
 ## v0.21 — Polish & experience ← we are here
 - [x] Add tasks to backlog
 - [x] Search for tasks in backlog with Tags aswell
-- [x] Daily tasks should be a diffrent color node in caldendar
+- [x] Daily tasks should be a different color node in calendar
 
 ## v0.2 — Polish & experience ← we are here
 - [x] Dark mode
