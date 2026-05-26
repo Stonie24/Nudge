@@ -17,13 +17,16 @@ function hasJwtShape(token: string) {
   return parts.length === 3 && parts.every((part) => part.length > 0 && JWT_PART_REGEX.test(part))
 }
 
-function getCorsHeaders(origin: string | null) {
-  return {
-    'Access-Control-Allow-Origin':
-      ALLOWED_ORIGIN && origin === ALLOWED_ORIGIN ? ALLOWED_ORIGIN : '*',
+function getCorsHeaders(origin: string | null, includeOrigin = true) {
+  const headers: Record<string, string> = {
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
     'Access-Control-Allow-Methods': 'OPTIONS, POST',
   }
+
+  if (!includeOrigin) return headers
+
+  headers['Access-Control-Allow-Origin'] = ALLOWED_ORIGIN || origin || '*'
+  return headers
 }
 
 function json(data: unknown, status = 200, origin: string | null = null) {
@@ -48,7 +51,10 @@ serve(async (req) => {
   }
 
   if (ALLOWED_ORIGIN && origin !== ALLOWED_ORIGIN) {
-    return json({ error: 'Forbidden' }, 403, origin)
+    return new Response(JSON.stringify({ error: 'Forbidden' }), {
+      status: 403,
+      headers: { ...getCorsHeaders(origin, false), 'Content-Type': 'application/json' },
+    })
   }
 
   // Fail fast if misconfigured — logged server-side only
