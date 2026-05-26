@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import {
   View,
   Text,
@@ -12,8 +12,10 @@ import { useNudgeEvents, useGoogleEvents, useAppleEvents } from '../../hooks/use
 import { useGoogleCalendarAuth } from '../../hooks/useGoogleCalendarAuth'
 import { useTodayTasks, useTodayCompletions } from '../../hooks/useToday'
 import { useTasks } from '../../hooks/useTasks'
+import { useTheme } from '../../lib/ThemeContext'
 import { CalendarView } from '../../components/CalendarView'
 import { DaySheet } from '../../components/DaySheet'
+import type { Colors } from '../../lib/theme'
 import type { CalendarEvent, Task } from '../../types'
 
 type ViewMode = 'week' | 'month'
@@ -50,6 +52,9 @@ export default function CalendarScreen() {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState(toDateStr(new Date()))
   const [daySheetOpen, setDaySheetOpen] = useState(false)
+
+  const { colors } = useTheme()
+  const styles = useMemo(() => createStyles(colors), [colors])
 
   const { start, end } = getRangeForDate(currentDate, mode)
   const { isConnected, connect, disconnect, accessToken } = useGoogleCalendarAuth()
@@ -139,8 +144,12 @@ export default function CalendarScreen() {
         {/* Legend */}
         <View style={styles.legend}>
           <View style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: '#639922' }]} />
-            <Text style={styles.legendText}>Tasks</Text>
+            <View style={[styles.legendDot, { backgroundColor: colors.calendarDotTask }]} />
+            <Text style={styles.legendText}>Scheduled</Text>
+          </View>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendDot, { backgroundColor: colors.calendarDotRecurring }]} />
+            <Text style={styles.legendText}>Daily</Text>
           </View>
           <View style={styles.legendItem}>
             <View style={[styles.legendDot, { backgroundColor: '#F59F0A' }]} />
@@ -224,84 +233,86 @@ export default function CalendarScreen() {
   )
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FAF8F4' },
-  content: { paddingHorizontal: 24, paddingBottom: 60 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 32,
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 28, fontWeight: '700', color: '#1C1917',
-    letterSpacing: -0.5,
-    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
-  },
-  modeToggle: {
-    flexDirection: 'row',
-    backgroundColor: '#F1EFE8',
-    borderRadius: 10,
-    padding: 3,
-  },
-  modeBtn: {
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-    borderRadius: 8,
-  },
-  modeBtnActive: { backgroundColor: '#FFFFFF' },
-  modeBtnText: { fontSize: 13, color: '#A8A29E', fontWeight: '500' },
-  modeBtnTextActive: { color: '#1C1917' },
-  legend: {
-    flexDirection: 'row',
-    gap: 16,
-    marginTop: 16,
-    marginBottom: 28,
-    flexWrap: 'wrap',
-  },
-  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  legendDot: { width: 8, height: 8, borderRadius: 4 },
-  legendText: { fontSize: 12, color: '#A8A29E' },
-  integrations: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#E7E5E4',
-    padding: 16,
-    gap: 4,
-  },
-  integrationsTitle: {
-    fontSize: 11, fontWeight: '600', color: '#A8A29E',
-    letterSpacing: 0.8, textTransform: 'uppercase',
-    marginBottom: 12,
-  },
-  integrationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F5F3EF',
-  },
-  integrationInfo: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  integrationIcon: {
-    width: 36, height: 36, borderRadius: 10,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  integrationIconText: { fontSize: 16, fontWeight: '700', color: '#4285F4' },
-  integrationName: { fontSize: 14, fontWeight: '500', color: '#1C1917' },
-  integrationStatus: { fontSize: 12, color: '#A8A29E', marginTop: 1 },
-  integrationBtn: {
-    paddingVertical: 6, paddingHorizontal: 14,
-    borderRadius: 100, borderWidth: 1, borderColor: '#E7E5E4',
-  },
-  integrationBtnDanger: { borderColor: '#F09595' },
-  integrationBtnText: { fontSize: 13, color: '#1C1917', fontWeight: '500' },
-  integrationBtnTextDanger: { color: '#E24B4A' },
-  integrationConnected: {
-    paddingVertical: 6, paddingHorizontal: 14,
-    borderRadius: 100, backgroundColor: '#EAF3DE',
-  },
-  integrationConnectedText: { fontSize: 13, color: '#3B6D11', fontWeight: '500' },
-})
+function createStyles(c: Colors) {
+  return StyleSheet.create({
+    safe: { flex: 1, backgroundColor: c.bg },
+    content: { paddingHorizontal: 24, paddingBottom: 60 },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginTop: 32,
+      marginBottom: 20,
+    },
+    title: {
+      fontSize: 28, fontWeight: '700', color: c.text,
+      letterSpacing: -0.5,
+      fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+    },
+    modeToggle: {
+      flexDirection: 'row',
+      backgroundColor: c.surfaceAlt,
+      borderRadius: 10,
+      padding: 3,
+    },
+    modeBtn: {
+      paddingVertical: 6,
+      paddingHorizontal: 14,
+      borderRadius: 8,
+    },
+    modeBtnActive: { backgroundColor: c.surface },
+    modeBtnText: { fontSize: 13, color: c.textMuted, fontWeight: '500' },
+    modeBtnTextActive: { color: c.text },
+    legend: {
+      flexDirection: 'row',
+      gap: 16,
+      marginTop: 16,
+      marginBottom: 28,
+      flexWrap: 'wrap',
+    },
+    legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    legendDot: { width: 8, height: 8, borderRadius: 4 },
+    legendText: { fontSize: 12, color: c.textMuted },
+    integrations: {
+      backgroundColor: c.surface,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: c.border,
+      padding: 16,
+      gap: 4,
+    },
+    integrationsTitle: {
+      fontSize: 11, fontWeight: '600', color: c.textMuted,
+      letterSpacing: 0.8, textTransform: 'uppercase',
+      marginBottom: 12,
+    },
+    integrationRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: 10,
+      borderBottomWidth: 1,
+      borderBottomColor: c.borderLight,
+    },
+    integrationInfo: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    integrationIcon: {
+      width: 36, height: 36, borderRadius: 10,
+      alignItems: 'center', justifyContent: 'center',
+    },
+    integrationIconText: { fontSize: 16, fontWeight: '700', color: '#4285F4' },
+    integrationName: { fontSize: 14, fontWeight: '500', color: c.text },
+    integrationStatus: { fontSize: 12, color: c.textMuted, marginTop: 1 },
+    integrationBtn: {
+      paddingVertical: 6, paddingHorizontal: 14,
+      borderRadius: 100, borderWidth: 1, borderColor: c.border,
+    },
+    integrationBtnDanger: { borderColor: '#F09595' },
+    integrationBtnText: { fontSize: 13, color: c.text, fontWeight: '500' },
+    integrationBtnTextDanger: { color: '#E24B4A' },
+    integrationConnected: {
+      paddingVertical: 6, paddingHorizontal: 14,
+      borderRadius: 100, backgroundColor: c.accentBg,
+    },
+    integrationConnectedText: { fontSize: 13, color: c.accentText, fontWeight: '500' },
+  })
+}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import {
   View,
   Text,
@@ -11,7 +11,9 @@ import {
   ActivityIndicator,
 } from 'react-native'
 import { useTags, useAddTag, useDeleteTag } from '../hooks/useTags'
+import { useTheme } from '../lib/ThemeContext'
 import { getTagColor } from '../lib/tagColor'
+import type { Colors } from '../lib/theme'
 
 const PRESET_TAGS = ['Work', 'Personal', 'Focus', 'Health', 'Errands']
 
@@ -24,6 +26,9 @@ export function TagPicker({
 }) {
   const [open, setOpen] = useState(false)
   const [custom, setCustom] = useState('')
+
+  const { colors } = useTheme()
+  const styles = useMemo(() => createStyles(colors), [colors])
 
   const { data: savedTags, isLoading } = useTags()
   const addTag = useAddTag()
@@ -88,7 +93,7 @@ export function TagPicker({
             <Text style={styles.sheetTitle}>Add a tag</Text>
 
             {isLoading ? (
-              <ActivityIndicator style={styles.loader} color="#639922" />
+              <ActivityIndicator style={styles.loader} color={colors.accent} />
             ) : (
               <ScrollView showsVerticalScrollIndicator={false} style={styles.tagsScroll}>
                 <View style={styles.presets}>
@@ -131,7 +136,7 @@ export function TagPicker({
               <TextInput
                 style={styles.customInput}
                 placeholder="New custom tag..."
-                placeholderTextColor="#A8A29E"
+                placeholderTextColor={colors.placeholder}
                 value={custom}
                 onChangeText={setCustom}
                 onSubmitEditing={submitCustom}
@@ -145,7 +150,7 @@ export function TagPicker({
                 activeOpacity={0.8}
               >
                 {addTag.isPending
-                  ? <ActivityIndicator color="#FAF8F4" size="small" />
+                  ? <ActivityIndicator color={colors.btnPrimaryText} size="small" />
                   : <Text style={styles.customBtnText}>Add</Text>
                 }
               </TouchableOpacity>
@@ -166,141 +171,14 @@ export function TagPicker({
 export function TagBadge({ tag }: { tag: string }) {
   const color = getTagColor(tag)
   return (
-    <View style={[styles.badge, { backgroundColor: color.bg, borderColor: color.border }]}>
-      <Text style={[styles.badgeText, { color: color.text }]}>{tag}</Text>
+    <View style={[badgeStyles.badge, { backgroundColor: color.bg, borderColor: color.border }]}>
+      <Text style={[badgeStyles.badgeText, { color: color.text }]}>{tag}</Text>
     </View>
   )
 }
 
-const styles = StyleSheet.create({
-  trigger: {
-    height: 48,
-    paddingHorizontal: 14,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E7E5E4',
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  triggerText: {
-    fontSize: 13,
-    color: '#A8A29E',
-    fontWeight: '500',
-  },
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    justifyContent: 'flex-end',
-  },
-  sheet: {
-    backgroundColor: '#FAF8F4',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 24,
-    paddingBottom: 40,
-    maxHeight: '80%',
-  },
-  sheetHandle: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#E7E5E4',
-    alignSelf: 'center',
-    marginBottom: 20,
-  },
-  sheetTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1C1917',
-    marginBottom: 16,
-  },
-  loader: {
-    marginVertical: 20,
-  },
-  tagsScroll: {
-    maxHeight: 160,
-    marginBottom: 16,
-  },
-  presets: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  tagWrapper: {
-    position: 'relative',
-  },
-  preset: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 100,
-    borderWidth: 1.5,
-  },
-  presetActive: {
-    borderWidth: 2.5,
-  },
-  presetText: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  removeTag: {
-    position: 'absolute',
-    top: -6,
-    right: -4,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: '#E7E5E4',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  removeTagText: {
-    fontSize: 11,
-    color: '#57534E',
-    lineHeight: 14,
-    fontWeight: '600',
-  },
-  customRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginBottom: 16,
-  },
-  customInput: {
-    flex: 1,
-    height: 44,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E7E5E4',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    fontSize: 14,
-    color: '#1C1917',
-  },
-  customBtn: {
-    height: 44,
-    paddingHorizontal: 16,
-    backgroundColor: '#1C1917',
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  customBtnDisabled: {
-    backgroundColor: '#E7E5E4',
-  },
-  customBtnText: {
-    color: '#FAF8F4',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  clearBtn: {
-    alignItems: 'center',
-    paddingVertical: 12,
-  },
-  clearBtnText: {
-    fontSize: 14,
-    color: '#E24B4A',
-    fontWeight: '500',
-  },
+// TagBadge uses tag-specific colors, no theme dependency needed
+const badgeStyles = StyleSheet.create({
   badge: {
     alignSelf: 'flex-start',
     borderRadius: 100,
@@ -313,3 +191,136 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
 })
+
+function createStyles(c: Colors) {
+  return StyleSheet.create({
+    trigger: {
+      height: 48,
+      paddingHorizontal: 14,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: c.border,
+      backgroundColor: c.surface,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    triggerText: {
+      fontSize: 13,
+      color: c.textMuted,
+      fontWeight: '500',
+    },
+    backdrop: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      justifyContent: 'flex-end',
+    },
+    sheet: {
+      backgroundColor: c.surface,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      padding: 24,
+      paddingBottom: 40,
+      maxHeight: '80%',
+    },
+    sheetHandle: {
+      width: 36,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: c.border,
+      alignSelf: 'center',
+      marginBottom: 20,
+    },
+    sheetTitle: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: c.text,
+      marginBottom: 16,
+    },
+    loader: {
+      marginVertical: 20,
+    },
+    tagsScroll: {
+      maxHeight: 160,
+      marginBottom: 16,
+    },
+    presets: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+    },
+    tagWrapper: {
+      position: 'relative',
+    },
+    preset: {
+      paddingVertical: 8,
+      paddingHorizontal: 16,
+      borderRadius: 100,
+      borderWidth: 1.5,
+    },
+    presetActive: {
+      borderWidth: 2.5,
+    },
+    presetText: {
+      fontSize: 14,
+      fontWeight: '500',
+    },
+    removeTag: {
+      position: 'absolute',
+      top: -6,
+      right: -4,
+      width: 16,
+      height: 16,
+      borderRadius: 8,
+      backgroundColor: c.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    removeTagText: {
+      fontSize: 11,
+      color: c.textSecondary,
+      lineHeight: 14,
+      fontWeight: '600',
+    },
+    customRow: {
+      flexDirection: 'row',
+      gap: 10,
+      marginBottom: 16,
+    },
+    customInput: {
+      flex: 1,
+      height: 44,
+      backgroundColor: c.inputBg,
+      borderWidth: 1,
+      borderColor: c.border,
+      borderRadius: 12,
+      paddingHorizontal: 14,
+      fontSize: 14,
+      color: c.text,
+    },
+    customBtn: {
+      height: 44,
+      paddingHorizontal: 16,
+      backgroundColor: c.btnPrimary,
+      borderRadius: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    customBtnDisabled: {
+      backgroundColor: c.btnDisabled,
+    },
+    customBtnText: {
+      color: c.btnPrimaryText,
+      fontSize: 14,
+      fontWeight: '500',
+    },
+    clearBtn: {
+      alignItems: 'center',
+      paddingVertical: 12,
+    },
+    clearBtnText: {
+      fontSize: 14,
+      color: '#E24B4A',
+      fontWeight: '500',
+    },
+  })
+}

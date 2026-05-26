@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import {
   View,
   Text,
@@ -17,10 +17,12 @@ import {
 } from '../../hooks/useToday'
 import { useCompleteTask, useUncompleteTask, useDeleteTask, useUpdateTask } from '../../hooks/useTasks'
 import { useLayout } from '../../hooks/useLayout'
+import { useTheme } from '../../lib/ThemeContext'
 import { TagPicker } from '../../components/TagPicker'
 import { KanbanBoard } from '../../components/KanbanBoard'
 import { AddTaskSheet } from '../../components/Addtasksheet'
 import { showAlert } from '../../lib/alert'
+import type { Colors } from '../../lib/theme'
 import type { Task } from '../../types'
 
 function getGreeting() {
@@ -50,6 +52,7 @@ function TaskItem({
   onUncomplete,
   onDelete,
   onUpdateTag,
+  colors,
 }: {
   task: Task
   completedToday: boolean
@@ -57,6 +60,7 @@ function TaskItem({
   onUncomplete: (id: string) => void
   onDelete: (id: string) => void
   onUpdateTag: (id: string, tag?: string) => void
+  colors: Colors
 }) {
   function handleLongPress() {
     showAlert('Delete task', `Remove "${task.title}"?`, [
@@ -66,6 +70,7 @@ function TaskItem({
   }
 
   const isDone = task.recurring ? completedToday : task.completed
+  const styles = useMemo(() => createStyles(colors), [colors])
 
   return (
     <TouchableOpacity
@@ -93,6 +98,8 @@ function TaskItem({
 export default function TodayScreen() {
   const [sheetOpen, setSheetOpen] = useState(false)
   const { isDesktop } = useLayout()
+  const { colors } = useTheme()
+  const styles = useMemo(() => createStyles(colors), [colors])
 
   const { data: tasks, isLoading } = useTodayTasks()
   const { data: completions } = useTodayCompletions()
@@ -198,6 +205,7 @@ export default function TodayScreen() {
               onUncomplete={() => handleUncomplete(item)}
               onDelete={id => deleteTask.mutate(id)}
               onUpdateTag={(id, tag) => updateTask.mutate({ id, tag })}
+              colors={colors}
             />
           )}
           ListFooterComponent={
@@ -213,6 +221,7 @@ export default function TodayScreen() {
                     onUncomplete={() => handleUncomplete(task)}
                     onDelete={id => deleteTask.mutate(id)}
                     onUpdateTag={(id, tag) => updateTask.mutate({ id, tag })}
+                    colors={colors}
                   />
                 ))}
               </View>
@@ -235,53 +244,55 @@ export default function TodayScreen() {
   )
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FAF8F4' },
-  desktopWrap: { flex: 1 },
-  content: { paddingHorizontal: 24, paddingBottom: 40 },
-  headerWrap: { paddingHorizontal: 24 },
-  headerWrapDesktop: { paddingVertical: 8 },
-  header: { marginTop: 32, marginBottom: 20 },
-  greeting: {
-    fontSize: 28, fontWeight: '700', color: '#1C1917',
-    letterSpacing: -0.5,
-    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
-  },
-  date: { fontSize: 14, color: '#A8A29E', marginTop: 4, fontWeight: '300' },
-  nudgeBanner: {
-    backgroundColor: '#EAF3DE', borderRadius: 12,
-    padding: 14, marginBottom: 20,
-  },
-  nudgeText: { fontSize: 14, color: '#3B6D11', fontWeight: '400', lineHeight: 20 },
-  addBtn: {
-    height: 52, backgroundColor: '#1C1917',
-    borderRadius: 100, alignItems: 'center',
-    justifyContent: 'center', marginBottom: 28,
-  },
-  addBtnText: { color: '#FAF8F4', fontSize: 15, fontWeight: '500' },
-  sectionLabel: {
-    fontSize: 11, fontWeight: '600', color: '#A8A29E',
-    letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 8,
-  },
-  taskRow: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingVertical: 13, borderBottomWidth: 1,
-    borderBottomColor: '#F5F3EF', gap: 14,
-  },
-  checkbox: {
-    width: 22, height: 22, borderRadius: 11,
-    borderWidth: 1.5, borderColor: '#D6D3D1',
-    alignItems: 'center', justifyContent: 'center',
-  },
-  checkboxDone: { backgroundColor: '#639922', borderColor: '#639922' },
-  checkmark: {
-    width: 6, height: 10, borderRightWidth: 2,
-    borderBottomWidth: 2, borderColor: '#FFFFFF',
-    transform: [{ rotate: '40deg' }, { translateY: -1 }],
-  },
-  taskContent: { flex: 1, gap: 3 },
-  taskTitle: { fontSize: 15, color: '#1C1917', lineHeight: 22 },
-  taskTitleDone: { color: '#A8A29E', textDecorationLine: 'line-through' },
-  recurringBadge: { fontSize: 11, color: '#639922', fontWeight: '500' },
-  emptyText: { fontSize: 14, color: '#A8A29E', textAlign: 'center', marginTop: 40 },
-})
+function createStyles(c: Colors) {
+  return StyleSheet.create({
+    safe: { flex: 1, backgroundColor: c.bg },
+    desktopWrap: { flex: 1 },
+    content: { paddingHorizontal: 24, paddingBottom: 40 },
+    headerWrap: { paddingHorizontal: 24 },
+    headerWrapDesktop: { paddingVertical: 8 },
+    header: { marginTop: 32, marginBottom: 20 },
+    greeting: {
+      fontSize: 28, fontWeight: '700', color: c.text,
+      letterSpacing: -0.5,
+      fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+    },
+    date: { fontSize: 14, color: c.textMuted, marginTop: 4, fontWeight: '300' },
+    nudgeBanner: {
+      backgroundColor: c.accentBg, borderRadius: 12,
+      padding: 14, marginBottom: 20,
+    },
+    nudgeText: { fontSize: 14, color: c.accentText, fontWeight: '400', lineHeight: 20 },
+    addBtn: {
+      height: 52, backgroundColor: c.btnPrimary,
+      borderRadius: 100, alignItems: 'center',
+      justifyContent: 'center', marginBottom: 28,
+    },
+    addBtnText: { color: c.btnPrimaryText, fontSize: 15, fontWeight: '500' },
+    sectionLabel: {
+      fontSize: 11, fontWeight: '600', color: c.textMuted,
+      letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 8,
+    },
+    taskRow: {
+      flexDirection: 'row', alignItems: 'center',
+      paddingVertical: 13, borderBottomWidth: 1,
+      borderBottomColor: c.borderLight, gap: 14,
+    },
+    checkbox: {
+      width: 22, height: 22, borderRadius: 11,
+      borderWidth: 1.5, borderColor: c.textFaint,
+      alignItems: 'center', justifyContent: 'center',
+    },
+    checkboxDone: { backgroundColor: c.accent, borderColor: c.accent },
+    checkmark: {
+      width: 6, height: 10, borderRightWidth: 2,
+      borderBottomWidth: 2, borderColor: '#FFFFFF',
+      transform: [{ rotate: '40deg' }, { translateY: -1 }],
+    },
+    taskContent: { flex: 1, gap: 3 },
+    taskTitle: { fontSize: 15, color: c.text, lineHeight: 22 },
+    taskTitleDone: { color: c.textMuted, textDecorationLine: 'line-through' },
+    recurringBadge: { fontSize: 11, color: c.accent, fontWeight: '500' },
+    emptyText: { fontSize: 14, color: c.textMuted, textAlign: 'center', marginTop: 40 },
+  })
+}

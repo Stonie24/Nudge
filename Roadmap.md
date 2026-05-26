@@ -16,10 +16,10 @@
 ## v0.21 — Polish & experience ← we are here
 - [x] Add tasks to backlog
 - [x] Search for tasks in backlog with Tags aswell
-- [ ] Daily tasks should be a diffrent color node in caldendar
+- [x] Daily tasks should be a different color node in calendar
 
 ## v0.2 — Polish & experience ← we are here
-- [ ] Dark mode
+- [x] Dark mode
 - [ ] Animations & micro-interactions
 - [ ] Onboarding flow for new users
 - [ ] Push notifications / gentle nudge reminders

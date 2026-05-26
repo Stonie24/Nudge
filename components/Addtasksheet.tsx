@@ -14,8 +14,10 @@ import {
 } from 'react-native'
 import { useAddTodayTask, useScheduleForToday } from '../hooks/useToday'
 import { useTasks } from '../hooks/useTasks'
+import { useTheme } from '../lib/ThemeContext'
 import { TagPicker, TagBadge } from './TagPicker'
 import { getTagColor } from '../lib/tagColor'
+import type { Colors } from '../lib/theme'
 import type { Task } from '../types'
 
 type Tab = 'new' | 'backlog'
@@ -36,6 +38,9 @@ export function AddTaskSheet({
     const [search, setSearch] = useState('')
     const [selectedTag, setSelectedTag] = useState<string | undefined>()
 
+    const { colors } = useTheme()
+    const styles = useMemo(() => createStyles(colors), [colors])
+
     const addTodayTask = useAddTodayTask()
     const scheduleForToday = useScheduleForToday()
     const { data: allTasks, isLoading } = useTasks()
@@ -46,18 +51,22 @@ export function AddTaskSheet({
         ) ?? []
     ), [allTasks, todayTaskIds])
 
-    const backlogTags = useMemo(() => {
-        const seen = new Set<string>()
-        backlog.forEach(t => { if (t.tag) seen.add(t.tag) })
-        return Array.from(seen)
-    }, [backlog])
+    const backlogTags = useMemo(
+        () => Array.from(
+            backlog.reduce((seen, task) => {
+                if (task.tag) seen.add(task.tag)
+                return seen
+            }, new Set<string>())
+        ),
+        [backlog]
+    )
 
     const filteredBacklog = useMemo(() => {
         const normalizedSearch = search.trim().toLowerCase()
-        let result = backlog
-        if (normalizedSearch) result = result.filter(t => t.title.toLowerCase().includes(normalizedSearch))
-        if (selectedTag) result = result.filter(t => t.tag === selectedTag)
-        return result
+        return backlog.filter(task =>
+            (!normalizedSearch || task.title.toLowerCase().includes(normalizedSearch)) &&
+            (!selectedTag || task.tag === selectedTag)
+        )
     }, [backlog, search, selectedTag])
 
     function reset() {
@@ -98,6 +107,7 @@ export function AddTaskSheet({
                 <Pressable style={styles.sheet} onPress={() => {}}>
                     <View style={styles.handle} />
 
+                    {/* Tabs */}
                     <View style={styles.tabs}>
                         <TouchableOpacity
                             style={[styles.tab, tab === 'new' && styles.tabActive]}
@@ -124,7 +134,7 @@ export function AddTaskSheet({
                             <TextInput
                                 style={styles.input}
                                 placeholder="What do you need to do?"
-                                placeholderTextColor="#A8A29E"
+                                placeholderTextColor={colors.placeholder}
                                 value={title}
                                 onChangeText={setTitle}
                                 autoFocus
@@ -134,6 +144,7 @@ export function AddTaskSheet({
 
                             <TagPicker value={tag} onChange={setTag} />
 
+                            {/* Recurring toggle */}
                             <View style={styles.recurringRow}>
                                 <View style={styles.recurringLabel}>
                                     <Text style={styles.recurringTitle}>Repeat daily</Text>
@@ -144,8 +155,8 @@ export function AddTaskSheet({
                                 <Switch
                                     value={recurring}
                                     onValueChange={setRecurring}
-                                    trackColor={{ false: '#E7E5E4', true: '#639922' }}
-                                    thumbColor="#FFFFFF"
+                                    trackColor={{ false: colors.border, true: colors.accent }}
+                                    thumbColor={colors.surface}
                                 />
                             </View>
 
@@ -156,7 +167,7 @@ export function AddTaskSheet({
                                 activeOpacity={0.8}
                             >
                                 {addTodayTask.isPending
-                                    ? <ActivityIndicator color="#FAF8F4" />
+                                    ? <ActivityIndicator color={colors.btnPrimaryText} />
                                     : <Text style={styles.addBtnText}>Add to today</Text>
                                 }
                             </TouchableOpacity>
@@ -166,7 +177,7 @@ export function AddTaskSheet({
                             <TextInput
                                 style={styles.searchInput}
                                 placeholder="Search backlog..."
-                                placeholderTextColor="#A8A29E"
+                                placeholderTextColor={colors.placeholder}
                                 value={search}
                                 onChangeText={setSearch}
                                 clearButtonMode="while-editing"
@@ -211,7 +222,7 @@ export function AddTaskSheet({
                             )}
 
                             {isLoading ? (
-                                <ActivityIndicator color="#639922" style={styles.loader} />
+                                <ActivityIndicator color={colors.accent} style={styles.loader} />
                             ) : filteredBacklog.length === 0 ? (
                                 <Text style={styles.emptyText}>
                                     {backlog.length === 0
@@ -247,96 +258,98 @@ export function AddTaskSheet({
     )
 }
 
-const styles = StyleSheet.create({
-    backdrop: {
-        flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.35)',
-        justifyContent: 'flex-end',
-    },
-    sheet: {
-        backgroundColor: '#FAF8F4',
-        borderTopLeftRadius: 24,
-        borderTopRightRadius: 24,
-        padding: 24,
-        paddingBottom: 48,
-        maxHeight: '85%',
-    },
-    handle: {
-        width: 36, height: 4, borderRadius: 2,
-        backgroundColor: '#E7E5E4',
-        alignSelf: 'center', marginBottom: 20,
-    },
-    tabs: {
-        flexDirection: 'row',
-        backgroundColor: '#F1EFE8',
-        borderRadius: 12,
-        padding: 4,
-        marginBottom: 24,
-    },
-    tab: {
-        flex: 1, paddingVertical: 8,
-        borderRadius: 10, alignItems: 'center',
-    },
-    tabActive: { backgroundColor: '#FFFFFF' },
-    tabText: { fontSize: 14, color: '#A8A29E', fontWeight: '500' },
-    tabTextActive: { color: '#1C1917' },
-    newTask: { gap: 16 },
-    input: {
-        height: 50, backgroundColor: '#FFFFFF',
-        borderWidth: 1, borderColor: '#E7E5E4',
-        borderRadius: 12, paddingHorizontal: 16,
-        fontSize: 15, color: '#1C1917',
-    },
-    recurringRow: {
-        flexDirection: 'row', alignItems: 'center',
-        backgroundColor: '#FFFFFF', borderRadius: 12,
-        borderWidth: 1, borderColor: '#E7E5E4',
-        padding: 14, gap: 12,
-    },
-    recurringLabel: { flex: 1 },
-    recurringTitle: { fontSize: 15, color: '#1C1917', fontWeight: '500' },
-    recurringHint: { fontSize: 12, color: '#A8A29E', marginTop: 2 },
-    addBtn: {
-        height: 52, backgroundColor: '#1C1917',
-        borderRadius: 100, alignItems: 'center', justifyContent: 'center',
-    },
-    addBtnDisabled: { backgroundColor: '#E7E5E4' },
-    addBtnText: { color: '#FAF8F4', fontSize: 15, fontWeight: '500' },
-    backlog: { gap: 12 },
-    searchInput: {
-        height: 44, backgroundColor: '#FFFFFF',
-        borderWidth: 1, borderColor: '#E7E5E4',
-        borderRadius: 12, paddingHorizontal: 16,
-        fontSize: 14, color: '#1C1917',
-    },
-    tagRow: { flexGrow: 0 },
-    tagRowContent: { flexDirection: 'row', gap: 8 },
-    tagAllChip: {
-        paddingVertical: 6, paddingHorizontal: 14,
-        borderRadius: 100, borderWidth: 1,
-        borderColor: '#E7E5E4', backgroundColor: '#FFFFFF',
-    },
-    tagAllChipActive: { backgroundColor: '#1C1917', borderColor: '#1C1917' },
-    tagAllChipText: { fontSize: 12, color: '#78716C', fontWeight: '500' },
-    tagAllChipTextActive: { color: '#FAF8F4' },
-    tagChip: {
-        paddingVertical: 6, paddingHorizontal: 14,
-        borderRadius: 100, borderWidth: 1.5,
-    },
-    tagChipActive: { borderWidth: 2.5 },
-    tagChipText: { fontSize: 12, fontWeight: '500' },
-    backlogList: { maxHeight: 320 },
-    backlogRow: {
-        flexDirection: 'row', alignItems: 'center',
-        paddingVertical: 14, borderBottomWidth: 1,
-        borderBottomColor: '#F5F3EF', gap: 12,
-    },
-    backlogText: { flex: 1, gap: 4 },
-    backlogTitle: { fontSize: 15, color: '#1C1917' },
-    addIcon: { fontSize: 22, color: '#639922', fontWeight: '300' },
-    loader: { marginTop: 40 },
-    emptyText: {
-        fontSize: 14, color: '#A8A29E',
-        textAlign: 'center', marginTop: 40, lineHeight: 22,
-    },
-})
+function createStyles(c: Colors) {
+    return StyleSheet.create({
+        backdrop: {
+            flex: 1,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            justifyContent: 'flex-end',
+        },
+        sheet: {
+            backgroundColor: c.surface,
+            borderTopLeftRadius: 24,
+            borderTopRightRadius: 24,
+            padding: 24,
+            paddingBottom: 48,
+            maxHeight: '85%',
+        },
+        handle: {
+            width: 36, height: 4, borderRadius: 2,
+            backgroundColor: c.border,
+            alignSelf: 'center', marginBottom: 20,
+        },
+        tabs: {
+            flexDirection: 'row',
+            backgroundColor: c.surfaceAlt,
+            borderRadius: 12,
+            padding: 4,
+            marginBottom: 24,
+        },
+        tab: {
+            flex: 1, paddingVertical: 8,
+            borderRadius: 10, alignItems: 'center',
+        },
+        tabActive: { backgroundColor: c.surface },
+        tabText: { fontSize: 14, color: c.textMuted, fontWeight: '500' },
+        tabTextActive: { color: c.text },
+        newTask: { gap: 16 },
+        input: {
+            height: 50, backgroundColor: c.inputBg,
+            borderWidth: 1, borderColor: c.border,
+            borderRadius: 12, paddingHorizontal: 16,
+            fontSize: 15, color: c.text,
+        },
+        recurringRow: {
+            flexDirection: 'row', alignItems: 'center',
+            backgroundColor: c.inputBg, borderRadius: 12,
+            borderWidth: 1, borderColor: c.border,
+            padding: 14, gap: 12,
+        },
+        recurringLabel: { flex: 1 },
+        recurringTitle: { fontSize: 15, color: c.text, fontWeight: '500' },
+        recurringHint: { fontSize: 12, color: c.textMuted, marginTop: 2 },
+        addBtn: {
+            height: 52, backgroundColor: c.btnPrimary,
+            borderRadius: 100, alignItems: 'center', justifyContent: 'center',
+        },
+        addBtnDisabled: { backgroundColor: c.btnDisabled },
+        addBtnText: { color: c.btnPrimaryText, fontSize: 15, fontWeight: '500' },
+        backlog: { gap: 12 },
+        searchInput: {
+            height: 44, backgroundColor: c.inputBg,
+            borderWidth: 1, borderColor: c.border,
+            borderRadius: 12, paddingHorizontal: 16,
+            fontSize: 14, color: c.text,
+        },
+        tagRow: { flexGrow: 0 },
+        tagRowContent: { flexDirection: 'row', gap: 8 },
+        tagAllChip: {
+            paddingVertical: 6, paddingHorizontal: 14,
+            borderRadius: 100, borderWidth: 1,
+            borderColor: c.border, backgroundColor: c.surface,
+        },
+        tagAllChipActive: { backgroundColor: c.btnPrimary, borderColor: c.btnPrimary },
+        tagAllChipText: { fontSize: 12, color: c.textSecondary, fontWeight: '500' },
+        tagAllChipTextActive: { color: c.btnPrimaryText },
+        tagChip: {
+            paddingVertical: 6, paddingHorizontal: 14,
+            borderRadius: 100, borderWidth: 1.5,
+        },
+        tagChipActive: { borderWidth: 2.5 },
+        tagChipText: { fontSize: 12, fontWeight: '500' },
+        backlogList: { maxHeight: 320 },
+        backlogRow: {
+            flexDirection: 'row', alignItems: 'center',
+            paddingVertical: 14, borderBottomWidth: 1,
+            borderBottomColor: c.borderLight, gap: 12,
+        },
+        backlogText: { flex: 1, gap: 4 },
+        backlogTitle: { fontSize: 15, color: c.text },
+        addIcon: { fontSize: 22, color: c.accent, fontWeight: '300' },
+        loader: { marginTop: 40 },
+        emptyText: {
+            fontSize: 14, color: c.textMuted,
+            textAlign: 'center', marginTop: 40, lineHeight: 22,
+        },
+    })
+}

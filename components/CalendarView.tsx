@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import {
   View,
   Text,
@@ -6,6 +6,8 @@ import {
   ScrollView,
   StyleSheet,
 } from 'react-native'
+import { useTheme } from '../lib/ThemeContext'
+import type { Colors } from '../lib/theme'
 import type { CalendarEvent, Task } from '../types'
 
 type ViewMode = 'week' | 'month'
@@ -56,6 +58,7 @@ function DayCell({
   tasks,
   onPress,
   isWeek,
+  colors,
 }: {
   date: Date | null
   isToday?: boolean
@@ -64,18 +67,28 @@ function DayCell({
   tasks: Task[]
   onPress?: () => void
   isWeek?: boolean
+  colors: Colors
 }) {
+  const styles = useMemo(() => createStyles(colors), [colors])
+
   if (!date) return <View style={styles.emptyCell} />
 
   const nudgeEvents = events.filter(e => e.source === 'nudge')
   const googleEvents = events.filter(e => e.source === 'google')
   const appleEvents = events.filter(e => e.source === 'apple')
+
+  // Split tasks: recurring (daily habits) vs one-time scheduled
+  const scheduledTasks = tasks.filter(t => !t.recurring)
+  const recurringTasks = tasks.filter(t => t.recurring)
+
   const dots: string[] = []
   if (nudgeEvents.length > 0) dots.push('#F59F0A')
   if (googleEvents.length > 0) dots.push('#4285F4')
   if (appleEvents.length > 0) dots.push('#FF9500')
-  if (tasks.length > 0) dots.push('#639922')
-  const visibleDots = dots.slice(0, 3)
+  if (scheduledTasks.length > 0) dots.push(colors.calendarDotTask)
+  if (recurringTasks.length > 0) dots.push(colors.calendarDotRecurring)
+
+  const visibleDots = dots.slice(0, 4)
 
   return (
     <TouchableOpacity
@@ -120,6 +133,8 @@ export function CalendarView({
   onPrevious: () => void
   onNext: () => void
 }) {
+  const { colors } = useTheme()
+  const styles = useMemo(() => createStyles(colors), [colors])
   const today = toDateStr(new Date())
 
   const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
@@ -174,6 +189,7 @@ export function CalendarView({
               tasks={getTasksForDate(date)}
               onPress={() => onSelectDate(toDateStr(date))}
               isWeek
+              colors={colors}
             />
           ))}
         </View>
@@ -188,6 +204,7 @@ export function CalendarView({
               events={date ? getEventsForDate(date) : []}
               tasks={date ? getTasksForDate(date) : []}
               onPress={date ? () => onSelectDate(toDateStr(date)) : undefined}
+              colors={colors}
             />
           ))}
         </View>
@@ -196,113 +213,115 @@ export function CalendarView({
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#E7E5E4',
-    padding: 16,
-  },
-  navRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  navBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: '#F5F3EF',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  navBtnText: {
-    fontSize: 20,
-    color: '#1C1917',
-    lineHeight: 24,
-  },
-  navTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#1C1917',
-  },
-  dayLabels: {
-    flexDirection: 'row',
-    marginBottom: 8,
-  },
-  dayLabel: {
-    flex: 1,
-    textAlign: 'center',
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#A8A29E',
-    letterSpacing: 0.5,
-  },
-  weekRow: {
-    flexDirection: 'row',
-  },
-  weekCell: {
-    flex: 1,
-    aspectRatio: 0.85,
-    alignItems: 'center',
-    paddingTop: 4,
-    borderRadius: 10,
-  },
-  monthGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  emptyCell: {
-    width: '14.28%',
-    aspectRatio: 0.85,
-  },
-  dayCell: {
-    width: '14.28%',
-    aspectRatio: 0.85,
-    alignItems: 'center',
-    paddingTop: 4,
-    borderRadius: 10,
-  },
-  dayCellSelected: {
-    backgroundColor: '#F5F3EF',
-  },
-  dayNumber: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dayNumberToday: {
-    backgroundColor: '#1C1917',
-  },
-  dayNumberSelected: {
-    backgroundColor: '#EAF3DE',
-  },
-  dayNumberText: {
-    fontSize: 13,
-    color: '#1C1917',
-    fontWeight: '400',
-  },
-  dayNumberTextToday: {
-    color: '#FAF8F4',
-    fontWeight: '600',
-  },
-  dayNumberTextSelected: {
-    color: '#3B6D11',
-    fontWeight: '600',
-  },
-  dots: {
-    flexDirection: 'row',
-    gap: 3,
-    marginTop: 3,
-    height: 6,
-  },
-  dot: {
-    width: 5,
-    height: 5,
-    borderRadius: 3,
-  },
-})
+function createStyles(c: Colors) {
+  return StyleSheet.create({
+    container: {
+      backgroundColor: c.surface,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: c.border,
+      padding: 16,
+    },
+    navRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 16,
+    },
+    navBtn: {
+      width: 36,
+      height: 36,
+      borderRadius: 10,
+      backgroundColor: c.surfaceMuted,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    navBtnText: {
+      fontSize: 20,
+      color: c.text,
+      lineHeight: 24,
+    },
+    navTitle: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: c.text,
+    },
+    dayLabels: {
+      flexDirection: 'row',
+      marginBottom: 8,
+    },
+    dayLabel: {
+      flex: 1,
+      textAlign: 'center',
+      fontSize: 11,
+      fontWeight: '600',
+      color: c.textMuted,
+      letterSpacing: 0.5,
+    },
+    weekRow: {
+      flexDirection: 'row',
+    },
+    weekCell: {
+      flex: 1,
+      aspectRatio: 0.85,
+      alignItems: 'center',
+      paddingTop: 4,
+      borderRadius: 10,
+    },
+    monthGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+    },
+    emptyCell: {
+      width: '14.28%',
+      aspectRatio: 0.85,
+    },
+    dayCell: {
+      width: '14.28%',
+      aspectRatio: 0.85,
+      alignItems: 'center',
+      paddingTop: 4,
+      borderRadius: 10,
+    },
+    dayCellSelected: {
+      backgroundColor: c.surfaceMuted,
+    },
+    dayNumber: {
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    dayNumberToday: {
+      backgroundColor: c.btnPrimary,
+    },
+    dayNumberSelected: {
+      backgroundColor: c.accentBg,
+    },
+    dayNumberText: {
+      fontSize: 13,
+      color: c.text,
+      fontWeight: '400',
+    },
+    dayNumberTextToday: {
+      color: c.btnPrimaryText,
+      fontWeight: '600',
+    },
+    dayNumberTextSelected: {
+      color: c.accentText,
+      fontWeight: '600',
+    },
+    dots: {
+      flexDirection: 'row',
+      gap: 3,
+      marginTop: 3,
+      height: 6,
+    },
+    dot: {
+      width: 5,
+      height: 5,
+      borderRadius: 3,
+    },
+  })
+}

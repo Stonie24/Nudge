@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import {
   View,
   Text,
@@ -7,8 +7,10 @@ import {
   StyleSheet,
 } from 'react-native'
 import { getTagColor } from '../lib/tagColor'
+import { useTheme } from '../lib/ThemeContext'
 import { TagPicker } from './TagPicker'
 import { showAlert } from '../lib/alert'
+import type { Colors } from '../lib/theme'
 import type { Task } from '../types'
 
 function KanbanCard({
@@ -24,6 +26,9 @@ function KanbanCard({
   onDelete: (id: string) => void
   onUpdateTag?: (id: string, tag?: string) => void
 }) {
+  const { colors } = useTheme()
+  const styles = useMemo(() => createStyles(colors), [colors])
+
   function handleLongPress() {
     showAlert('Delete task', `Remove "${task.title}"?`, [
       { text: 'Cancel', style: 'cancel' },
@@ -74,6 +79,9 @@ export function KanbanBoard({
   onDelete: (id: string) => void
   onUpdateTag?: (id: string, tag?: string) => void
 }) {
+  const { colors } = useTheme()
+  const styles = useMemo(() => createStyles(colors), [colors])
+
   const groups: Record<string, Task[]> = {}
   for (const task of tasks) {
     const key = task.tag ?? 'No tag'
@@ -114,7 +122,7 @@ export function KanbanBoard({
                   styles.progressFill,
                   {
                     width: total > 0 ? `${(done / total) * 100}%` : '0%',
-                    backgroundColor: color ? color.border : '#D6D3D1',
+                    backgroundColor: color ? color.border : colors.textFaint,
                   },
                 ]}
               />
@@ -142,118 +150,120 @@ export function KanbanBoard({
   )
 }
 
-const styles = StyleSheet.create({
-  board: {
-    paddingHorizontal: 24,
-    paddingBottom: 40,
-    gap: 16,
-    alignItems: 'flex-start',
-  },
-  column: {
-    width: 260,
-    backgroundColor: '#F5F3EF',
-    borderRadius: 16,
-    padding: 16,
-    minHeight: 200,
-  },
-  columnHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  columnTag: {
-    paddingVertical: 4,
-    paddingHorizontal: 12,
-    borderRadius: 100,
-    borderWidth: 1.5,
-  },
-  columnTagDefault: {
-    backgroundColor: '#F1EFE8',
-    borderColor: '#D3D1C7',
-  },
-  columnTagText: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  columnTagTextDefault: {
-    color: '#78716C',
-  },
-  columnCount: {
-    fontSize: 12,
-    color: '#A8A29E',
-    fontWeight: '400',
-  },
-  progressBar: {
-    height: 3,
-    backgroundColor: '#E7E5E4',
-    borderRadius: 2,
-    marginBottom: 12,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: 2,
-  },
-  cards: {
-    gap: 8,
-  },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: '#E7E5E4',
-    gap: 10,
-  },
-  cardDone: {
-    opacity: 0.6,
-  },
-  cardTop: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 10,
-  },
-  checkbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 1.5,
-    borderColor: '#D6D3D1',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 1,
-    flexShrink: 0,
-  },
-  checkboxDone: {
-    backgroundColor: '#639922',
-    borderColor: '#639922',
-  },
-  checkmark: {
-    width: 5,
-    height: 9,
-    borderRightWidth: 2,
-    borderBottomWidth: 2,
-    borderColor: '#FFFFFF',
-    transform: [{ rotate: '40deg' }, { translateY: -1 }],
-  },
-  cardTitle: {
-    fontSize: 14,
-    color: '#1C1917',
-    flex: 1,
-    lineHeight: 20,
-  },
-  cardTitleDone: {
-    color: '#A8A29E',
-    textDecorationLine: 'line-through',
-  },
-  cardBottom: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  cardDate: {
-    fontSize: 11,
-    color: '#A8A29E',
-  },
-})
+function createStyles(c: Colors) {
+  return StyleSheet.create({
+    board: {
+      paddingHorizontal: 24,
+      paddingBottom: 40,
+      gap: 16,
+      alignItems: 'flex-start',
+    },
+    column: {
+      width: 260,
+      backgroundColor: c.surfaceMuted,
+      borderRadius: 16,
+      padding: 16,
+      minHeight: 200,
+    },
+    columnHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 8,
+    },
+    columnTag: {
+      paddingVertical: 4,
+      paddingHorizontal: 12,
+      borderRadius: 100,
+      borderWidth: 1.5,
+    },
+    columnTagDefault: {
+      backgroundColor: c.surfaceAlt,
+      borderColor: c.border,
+    },
+    columnTagText: {
+      fontSize: 13,
+      fontWeight: '600',
+    },
+    columnTagTextDefault: {
+      color: c.textSecondary,
+    },
+    columnCount: {
+      fontSize: 12,
+      color: c.textMuted,
+      fontWeight: '400',
+    },
+    progressBar: {
+      height: 3,
+      backgroundColor: c.border,
+      borderRadius: 2,
+      marginBottom: 12,
+      overflow: 'hidden',
+    },
+    progressFill: {
+      height: '100%',
+      borderRadius: 2,
+    },
+    cards: {
+      gap: 8,
+    },
+    card: {
+      backgroundColor: c.surface,
+      borderRadius: 12,
+      padding: 14,
+      borderWidth: 1,
+      borderColor: c.border,
+      gap: 10,
+    },
+    cardDone: {
+      opacity: 0.6,
+    },
+    cardTop: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: 10,
+    },
+    checkbox: {
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+      borderWidth: 1.5,
+      borderColor: c.textFaint,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: 1,
+      flexShrink: 0,
+    },
+    checkboxDone: {
+      backgroundColor: c.accent,
+      borderColor: c.accent,
+    },
+    checkmark: {
+      width: 5,
+      height: 9,
+      borderRightWidth: 2,
+      borderBottomWidth: 2,
+      borderColor: '#FFFFFF',
+      transform: [{ rotate: '40deg' }, { translateY: -1 }],
+    },
+    cardTitle: {
+      fontSize: 14,
+      color: c.text,
+      flex: 1,
+      lineHeight: 20,
+    },
+    cardTitleDone: {
+      color: c.textMuted,
+      textDecorationLine: 'line-through',
+    },
+    cardBottom: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    cardDate: {
+      fontSize: 11,
+      color: c.textMuted,
+    },
+  })
+}
