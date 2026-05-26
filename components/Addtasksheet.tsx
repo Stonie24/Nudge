@@ -8,6 +8,7 @@ import {
     Pressable,
     StyleSheet,
     FlatList,
+    ScrollView,
     ActivityIndicator,
     Switch,
 } from 'react-native'
@@ -15,6 +16,7 @@ import { useAddTodayTask, useScheduleForToday } from '../hooks/useToday'
 import { useTasks } from '../hooks/useTasks'
 import { useTheme } from '../lib/ThemeContext'
 import { TagPicker, TagBadge } from './TagPicker'
+import { getTagColor } from '../lib/tagColor'
 import type { Colors } from '../lib/theme'
 import type { Task } from '../types'
 
@@ -33,6 +35,8 @@ export function AddTaskSheet({
     const [title, setTitle] = useState('')
     const [tag, setTag] = useState<string | undefined>()
     const [recurring, setRecurring] = useState(false)
+    const [search, setSearch] = useState('')
+    const [selectedTag, setSelectedTag] = useState<string | undefined>()
 
     const { colors } = useTheme()
     const styles = useMemo(() => createStyles(colors), [colors])
@@ -41,16 +45,33 @@ export function AddTaskSheet({
     const scheduleForToday = useScheduleForToday()
     const { data: allTasks, isLoading } = useTasks()
 
-    // Backlog = tasks not already on today's board and not recurring
-    const backlog = allTasks?.filter(t =>
-        !t.recurring && !todayTaskIds.includes(t.id) && !t.completed
-    ) ?? []
+    const backlog = useMemo(() => (
+        allTasks?.filter(t =>
+            !t.recurring && !todayTaskIds.includes(t.id) && !t.completed
+        ) ?? []
+    ), [allTasks, todayTaskIds])
+
+    const backlogTags = useMemo(() => {
+        const seen = new Set<string>()
+        backlog.forEach(t => { if (t.tag) seen.add(t.tag) })
+        return Array.from(seen)
+    }, [backlog])
+
+    const filteredBacklog = useMemo(() => {
+        const normalizedSearch = search.trim().toLowerCase()
+        let result = backlog
+        if (normalizedSearch) result = result.filter(t => t.title.toLowerCase().includes(normalizedSearch))
+        if (selectedTag) result = result.filter(t => t.tag === selectedTag)
+        return result
+    }, [backlog, search, selectedTag])
 
     function reset() {
         setTitle('')
         setTag(undefined)
         setRecurring(false)
         setTab('new')
+        setSearch('')
+        setSelectedTag(undefined)
     }
 
     function handleClose() {
@@ -149,15 +170,65 @@ export function AddTaskSheet({
                         </View>
                     ) : (
                         <View style={styles.backlog}>
+                            <TextInput
+                                style={styles.searchInput}
+                                placeholder="Search backlog..."
+                                placeholderTextColor={colors.placeholder}
+                                value={search}
+                                onChangeText={setSearch}
+                                clearButtonMode="while-editing"
+                                returnKeyType="search"
+                            />
+
+                            {backlogTags.length > 0 && (
+                                <ScrollView
+                                    horizontal
+                                    showsHorizontalScrollIndicator={false}
+                                    style={styles.tagRow}
+                                    contentContainerStyle={styles.tagRowContent}
+                                >
+                                    <TouchableOpacity
+                                        style={[styles.tagAllChip, !selectedTag && styles.tagAllChipActive]}
+                                        onPress={() => setSelectedTag(undefined)}
+                                        activeOpacity={0.7}
+                                    >
+                                        <Text style={[styles.tagAllChipText, !selectedTag && styles.tagAllChipTextActive]}>
+                                            All
+                                        </Text>
+                                    </TouchableOpacity>
+                                    {backlogTags.map(t => {
+                                        const c = getTagColor(t)
+                                        const isActive = selectedTag === t
+                                        return (
+                                            <TouchableOpacity
+                                                key={t}
+                                                style={[
+                                                    styles.tagChip,
+                                                    { backgroundColor: c.bg, borderColor: c.border },
+                                                    isActive && styles.tagChipActive,
+                                                ]}
+                                                onPress={() => setSelectedTag(isActive ? undefined : t)}
+                                                activeOpacity={0.7}
+                                            >
+                                                <Text style={[styles.tagChipText, { color: c.text }]}>{t}</Text>
+                                            </TouchableOpacity>
+                                        )
+                                    })}
+                                </ScrollView>
+                            )}
+
                             {isLoading ? (
                                 <ActivityIndicator color={colors.accent} style={styles.loader} />
-                            ) : backlog.length === 0 ? (
+                            ) : filteredBacklog.length === 0 ? (
                                 <Text style={styles.emptyText}>
-                                    No backlog tasks — everything is already on today's board or completed!
+                                    {backlog.length === 0
+                                        ? 'No backlog tasks — everything is already on today\'s board or completed!'
+                                        : 'No tasks match your search.'
+                                    }
                                 </Text>
                             ) : (
                                 <FlatList
-                                    data={backlog}
+                                    data={filteredBacklog}
                                     keyExtractor={item => item.id}
                                     style={styles.backlogList}
                                     renderItem={({ item }) => (
@@ -239,8 +310,30 @@ function createStyles(c: Colors) {
         },
         addBtnDisabled: { backgroundColor: c.btnDisabled },
         addBtnText: { color: c.btnPrimaryText, fontSize: 15, fontWeight: '500' },
-        backlog: { minHeight: 200 },
-        backlogList: { maxHeight: 400 },
+        backlog: { gap: 12 },
+        searchInput: {
+            height: 44, backgroundColor: c.inputBg,
+            borderWidth: 1, borderColor: c.border,
+            borderRadius: 12, paddingHorizontal: 16,
+            fontSize: 14, color: c.text,
+        },
+        tagRow: { flexGrow: 0 },
+        tagRowContent: { flexDirection: 'row', gap: 8 },
+        tagAllChip: {
+            paddingVertical: 6, paddingHorizontal: 14,
+            borderRadius: 100, borderWidth: 1,
+            borderColor: c.border, backgroundColor: c.surface,
+        },
+        tagAllChipActive: { backgroundColor: c.btnPrimary, borderColor: c.btnPrimary },
+        tagAllChipText: { fontSize: 12, color: c.textSecondary, fontWeight: '500' },
+        tagAllChipTextActive: { color: c.btnPrimaryText },
+        tagChip: {
+            paddingVertical: 6, paddingHorizontal: 14,
+            borderRadius: 100, borderWidth: 1.5,
+        },
+        tagChipActive: { borderWidth: 2.5 },
+        tagChipText: { fontSize: 12, fontWeight: '500' },
+        backlogList: { maxHeight: 320 },
         backlogRow: {
             flexDirection: 'row', alignItems: 'center',
             paddingVertical: 14, borderBottomWidth: 1,
