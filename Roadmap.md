@@ -29,6 +29,13 @@
 - [ ] Make it possible to log in with OAuth for both mobile and desktop
 - [ ] Costum profile picture thats get saved in the database, or pull the picture from the login service, if none of these still use defualt.
 
+## v0.23 — Power features
+- [ ] Optional due dates on tasks (overdue indicator, sort by due date)
+- [ ] Subtasks / checklists inside a task (flat checklist, progress shown on task card)
+- [ ] Smart daily suggestions (surface overdue + due-soon backlog items automatically)
+- [ ] Weekly overview screen (tasks completed, active tags, streak summary)
+- [ ] Focus mode (one task at a time, full screen, optional timer)
+
 ## v0.3 — Growth
 - [ ] iOS App Store submission
 - [ ] Android Play Store submission
