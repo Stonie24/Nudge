@@ -1,28 +1,36 @@
 import { useRef, useEffect } from 'react'
 import { Animated, Platform } from 'react-native'
+import * as Haptics from 'expo-haptics'
 
-/** Fade + slide-up entrance when a component mounts. */
+/**
+ * Fade + slide-up entrance when a component mounts.
+ * `delay` is intentionally captured once at mount time via a ref —
+ * the animation only runs once per mount and the delay should not change.
+ */
 export function useEntranceAnimation(delay = 0) {
   const opacity = useRef(new Animated.Value(0)).current
   const translateY = useRef(new Animated.Value(10)).current
+  // Capture the mount-time delay so the effect dependency array can be empty
+  // without a stale closure warning — delay is a "mount-only" parameter.
+  const mountDelay = useRef(delay).current
 
   useEffect(() => {
     Animated.parallel([
       Animated.timing(opacity, {
         toValue: 1,
         duration: 260,
-        delay,
+        delay: mountDelay,
         useNativeDriver: true,
       }),
       Animated.spring(translateY, {
         toValue: 0,
-        delay,
+        delay: mountDelay,
         tension: 120,
         friction: 14,
         useNativeDriver: true,
       }),
     ]).start()
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return { opacity, translateY }
 }
@@ -118,17 +126,19 @@ export function usePressAnimation() {
   return { scale, onPressIn, onPressOut }
 }
 
-/** Fire haptic feedback — silently skipped on web. */
+/**
+ * Fire haptic feedback — silently skipped on web.
+ * expo-haptics is a listed dependency so Metro can resolve it at build time.
+ */
 export async function triggerHaptic(style: 'light' | 'medium' = 'light') {
   if (Platform.OS === 'web') return
   try {
-    const Haptics = await import('expo-haptics')
-    const feedbackStyle =
+    await Haptics.impactAsync(
       style === 'medium'
         ? Haptics.ImpactFeedbackStyle.Medium
         : Haptics.ImpactFeedbackStyle.Light
-    await Haptics.impactAsync(feedbackStyle)
+    )
   } catch {
-    // expo-haptics not installed or unavailable — no-op
+    // Silently ignore if haptics are unavailable on the device
   }
 }
