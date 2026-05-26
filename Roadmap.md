@@ -20,7 +20,7 @@
 
 ## v0.22 — Polish & experience ← we are here
 - [x] Dark mode
-- [ ] GitHub issue feedback integration
+- [x] GitHub issue feedback integration
 - [ ] Animations & micro-interactions
 - [ ] Onboarding flow for new users
 - [ ] Push notifications / gentle nudge reminders
