@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React, { useState, useMemo } from 'react'
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { useTasks } from '../../hooks/useTasks'
 import { useTheme } from '../../lib/ThemeContext'
 import { showAlert } from '../../lib/alert'
+import { FeedbackSheet } from '../../components/FeedbackSheet'
 import type { Colors } from '../../lib/theme'
 
 function SettingRow({
@@ -50,6 +51,7 @@ export default function SettingsScreen() {
   const { data: tasks } = useTasks()
   const { isDark, toggle, colors } = useTheme()
   const styles = useMemo(() => createStyles(colors), [colors])
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
 
   const totalTasks = tasks?.length ?? 0
   const completedTasks = tasks?.filter(t => t.completed).length ?? 0
@@ -151,7 +153,7 @@ export default function SettingsScreen() {
             />
             <SettingRow
               label="Send feedback"
-              onPress={() => showAlert('Coming soon', 'Feedback form coming soon!')}
+              onPress={() => setFeedbackOpen(true)}
               colors={colors}
             />
           </View>
@@ -167,6 +169,8 @@ export default function SettingsScreen() {
         <Text style={styles.footer}>Made with care · Nudge v0.2</Text>
 
       </ScrollView>
+
+      <FeedbackSheet visible={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
     </SafeAreaView>
   )
 }

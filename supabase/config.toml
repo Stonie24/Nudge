@@ -1,4 +1,10 @@
 
+[functions.submit-feedback]
+enabled = true
+verify_jwt = true
+import_map = "./functions/submit-feedback/deno.json"
+entrypoint = "./functions/submit-feedback/index.ts"
+
 [functions.google-token-exchange]
 enabled = true
 verify_jwt = true
