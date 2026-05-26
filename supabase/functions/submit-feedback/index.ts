@@ -3,13 +3,26 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const GITHUB_TOKEN = Deno.env.get('GITHUB_TOKEN')
 const GITHUB_REPO = 'Stonie24/Nudge'
-const ALLOWED_ORIGIN = Deno.env.get('FEEDBACK_ALLOWED_ORIGIN')
 const JWT_BASE64URL_PART_REGEX = /^[A-Za-z0-9_-]+$/
 
-if (!ALLOWED_ORIGIN) {
-  console.warn(
-    'submit-feedback: FEEDBACK_ALLOWED_ORIGIN is not set; CORS origin is permissive ("*").'
-  )
+// Optional allowlist — comma-separated origins, e.g.
+//   "https://nudge.app,http://localhost:8081"
+// If unset, CORS is permissive ("*"). Fine for dev; set this in production.
+const ALLOWED_ORIGINS: Set<string> | null = (() => {
+  const raw = Deno.env.get('FEEDBACK_ALLOWED_ORIGIN')
+  if (!raw) {
+    console.warn('submit-feedback: FEEDBACK_ALLOWED_ORIGIN not set; CORS is permissive ("*").')
+    return null
+  }
+  return new Set(raw.split(',').map(o => o.trim()).filter(Boolean))
+})()
+
+/** Returns the echoed origin, '*' if no allowlist, or null to deny. */
+function resolveOrigin(req: Request): string | null {
+  const origin = req.headers.get('Origin') ?? ''
+  if (!ALLOWED_ORIGINS) return '*'
+  if (ALLOWED_ORIGINS.has(origin)) return origin
+  return null
 }
 
 function hasJwtShape(token: string) {
@@ -33,19 +46,15 @@ function isBase64UrlDecodable(part: string) {
   }
 }
 
-function getCorsHeaders(origin: string | null, includeOrigin = true) {
-  const headers: Record<string, string> = {
+function getCorsHeaders(origin: string) {
+  return {
+    'Access-Control-Allow-Origin': origin,
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Access-Control-Allow-Methods': 'OPTIONS, POST',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
   }
-
-  if (!includeOrigin) return headers
-
-  headers['Access-Control-Allow-Origin'] = ALLOWED_ORIGIN || '*'
-  return headers
 }
 
-function json(data: unknown, status = 200, origin: string | null = null) {
+function json(data: unknown, status: number, origin: string) {
   return new Response(JSON.stringify(data), {
     status,
     headers: { ...getCorsHeaders(origin), 'Content-Type': 'application/json' },
@@ -53,24 +62,22 @@ function json(data: unknown, status = 200, origin: string | null = null) {
 }
 
 serve(async (req) => {
-  const origin = req.headers.get('Origin')
+  // Resolve origin FIRST — unknown origins are denied before CORS headers are
+  // ever returned, including on OPTIONS preflight. This means the browser's
+  // preflight itself fails for disallowed origins rather than succeeding and
+  // then hitting a 403 on the actual POST.
+  const origin = resolveOrigin(req)
+  if (origin === null) {
+    console.warn('submit-feedback: rejected disallowed origin', req.headers.get('Origin'))
+    return new Response(null, { status: 403 })
+  }
 
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: getCorsHeaders(origin) })
+    return new Response(null, { status: 204, headers: getCorsHeaders(origin) })
   }
 
   if (req.method !== 'POST') {
-    return new Response('Method not allowed', {
-      status: 405,
-      headers: { ...getCorsHeaders(origin), Allow: 'POST' },
-    })
-  }
-
-  if (ALLOWED_ORIGIN && origin !== ALLOWED_ORIGIN) {
-    return new Response(JSON.stringify({ error: 'Forbidden' }), {
-      status: 403,
-      headers: { 'Content-Type': 'application/json' },
-    })
+    return new Response(null, { status: 405, headers: { ...getCorsHeaders(origin), Allow: 'POST' } })
   }
 
   // Fail fast if misconfigured — logged server-side only
