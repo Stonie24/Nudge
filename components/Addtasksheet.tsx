@@ -51,18 +51,22 @@ export function AddTaskSheet({
         ) ?? []
     ), [allTasks, todayTaskIds])
 
-    const backlogTags = useMemo(() => {
-        const seen = new Set<string>()
-        backlog.forEach(t => { if (t.tag) seen.add(t.tag) })
-        return Array.from(seen)
-    }, [backlog])
+    const backlogTags = useMemo(
+        () => Array.from(
+            backlog.reduce((seen, task) => {
+                if (task.tag) seen.add(task.tag)
+                return seen
+            }, new Set<string>())
+        ),
+        [backlog]
+    )
 
     const filteredBacklog = useMemo(() => {
         const normalizedSearch = search.trim().toLowerCase()
-        let result = backlog
-        if (normalizedSearch) result = result.filter(t => t.title.toLowerCase().includes(normalizedSearch))
-        if (selectedTag) result = result.filter(t => t.tag === selectedTag)
-        return result
+        return backlog.filter(task =>
+            (!normalizedSearch || task.title.toLowerCase().includes(normalizedSearch)) &&
+            (!selectedTag || task.tag === selectedTag)
+        )
     }, [backlog, search, selectedTag])
 
     function reset() {
