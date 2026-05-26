@@ -13,13 +13,14 @@
 - [x] Settings screen (account info, stats, sign out)
 - [x] Responsive layout (list on mobile, kanban on desktop)
 
-## v0.21 — Polish & experience ← we are here
+## v0.21 — Polish & experience ✅
 - [x] Add tasks to backlog
 - [x] Search for tasks in backlog with Tags aswell
 - [x] Daily tasks should be a different color node in calendar
 
-## v0.2 — Polish & experience ← we are here
+## v0.22 — Polish & experience ← we are here
 - [x] Dark mode
+- [ ] GitHub issue feedback integration
 - [ ] Animations & micro-interactions
 - [ ] Onboarding flow for new users
 - [ ] Push notifications / gentle nudge reminders
