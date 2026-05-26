@@ -3,33 +3,54 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const GITHUB_TOKEN = Deno.env.get('GITHUB_TOKEN')
 const GITHUB_REPO = 'Stonie24/Nudge'
+const ALLOWED_ORIGIN = Deno.env.get('FEEDBACK_ALLOWED_ORIGIN')
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+function getCorsHeaders(origin: string | null) {
+  return {
+    'Access-Control-Allow-Origin':
+      ALLOWED_ORIGIN && origin === ALLOWED_ORIGIN ? ALLOWED_ORIGIN : '*',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'OPTIONS, POST',
+  }
 }
 
-function json(data: unknown, status = 200) {
+function json(data: unknown, status = 200, origin: string | null = null) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    headers: { ...getCorsHeaders(origin), 'Content-Type': 'application/json' },
   })
 }
 
 serve(async (req) => {
+  const origin = req.headers.get('Origin')
+
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: getCorsHeaders(origin) })
+  }
+
+  if (req.method !== 'POST') {
+    return new Response('Method not allowed', {
+      status: 405,
+      headers: { ...getCorsHeaders(origin), Allow: 'POST' },
+    })
+  }
+
+  if (ALLOWED_ORIGIN && origin && origin !== ALLOWED_ORIGIN) {
+    return json({ error: 'Forbidden' }, 403, origin)
   }
 
   // Fail fast if misconfigured — logged server-side only
   if (!GITHUB_TOKEN) {
     console.error('submit-feedback: GITHUB_TOKEN secret is not set')
-    return json({ error: 'Service misconfigured' }, 500)
+    return json({ error: 'Service misconfigured' }, 500, origin)
   }
 
   try {
     const authHeader = req.headers.get('Authorization')
-    if (!authHeader) return json({ error: 'Unauthorized' }, 401)
+    const jwt = authHeader?.replace(/^Bearer\s+/i, '')
+    if (!jwt || jwt.split('.').length !== 3) {
+      return json({ error: 'Unauthorized' }, 401, origin)
+    }
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -38,10 +59,10 @@ serve(async (req) => {
     )
 
     const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) return json({ error: 'Unauthorized' }, 401)
+    if (authError || !user) return json({ error: 'Unauthorized' }, 401, origin)
 
     const { title, body } = await req.json()
-    if (!body?.trim()) return json({ error: 'Feedback body is required' }, 400)
+    if (!body?.trim()) return json({ error: 'Feedback body is required' }, 400, origin)
 
     const issueTitle = title?.trim() || 'User feedback'
     // user.id is a UUID — no PII exposed in the public issue
@@ -60,13 +81,13 @@ serve(async (req) => {
 
     if (!ghRes.ok) {
       console.error('submit-feedback: GitHub API error', ghRes.status, await ghRes.text())
-      return json({ error: 'Failed to create issue' }, 502)
+      return json({ error: 'Failed to create issue' }, 502, origin)
     }
 
     const issue = await ghRes.json()
-    return json({ url: issue.html_url, number: issue.number }, 201)
+    return json({ url: issue.html_url, number: issue.number }, 201, origin)
   } catch (e) {
     console.error('submit-feedback: unhandled error', e)
-    return json({ error: 'Internal server error' }, 500)
+    return json({ error: 'Internal server error' }, 500, origin)
   }
 })
