@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import {
   View,
   Text,
@@ -10,7 +10,9 @@ import {
   ActivityIndicator,
 } from 'react-native'
 import { useAddTask } from '../hooks/useTasks'
+import { useTheme } from '../lib/ThemeContext'
 import { TagPicker } from './TagPicker'
+import type { Colors } from '../lib/theme'
 
 export function AddBacklogTaskSheet({
   visible,
@@ -22,6 +24,9 @@ export function AddBacklogTaskSheet({
   const [title, setTitle] = useState('')
   const [tag, setTag] = useState<string | undefined>()
   const addTask = useAddTask()
+
+  const { colors } = useTheme()
+  const styles = useMemo(() => createStyles(colors), [colors])
 
   function reset() {
     setTitle('')
@@ -61,7 +66,7 @@ export function AddBacklogTaskSheet({
             <TextInput
               style={styles.input}
               placeholder="What needs to be done?"
-              placeholderTextColor="#A8A29E"
+              placeholderTextColor={colors.placeholder}
               value={title}
               onChangeText={setTitle}
               autoFocus
@@ -79,7 +84,7 @@ export function AddBacklogTaskSheet({
             activeOpacity={0.8}
           >
             {addTask.isPending
-              ? <ActivityIndicator color="#FAF8F4" />
+              ? <ActivityIndicator color={colors.btnPrimaryText} />
               : <Text style={styles.addBtnText}>Add to backlog</Text>
             }
           </TouchableOpacity>
@@ -89,62 +94,64 @@ export function AddBacklogTaskSheet({
   )
 }
 
-const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-    justifyContent: 'flex-end',
-  },
-  sheet: {
-    backgroundColor: '#FAF8F4',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 24,
-    paddingBottom: 48,
-    gap: 16,
-  },
-  handle: {
-    width: 36, height: 4, borderRadius: 2,
-    backgroundColor: '#E7E5E4',
-    alignSelf: 'center', marginBottom: 4,
-  },
-  title: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: '#1C1917',
-  },
-  subtitle: {
-    fontSize: 13,
-    color: '#A8A29E',
-    lineHeight: 18,
-    marginTop: -8,
-  },
-  fields: {
-    gap: 12,
-  },
-  input: {
-    height: 50,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E7E5E4',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    fontSize: 15,
-    color: '#1C1917',
-  },
-  addBtn: {
-    height: 52,
-    backgroundColor: '#1C1917',
-    borderRadius: 100,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  addBtnDisabled: {
-    backgroundColor: '#E7E5E4',
-  },
-  addBtnText: {
-    color: '#FAF8F4',
-    fontSize: 15,
-    fontWeight: '500',
-  },
-})
+function createStyles(c: Colors) {
+  return StyleSheet.create({
+    backdrop: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      justifyContent: 'flex-end',
+    },
+    sheet: {
+      backgroundColor: c.surface,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      padding: 24,
+      paddingBottom: 48,
+      gap: 16,
+    },
+    handle: {
+      width: 36, height: 4, borderRadius: 2,
+      backgroundColor: c.border,
+      alignSelf: 'center', marginBottom: 4,
+    },
+    title: {
+      fontSize: 17,
+      fontWeight: '600',
+      color: c.text,
+    },
+    subtitle: {
+      fontSize: 13,
+      color: c.textMuted,
+      lineHeight: 18,
+      marginTop: -8,
+    },
+    fields: {
+      gap: 12,
+    },
+    input: {
+      height: 50,
+      backgroundColor: c.inputBg,
+      borderWidth: 1,
+      borderColor: c.border,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      fontSize: 15,
+      color: c.text,
+    },
+    addBtn: {
+      height: 52,
+      backgroundColor: c.btnPrimary,
+      borderRadius: 100,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    addBtnDisabled: {
+      backgroundColor: c.btnDisabled,
+    },
+    addBtnText: {
+      color: c.btnPrimaryText,
+      fontSize: 15,
+      fontWeight: '500',
+    },
+  })
+}

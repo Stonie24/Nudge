@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import {
   View,
   Text,
@@ -13,8 +13,10 @@ import {
 import { useAddEvent, useDeleteEvent } from '../hooks/useCalendar'
 import { useCompleteTask, useUncompleteTask } from '../hooks/useTasks'
 import { useCompleteRecurring, useUncompleteRecurring } from '../hooks/useToday'
+import { useTheme } from '../lib/ThemeContext'
 import { TagBadge } from './TagPicker'
 import { showAlert } from '../lib/alert'
+import type { Colors } from '../lib/theme'
 import type { CalendarEvent, Task } from '../types'
 
 function EventRow({
@@ -24,6 +26,8 @@ function EventRow({
   event: CalendarEvent
   onDelete?: () => void
 }) {
+  const { colors } = useTheme()
+  const styles = useMemo(() => createStyles(colors), [colors])
   const sourceIcon = event.source === 'google' ? 'G' : event.source === 'apple' ? '' : '◆'
 
   return (
@@ -62,6 +66,8 @@ function TaskRow({
   onComplete: () => void
   onUncomplete: () => void
 }) {
+  const { colors } = useTheme()
+  const styles = useMemo(() => createStyles(colors), [colors])
   const isDone = task.recurring ? completedToday : task.completed
   return (
     <TouchableOpacity
@@ -95,6 +101,8 @@ function AddEventForm({
   const [endTime, setEndTime] = useState('10:00')
   const [allDay, setAllDay] = useState(false)
   const addEvent = useAddEvent()
+  const { colors } = useTheme()
+  const styles = useMemo(() => createStyles(colors), [colors])
 
   async function handleAdd() {
     if (!title.trim()) return
@@ -116,7 +124,7 @@ function AddEventForm({
       <TextInput
         style={styles.input}
         placeholder="Event title"
-        placeholderTextColor="#A8A29E"
+        placeholderTextColor={colors.placeholder}
         value={title}
         onChangeText={setTitle}
         autoFocus
@@ -129,7 +137,7 @@ function AddEventForm({
             value={startTime}
             onChangeText={setStartTime}
             placeholder="09:00"
-            placeholderTextColor="#A8A29E"
+            placeholderTextColor={colors.placeholder}
             editable={!allDay}
           />
         </View>
@@ -140,7 +148,7 @@ function AddEventForm({
             value={endTime}
             onChangeText={setEndTime}
             placeholder="10:00"
-            placeholderTextColor="#A8A29E"
+            placeholderTextColor={colors.placeholder}
             editable={!allDay}
           />
         </View>
@@ -185,6 +193,9 @@ export function DaySheet({
   onClose: () => void
 }) {
   const [showAddForm, setShowAddForm] = useState(false)
+  const { colors } = useTheme()
+  const styles = useMemo(() => createStyles(colors), [colors])
+
   const deleteEvent = useDeleteEvent()
   const completeTask = useCompleteTask()
   const uncompleteTask = useUncompleteTask()
@@ -281,139 +292,141 @@ export function DaySheet({
   )
 }
 
-const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-    justifyContent: 'flex-end',
-  },
-  sheet: {
-    backgroundColor: '#FAF8F4',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 24,
-    paddingBottom: 48,
-    maxHeight: '85%',
-  },
-  handle: {
-    width: 36, height: 4, borderRadius: 2,
-    backgroundColor: '#E7E5E4',
-    alignSelf: 'center', marginBottom: 20,
-  },
-  sheetHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-  sheetTitle: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: '#1C1917',
-    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
-  },
-  addEventBtn: {
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-    backgroundColor: '#EAF3DE',
-    borderRadius: 100,
-  },
-  addEventBtnText: {
-    fontSize: 13,
-    color: '#3B6D11',
-    fontWeight: '500',
-  },
-  scroll: { maxHeight: 500 },
-  section: { marginBottom: 24 },
-  sectionLabel: {
-    fontSize: 11, fontWeight: '600', color: '#A8A29E',
-    letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 8,
-  },
-  eventRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F5F3EF',
-  },
-  eventBar: {
-    width: 3,
-    height: 36,
-    borderRadius: 2,
-  },
-  eventContent: { flex: 1 },
-  eventTitle: { fontSize: 14, color: '#1C1917', fontWeight: '500' },
-  eventTime: { fontSize: 12, color: '#A8A29E', marginTop: 2 },
-  sourceTag: {
-    width: 24, height: 24, borderRadius: 12,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  sourceText: { fontSize: 11, fontWeight: '700' },
-  taskRow: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingVertical: 12, borderBottomWidth: 1,
-    borderBottomColor: '#F5F3EF', gap: 12,
-  },
-  checkbox: {
-    width: 20, height: 20, borderRadius: 10,
-    borderWidth: 1.5, borderColor: '#D6D3D1',
-    alignItems: 'center', justifyContent: 'center',
-  },
-  checkboxDone: { backgroundColor: '#639922', borderColor: '#639922' },
-  checkmark: {
-    width: 5, height: 9, borderRightWidth: 2,
-    borderBottomWidth: 2, borderColor: '#FFFFFF',
-    transform: [{ rotate: '40deg' }, { translateY: -1 }],
-  },
-  taskContent: { flex: 1, gap: 3 },
-  taskTitle: { fontSize: 14, color: '#1C1917' },
-  taskTitleDone: { color: '#A8A29E', textDecorationLine: 'line-through' },
-  recurringBadge: { fontSize: 14, color: '#F59F0A' },
-  addForm: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#E7E5E4',
-    padding: 16,
-    marginBottom: 20,
-    gap: 12,
-  },
-  addFormTitle: { fontSize: 15, fontWeight: '600', color: '#1C1917' },
-  input: {
-    height: 44, backgroundColor: '#FAF8F4',
-    borderWidth: 1, borderColor: '#E7E5E4',
-    borderRadius: 10, paddingHorizontal: 14,
-    fontSize: 14, color: '#1C1917',
-  },
-  timeRow: { flexDirection: 'row', gap: 10, alignItems: 'flex-end' },
-  timeField: { flex: 1, gap: 4 },
-  timeLabel: { fontSize: 11, color: '#A8A29E', fontWeight: '500' },
-  timeInput: { textAlign: 'center' },
-  allDayBtn: {
-    height: 44, paddingHorizontal: 12,
-    borderRadius: 10, borderWidth: 1,
-    borderColor: '#E7E5E4', alignItems: 'center', justifyContent: 'center',
-  },
-  allDayBtnActive: { backgroundColor: '#EAF3DE', borderColor: '#639922' },
-  allDayText: { fontSize: 12, color: '#78716C', fontWeight: '500' },
-  allDayTextActive: { color: '#3B6D11' },
-  formActions: { flexDirection: 'row', gap: 10 },
-  cancelBtn: {
-    flex: 1, height: 44, borderRadius: 100,
-    borderWidth: 1, borderColor: '#E7E5E4',
-    alignItems: 'center', justifyContent: 'center',
-  },
-  cancelBtnText: { fontSize: 14, color: '#78716C' },
-  saveBtn: {
-    flex: 1, height: 44, borderRadius: 100,
-    backgroundColor: '#1C1917',
-    alignItems: 'center', justifyContent: 'center',
-  },
-  saveBtnDisabled: { backgroundColor: '#E7E5E4' },
-  saveBtnText: { fontSize: 14, color: '#FAF8F4', fontWeight: '500' },
-  emptyText: {
-    fontSize: 14, color: '#A8A29E',
-    textAlign: 'center', marginTop: 24,
-  },
-})
+function createStyles(c: Colors) {
+  return StyleSheet.create({
+    backdrop: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      justifyContent: 'flex-end',
+    },
+    sheet: {
+      backgroundColor: c.surface,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      padding: 24,
+      paddingBottom: 48,
+      maxHeight: '85%',
+    },
+    handle: {
+      width: 36, height: 4, borderRadius: 2,
+      backgroundColor: c.border,
+      alignSelf: 'center', marginBottom: 20,
+    },
+    sheetHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 20,
+    },
+    sheetTitle: {
+      fontSize: 17,
+      fontWeight: '600',
+      color: c.text,
+      fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+    },
+    addEventBtn: {
+      paddingVertical: 6,
+      paddingHorizontal: 14,
+      backgroundColor: c.accentBg,
+      borderRadius: 100,
+    },
+    addEventBtnText: {
+      fontSize: 13,
+      color: c.accentText,
+      fontWeight: '500',
+    },
+    scroll: { maxHeight: 500 },
+    section: { marginBottom: 24 },
+    sectionLabel: {
+      fontSize: 11, fontWeight: '600', color: c.textMuted,
+      letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 8,
+    },
+    eventRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      paddingVertical: 10,
+      borderBottomWidth: 1,
+      borderBottomColor: c.borderLight,
+    },
+    eventBar: {
+      width: 3,
+      height: 36,
+      borderRadius: 2,
+    },
+    eventContent: { flex: 1 },
+    eventTitle: { fontSize: 14, color: c.text, fontWeight: '500' },
+    eventTime: { fontSize: 12, color: c.textMuted, marginTop: 2 },
+    sourceTag: {
+      width: 24, height: 24, borderRadius: 12,
+      alignItems: 'center', justifyContent: 'center',
+    },
+    sourceText: { fontSize: 11, fontWeight: '700' },
+    taskRow: {
+      flexDirection: 'row', alignItems: 'center',
+      paddingVertical: 12, borderBottomWidth: 1,
+      borderBottomColor: c.borderLight, gap: 12,
+    },
+    checkbox: {
+      width: 20, height: 20, borderRadius: 10,
+      borderWidth: 1.5, borderColor: c.textFaint,
+      alignItems: 'center', justifyContent: 'center',
+    },
+    checkboxDone: { backgroundColor: c.accent, borderColor: c.accent },
+    checkmark: {
+      width: 5, height: 9, borderRightWidth: 2,
+      borderBottomWidth: 2, borderColor: '#FFFFFF',
+      transform: [{ rotate: '40deg' }, { translateY: -1 }],
+    },
+    taskContent: { flex: 1, gap: 3 },
+    taskTitle: { fontSize: 14, color: c.text },
+    taskTitleDone: { color: c.textMuted, textDecorationLine: 'line-through' },
+    recurringBadge: { fontSize: 14, color: '#F59F0A' },
+    addForm: {
+      backgroundColor: c.surfaceMuted,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: c.border,
+      padding: 16,
+      marginBottom: 20,
+      gap: 12,
+    },
+    addFormTitle: { fontSize: 15, fontWeight: '600', color: c.text },
+    input: {
+      height: 44, backgroundColor: c.inputBg,
+      borderWidth: 1, borderColor: c.border,
+      borderRadius: 10, paddingHorizontal: 14,
+      fontSize: 14, color: c.text,
+    },
+    timeRow: { flexDirection: 'row', gap: 10, alignItems: 'flex-end' },
+    timeField: { flex: 1, gap: 4 },
+    timeLabel: { fontSize: 11, color: c.textMuted, fontWeight: '500' },
+    timeInput: { textAlign: 'center' },
+    allDayBtn: {
+      height: 44, paddingHorizontal: 12,
+      borderRadius: 10, borderWidth: 1,
+      borderColor: c.border, alignItems: 'center', justifyContent: 'center',
+    },
+    allDayBtnActive: { backgroundColor: c.accentBg, borderColor: c.accentBorder },
+    allDayText: { fontSize: 12, color: c.textSecondary, fontWeight: '500' },
+    allDayTextActive: { color: c.accentText },
+    formActions: { flexDirection: 'row', gap: 10 },
+    cancelBtn: {
+      flex: 1, height: 44, borderRadius: 100,
+      borderWidth: 1, borderColor: c.border,
+      alignItems: 'center', justifyContent: 'center',
+    },
+    cancelBtnText: { fontSize: 14, color: c.textSecondary },
+    saveBtn: {
+      flex: 1, height: 44, borderRadius: 100,
+      backgroundColor: c.btnPrimary,
+      alignItems: 'center', justifyContent: 'center',
+    },
+    saveBtnDisabled: { backgroundColor: c.btnDisabled },
+    saveBtnText: { fontSize: 14, color: c.btnPrimaryText, fontWeight: '500' },
+    emptyText: {
+      fontSize: 14, color: c.textMuted,
+      textAlign: 'center', marginTop: 24,
+    },
+  })
+}

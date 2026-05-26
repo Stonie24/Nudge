@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Link, useRouter } from 'expo-router'
 import { supabase } from '../../lib/supabase'
 import React from 'react'
@@ -13,7 +13,8 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native'
-
+import { useTheme } from '../../lib/ThemeContext'
+import type { Colors } from '../../lib/theme'
 
 export default function SignupScreen() {
   const [email, setEmail] = useState('')
@@ -21,6 +22,9 @@ export default function SignupScreen() {
   const [confirm, setConfirm] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+
+  const { colors } = useTheme()
+  const styles = useMemo(() => createStyles(colors), [colors])
 
   async function handleSignup() {
     if (!email || !password || !confirm) {
@@ -72,7 +76,7 @@ export default function SignupScreen() {
             <TextInput
               style={styles.input}
               placeholder="you@example.com"
-              placeholderTextColor="#A8A29E"
+              placeholderTextColor={colors.placeholder}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
@@ -86,7 +90,7 @@ export default function SignupScreen() {
             <TextInput
               style={styles.input}
               placeholder="At least 6 characters"
-              placeholderTextColor="#A8A29E"
+              placeholderTextColor={colors.placeholder}
               secureTextEntry
               value={password}
               onChangeText={setPassword}
@@ -98,7 +102,7 @@ export default function SignupScreen() {
             <TextInput
               style={styles.input}
               placeholder="••••••••"
-              placeholderTextColor="#A8A29E"
+              placeholderTextColor={colors.placeholder}
               secureTextEntry
               value={confirm}
               onChangeText={setConfirm}
@@ -112,7 +116,7 @@ export default function SignupScreen() {
             activeOpacity={0.85}
           >
             {loading
-              ? <ActivityIndicator color="#FAF8F4" />
+              ? <ActivityIndicator color={colors.btnPrimaryText} />
               : <Text style={styles.buttonText}>Create account</Text>
             }
           </TouchableOpacity>
@@ -135,98 +139,100 @@ export default function SignupScreen() {
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FAF8F4',
-  },
-  inner: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 28,
-    paddingBottom: 40,
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: 40,
-  },
-  dot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#639922',
-    marginBottom: 12,
-  },
-  logo: {
-    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
-    fontSize: 36,
-    fontWeight: '700',
-    color: '#1C1917',
-    letterSpacing: -1,
-    marginBottom: 6,
-  },
-  tagline: {
-    fontSize: 15,
-    color: '#78716C',
-    fontWeight: '300',
-  },
-  form: {
-    gap: 14,
-  },
-  field: {
-    gap: 6,
-  },
-  label: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: '#57534E',
-    marginLeft: 2,
-  },
-  input: {
-    height: 50,
-    borderWidth: 1,
-    borderColor: '#E7E5E4',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    fontSize: 15,
-    color: '#1C1917',
-    backgroundColor: '#FFFFFF',
-  },
-  button: {
-    height: 52,
-    backgroundColor: '#1C1917',
-    borderRadius: 100,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 6,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    color: '#FAF8F4',
-    fontSize: 15,
-    fontWeight: '500',
-  },
-  hint: {
-    fontSize: 11,
-    color: '#A8A29E',
-    textAlign: 'center',
-    lineHeight: 16,
-    marginTop: 4,
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 32,
-  },
-  footerText: {
-    fontSize: 14,
-    color: '#78716C',
-  },
-  footerLink: {
-    fontSize: 14,
-    color: '#3B6D11',
-    fontWeight: '500',
-  },
-})
+function createStyles(c: Colors) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: c.bg,
+    },
+    inner: {
+      flex: 1,
+      justifyContent: 'center',
+      paddingHorizontal: 28,
+      paddingBottom: 40,
+    },
+    header: {
+      alignItems: 'center',
+      marginBottom: 40,
+    },
+    dot: {
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+      backgroundColor: c.accent,
+      marginBottom: 12,
+    },
+    logo: {
+      fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+      fontSize: 36,
+      fontWeight: '700',
+      color: c.text,
+      letterSpacing: -1,
+      marginBottom: 6,
+    },
+    tagline: {
+      fontSize: 15,
+      color: c.textSecondary,
+      fontWeight: '300',
+    },
+    form: {
+      gap: 14,
+    },
+    field: {
+      gap: 6,
+    },
+    label: {
+      fontSize: 13,
+      fontWeight: '500',
+      color: c.textSecondary,
+      marginLeft: 2,
+    },
+    input: {
+      height: 50,
+      borderWidth: 1,
+      borderColor: c.border,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      fontSize: 15,
+      color: c.text,
+      backgroundColor: c.inputBg,
+    },
+    button: {
+      height: 52,
+      backgroundColor: c.btnPrimary,
+      borderRadius: 100,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: 6,
+    },
+    buttonDisabled: {
+      opacity: 0.6,
+    },
+    buttonText: {
+      color: c.btnPrimaryText,
+      fontSize: 15,
+      fontWeight: '500',
+    },
+    hint: {
+      fontSize: 11,
+      color: c.textMuted,
+      textAlign: 'center',
+      lineHeight: 16,
+      marginTop: 4,
+    },
+    footer: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      marginTop: 32,
+    },
+    footerText: {
+      fontSize: 14,
+      color: c.textSecondary,
+    },
+    footerLink: {
+      fontSize: 14,
+      color: c.accentText,
+      fontWeight: '500',
+    },
+  })
+}
