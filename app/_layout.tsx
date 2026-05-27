@@ -10,7 +10,7 @@ import * as WebBrowser from 'expo-web-browser'
 WebBrowser.maybeCompleteAuthSession()
 
 function AuthGate() {
-  const { user, loading } = useAuth()
+  const { user, loading, needsOnboarding } = useAuth()
   const segments = useSegments()
   const router = useRouter()
   const { isDark } = useTheme()
@@ -18,12 +18,19 @@ function AuthGate() {
   useEffect(() => {
     if (loading) return
     const inAuthGroup = segments[0] === '(auth)'
+    const inOnboardingGroup = segments[0] === '(onboarding)'
     if (!user && !inAuthGroup) {
       router.replace('/(auth)/login')
     } else if (user && inAuthGroup) {
+      if (needsOnboarding) {
+        router.replace('/(onboarding)/')
+      } else {
+        router.replace('/(tabs)/')
+      }
+    } else if (user && inOnboardingGroup && !needsOnboarding) {
       router.replace('/(tabs)/')
     }
-  }, [user, loading]) // segments intentionally omitted — we only want to react to auth changes
+  }, [user, loading, needsOnboarding]) // segments intentionally omitted — we only want to react to auth changes
 
   return (
     <>

@@ -21,5 +21,7 @@ export function useAuth() {
 
   const signOut = () => supabase.auth.signOut()
 
-  return { user, loading, signOut }
+  const needsOnboarding = user !== null && user.user_metadata?.onboarding_completed !== true
+
+  return { user, loading, signOut, needsOnboarding }
 }
