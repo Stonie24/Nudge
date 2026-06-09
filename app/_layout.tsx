@@ -21,13 +21,9 @@ function AuthGate() {
     const inOnboardingGroup = segments[0] === '(onboarding)'
     if (!user && !inAuthGroup) {
       router.replace('/(auth)/login')
-    } else if (user && inAuthGroup) {
-      if (needsOnboarding) {
-        router.replace('/(onboarding)/')
-      } else {
-        router.replace('/(tabs)/')
-      }
-    } else if (user && inOnboardingGroup && !needsOnboarding) {
+    } else if (user && needsOnboarding && !inOnboardingGroup) {
+      router.replace('/(onboarding)/')
+    } else if (user && !needsOnboarding && (inAuthGroup || inOnboardingGroup)) {
       router.replace('/(tabs)/')
     }
   }, [user, loading, needsOnboarding]) // segments intentionally omitted — we only want to react to auth changes
