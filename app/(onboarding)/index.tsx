@@ -110,9 +110,16 @@ export default function OnboardingScreen() {
     }
     // Last step — mark onboarding complete and navigate to the app
     setFinishing(true)
-    await supabase.auth.updateUser({ data: { onboarding_completed: true } })
-    setFinishing(false)
-    router.replace('/(tabs)/')
+    try {
+      const { error } = await supabase.auth.updateUser({ data: { onboarding_completed: true } })
+      if (error) {
+        console.warn('Failed to persist onboarding completion:', error.message)
+        return
+      }
+      router.replace('/(tabs)/')
+    } finally {
+      setFinishing(false)
+    }
   }
 
   function handleBack() {
@@ -178,9 +185,16 @@ export default function OnboardingScreen() {
               onPress={async () => {
                 triggerHaptic('light')
                 setFinishing(true)
-                await supabase.auth.updateUser({ data: { onboarding_completed: true } })
-                setFinishing(false)
-                router.replace('/(tabs)/')
+                try {
+                  const { error } = await supabase.auth.updateUser({ data: { onboarding_completed: true } })
+                  if (error) {
+                    console.warn('Failed to persist onboarding completion:', error.message)
+                    return
+                  }
+                  router.replace('/(tabs)/')
+                } finally {
+                  setFinishing(false)
+                }
               }}
               activeOpacity={0.7}
               disabled={finishing}
