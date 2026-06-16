@@ -14,6 +14,8 @@ import { useTasks } from '../../hooks/useTasks'
 import { useTheme } from '../../lib/ThemeContext'
 import { showAlert } from '../../lib/alert'
 import { FeedbackSheet } from '../../components/FeedbackSheet'
+import { useNudgeNotifications, NUDGE_TIME_LABELS, supportsNotifications } from '../../hooks/usePushNotifications'
+import type { NudgeTime } from '../../hooks/usePushNotifications'
 import type { Colors } from '../../lib/theme'
 
 function SettingRow({
@@ -52,6 +54,7 @@ export default function SettingsScreen() {
   const { isDark, toggle, colors } = useTheme()
   const styles = useMemo(() => createStyles(colors), [colors])
   const [feedbackOpen, setFeedbackOpen] = useState(false)
+  const { prefs, loading: notifLoading, enable, disable, changeTime } = useNudgeNotifications()
 
   const totalTasks = tasks?.length ?? 0
   const completedTasks = tasks?.filter(t => t.completed).length ?? 0
@@ -140,6 +143,44 @@ export default function SettingsScreen() {
             />
           </View>
         </View>
+
+        {/* Notifications section — native only */}
+        {supportsNotifications && (
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>Notifications</Text>
+            <View style={styles.sectionCard}>
+              <View style={styles.row}>
+                <Text style={styles.rowLabel}>Daily nudge reminder</Text>
+                <Switch
+                  value={prefs.enabled}
+                  disabled={notifLoading}
+                  onValueChange={async (val) => {
+                    if (val) await enable(prefs.time)
+                    else await disable()
+                  }}
+                  trackColor={{ false: colors.border, true: colors.accent }}
+                  thumbColor={colors.surface}
+                />
+              </View>
+              {prefs.enabled && (
+                <View style={styles.timeOptions}>
+                  {(Object.keys(NUDGE_TIME_LABELS) as NudgeTime[]).map((t) => (
+                    <TouchableOpacity
+                      key={t}
+                      style={[styles.timeChip, prefs.time === t && styles.timeChipActive]}
+                      onPress={() => changeTime(t)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[styles.timeChipText, prefs.time === t && styles.timeChipTextActive]}>
+                        {NUDGE_TIME_LABELS[t]}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </View>
+          </View>
+        )}
 
         {/* About section */}
         <View style={styles.section}>
@@ -306,6 +347,33 @@ function createStyles(c: Colors) {
       fontSize: 12,
       color: c.textFaint,
       marginTop: 12,
+    },
+    timeOptions: {
+      paddingHorizontal: 16,
+      paddingBottom: 14,
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+    },
+    timeChip: {
+      paddingVertical: 6,
+      paddingHorizontal: 12,
+      borderRadius: 100,
+      borderWidth: 1,
+      borderColor: c.border,
+      backgroundColor: c.surfaceMuted,
+    },
+    timeChipActive: {
+      borderColor: c.accentBorder,
+      backgroundColor: c.accentBg,
+    },
+    timeChipText: {
+      fontSize: 13,
+      color: c.textMuted,
+    },
+    timeChipTextActive: {
+      color: c.accentText,
+      fontWeight: '500',
     },
   })
 }
