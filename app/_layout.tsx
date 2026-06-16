@@ -6,8 +6,20 @@ import { useAuth } from '../hooks/useAuth'
 import { ThemeProvider, useTheme } from '../lib/ThemeContext'
 import { StatusBar } from 'expo-status-bar'
 import * as WebBrowser from 'expo-web-browser'
+import * as Notifications from 'expo-notifications'
+import { Platform } from 'react-native'
 
 WebBrowser.maybeCompleteAuthSession()
+
+if (Platform.OS !== 'web') {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: false,
+      shouldSetBadge: false,
+    }),
+  })
+}
 
 function AuthGate() {
   const { user, loading, needsOnboarding } = useAuth()
