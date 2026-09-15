@@ -22,7 +22,7 @@
 - [x] Dark mode
 - [x] GitHub issue feedback integration
 - [x] Animations & micro-interactions
-- [ ] Onboarding flow for new users
+- [x] Onboarding flow for new users
 - [ ] Push notifications / gentle nudge reminders
 - [ ] Offline support
 - [ ] Streak tracking for recurring tasks
