@@ -1,13 +1,16 @@
 import { useEffect } from 'react'
 import { Slot, useRouter, useSegments } from 'expo-router'
-import { QueryClientProvider } from '@tanstack/react-query'
-import { queryClient } from '../lib/queryClient'
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
+import { queryClient, persister, PERSIST_MAX_AGE } from '../lib/queryClient'
+import { setupOnlineManager } from '../lib/network'
 import { useAuth } from '../hooks/useAuth'
 import { ThemeProvider, useTheme } from '../lib/ThemeContext'
 import { StatusBar } from 'expo-status-bar'
 import * as WebBrowser from 'expo-web-browser'
+import { OfflineBanner } from '../components/OfflineBanner'
 
 WebBrowser.maybeCompleteAuthSession()
+setupOnlineManager()
 
 function AuthGate() {
   const { user, loading, needsOnboarding } = useAuth()
@@ -31,6 +34,7 @@ function AuthGate() {
   return (
     <>
       <StatusBar style={isDark ? 'light' : 'dark'} />
+      <OfflineBanner />
       <Slot />
     </>
   )
@@ -38,10 +42,13 @@ function AuthGate() {
 
 export default function RootLayout() {
   return (
-    <QueryClientProvider client={queryClient}>
+    <PersistQueryClientProvider
+      client={queryClient}
+      persistOptions={{ persister, maxAge: PERSIST_MAX_AGE }}
+    >
       <ThemeProvider>
         <AuthGate />
       </ThemeProvider>
-    </QueryClientProvider>
+    </PersistQueryClientProvider>
   )
 }
