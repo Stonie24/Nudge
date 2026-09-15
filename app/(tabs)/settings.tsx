@@ -15,6 +15,7 @@ import { useTheme } from '../../lib/ThemeContext'
 import { showAlert } from '../../lib/alert'
 import { FeedbackSheet } from '../../components/FeedbackSheet'
 import type { Colors } from '../../lib/theme'
+import { space, radius } from '../../lib/theme'
 
 function SettingRow({
   label,
@@ -182,12 +183,12 @@ function createStyles(c: Colors) {
       backgroundColor: c.bg,
     },
     content: {
-      paddingHorizontal: 24,
+      paddingHorizontal: space.xxl,
       paddingBottom: 60,
     },
     header: {
-      marginTop: 32,
-      marginBottom: 24,
+      marginTop: space.xxxl,
+      marginBottom: space.xxl,
     },
     title: {
       fontSize: 28,
@@ -198,7 +199,7 @@ function createStyles(c: Colors) {
     },
     avatarSection: {
       alignItems: 'center',
-      marginBottom: 28,
+      marginBottom: space.xxl,
     },
     avatar: {
       width: 64,
@@ -207,7 +208,7 @@ function createStyles(c: Colors) {
       backgroundColor: c.accentBg,
       alignItems: 'center',
       justifyContent: 'center',
-      marginBottom: 12,
+      marginBottom: space.md,
     },
     avatarText: {
       fontSize: 24,
@@ -218,7 +219,7 @@ function createStyles(c: Colors) {
       fontSize: 15,
       fontWeight: '500',
       color: c.text,
-      marginBottom: 4,
+      marginBottom: space.xs,
     },
     memberText: {
       fontSize: 13,
@@ -228,21 +229,21 @@ function createStyles(c: Colors) {
     statsRow: {
       flexDirection: 'row',
       backgroundColor: c.surface,
-      borderRadius: 16,
+      borderRadius: radius.lg,
       borderWidth: 1,
       borderColor: c.border,
-      marginBottom: 28,
+      marginBottom: space.xxl,
       overflow: 'hidden',
     },
     statCard: {
       flex: 1,
       alignItems: 'center',
-      paddingVertical: 16,
+      paddingVertical: space.lg,
     },
     statDivider: {
       width: 1,
       backgroundColor: c.border,
-      marginVertical: 12,
+      marginVertical: space.md,
     },
     statNumber: {
       fontSize: 24,
@@ -257,7 +258,7 @@ function createStyles(c: Colors) {
       fontWeight: '400',
     },
     section: {
-      marginBottom: 20,
+      marginBottom: space.xl,
     },
     sectionLabel: {
       fontSize: 11,
@@ -265,12 +266,12 @@ function createStyles(c: Colors) {
       color: c.textMuted,
       letterSpacing: 0.8,
       textTransform: 'uppercase',
-      marginBottom: 8,
-      marginLeft: 4,
+      marginBottom: space.sm,
+      marginLeft: space.xs,
     },
     sectionCard: {
       backgroundColor: c.surface,
-      borderRadius: 16,
+      borderRadius: radius.lg,
       borderWidth: 1,
       borderColor: c.border,
       overflow: 'hidden',
@@ -278,8 +279,8 @@ function createStyles(c: Colors) {
     row: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingVertical: 14,
-      paddingHorizontal: 16,
+      paddingVertical: space.md,
+      paddingHorizontal: space.lg,
       borderBottomWidth: 1,
       borderBottomColor: c.borderLight,
     },
@@ -294,7 +295,7 @@ function createStyles(c: Colors) {
     rowValue: {
       fontSize: 14,
       color: c.textMuted,
-      marginRight: 8,
+      marginRight: space.sm,
     },
     rowChevron: {
       fontSize: 18,
@@ -305,7 +306,7 @@ function createStyles(c: Colors) {
       textAlign: 'center',
       fontSize: 12,
       color: c.textFaint,
-      marginTop: 12,
+      marginTop: space.md,
     },
   })
 }

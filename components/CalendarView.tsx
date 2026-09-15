@@ -8,6 +8,7 @@ import {
 } from 'react-native'
 import { useTheme } from '../lib/ThemeContext'
 import type { Colors } from '../lib/theme'
+import { space, radius } from '../lib/theme'
 import type { CalendarEvent, Task } from '../types'
 
 type ViewMode = 'week' | 'month'
@@ -217,21 +218,21 @@ function createStyles(c: Colors) {
   return StyleSheet.create({
     container: {
       backgroundColor: c.surface,
-      borderRadius: 16,
+      borderRadius: radius.lg,
       borderWidth: 1,
       borderColor: c.border,
-      padding: 16,
+      padding: space.lg,
     },
     navRow: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      marginBottom: 16,
+      marginBottom: space.lg,
     },
     navBtn: {
       width: 36,
       height: 36,
-      borderRadius: 10,
+      borderRadius: radius.md,
       backgroundColor: c.surfaceMuted,
       alignItems: 'center',
       justifyContent: 'center',
@@ -248,7 +249,7 @@ function createStyles(c: Colors) {
     },
     dayLabels: {
       flexDirection: 'row',
-      marginBottom: 8,
+      marginBottom: space.sm,
     },
     dayLabel: {
       flex: 1,
@@ -265,8 +266,8 @@ function createStyles(c: Colors) {
       flex: 1,
       aspectRatio: 0.85,
       alignItems: 'center',
-      paddingTop: 4,
-      borderRadius: 10,
+      paddingTop: space.xs,
+      borderRadius: radius.sm,
     },
     monthGrid: {
       flexDirection: 'row',
@@ -280,8 +281,8 @@ function createStyles(c: Colors) {
       width: '14.28%',
       aspectRatio: 0.85,
       alignItems: 'center',
-      paddingTop: 4,
-      borderRadius: 10,
+      paddingTop: space.xs,
+      borderRadius: radius.sm,
     },
     dayCellSelected: {
       backgroundColor: c.surfaceMuted,
@@ -314,8 +315,8 @@ function createStyles(c: Colors) {
     },
     dots: {
       flexDirection: 'row',
-      gap: 3,
-      marginTop: 3,
+      gap: space.xs,
+      marginTop: space.xs,
       height: 6,
     },
     dot: {

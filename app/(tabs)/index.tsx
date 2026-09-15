@@ -25,6 +25,7 @@ import { AddTaskSheet } from '../../components/Addtasksheet'
 import { showAlert } from '../../lib/alert'
 import { useEntranceAnimation, useCheckboxAnimation, usePressAnimation, triggerHaptic } from '../../hooks/useAnimation'
 import type { Colors } from '../../lib/theme'
+import { space, radius } from '../../lib/theme'
 import type { Task } from '../../types'
 
 function getGreeting() {
@@ -283,35 +284,35 @@ function createStyles(c: Colors) {
   return StyleSheet.create({
     safe: { flex: 1, backgroundColor: c.bg },
     desktopWrap: { flex: 1 },
-    content: { paddingHorizontal: 24, paddingBottom: 40 },
-    headerWrap: { paddingHorizontal: 24 },
-    headerWrapDesktop: { paddingVertical: 8 },
-    header: { marginTop: 32, marginBottom: 20 },
+    content: { paddingHorizontal: space.xxl, paddingBottom: 40 },
+    headerWrap: { paddingHorizontal: space.xxl },
+    headerWrapDesktop: { paddingVertical: space.sm },
+    header: { marginTop: space.xxxl, marginBottom: space.xl },
     greeting: {
       fontSize: 28, fontWeight: '700', color: c.text,
       letterSpacing: -0.5,
       fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
     },
-    date: { fontSize: 14, color: c.textMuted, marginTop: 4, fontWeight: '300' },
+    date: { fontSize: 14, color: c.textMuted, marginTop: space.xs, fontWeight: '300' },
     nudgeBanner: {
-      backgroundColor: c.accentBg, borderRadius: 12,
-      padding: 14, marginBottom: 20,
+      backgroundColor: c.accentBg, borderRadius: radius.md,
+      padding: space.md, marginBottom: space.xl,
     },
     nudgeText: { fontSize: 14, color: c.accentText, fontWeight: '400', lineHeight: 20 },
     addBtn: {
       height: 52, backgroundColor: c.btnPrimary,
-      borderRadius: 100, alignItems: 'center',
-      justifyContent: 'center', marginBottom: 28,
+      borderRadius: radius.pill, alignItems: 'center',
+      justifyContent: 'center', marginBottom: space.xxl,
     },
     addBtnText: { color: c.btnPrimaryText, fontSize: 15, fontWeight: '500' },
     sectionLabel: {
       fontSize: 11, fontWeight: '600', color: c.textMuted,
-      letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 8,
+      letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: space.sm,
     },
     taskRow: {
       flexDirection: 'row', alignItems: 'center',
-      paddingVertical: 13, borderBottomWidth: 1,
-      borderBottomColor: c.borderLight, gap: 14,
+      paddingVertical: space.md, borderBottomWidth: 1,
+      borderBottomColor: c.borderLight, gap: space.md,
     },
     checkboxWrap: {
       width: 22, height: 22,
@@ -333,7 +334,7 @@ function createStyles(c: Colors) {
       borderBottomWidth: 2, borderColor: '#FFFFFF',
       transform: [{ rotate: '40deg' }, { translateY: -1 }],
     },
-    taskContent: { flex: 1, gap: 3 },
+    taskContent: { flex: 1, gap: space.xs },
     taskTitle: { fontSize: 15, color: c.text, lineHeight: 22 },
     taskTitleDone: { color: c.textMuted, textDecorationLine: 'line-through' },
     recurringBadge: { fontSize: 11, color: c.accent, fontWeight: '500' },

@@ -16,6 +16,7 @@ import { useTheme } from '../../lib/ThemeContext'
 import { CalendarView } from '../../components/CalendarView'
 import { DaySheet } from '../../components/DaySheet'
 import type { Colors } from '../../lib/theme'
+import { space, radius } from '../../lib/theme'
 import type { CalendarEvent, Task } from '../../types'
 
 type ViewMode = 'week' | 'month'
@@ -236,13 +237,13 @@ export default function CalendarScreen() {
 function createStyles(c: Colors) {
   return StyleSheet.create({
     safe: { flex: 1, backgroundColor: c.bg },
-    content: { paddingHorizontal: 24, paddingBottom: 60 },
+    content: { paddingHorizontal: space.xxl, paddingBottom: 60 },
     header: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      marginTop: 32,
-      marginBottom: 20,
+      marginTop: space.xxxl,
+      marginBottom: space.xl,
     },
     title: {
       fontSize: 28, fontWeight: '700', color: c.text,
@@ -252,22 +253,22 @@ function createStyles(c: Colors) {
     modeToggle: {
       flexDirection: 'row',
       backgroundColor: c.surfaceAlt,
-      borderRadius: 10,
-      padding: 3,
+      borderRadius: radius.md,
+      padding: space.xs,
     },
     modeBtn: {
-      paddingVertical: 6,
-      paddingHorizontal: 14,
-      borderRadius: 8,
+      paddingVertical: space.sm,
+      paddingHorizontal: space.md,
+      borderRadius: radius.sm,
     },
     modeBtnActive: { backgroundColor: c.surface },
     modeBtnText: { fontSize: 13, color: c.textMuted, fontWeight: '500' },
     modeBtnTextActive: { color: c.text },
     legend: {
       flexDirection: 'row',
-      gap: 16,
-      marginTop: 16,
-      marginBottom: 28,
+      gap: space.lg,
+      marginTop: space.lg,
+      marginBottom: space.xxl,
       flexWrap: 'wrap',
     },
     legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
@@ -275,43 +276,43 @@ function createStyles(c: Colors) {
     legendText: { fontSize: 12, color: c.textMuted },
     integrations: {
       backgroundColor: c.surface,
-      borderRadius: 16,
+      borderRadius: radius.lg,
       borderWidth: 1,
       borderColor: c.border,
-      padding: 16,
-      gap: 4,
+      padding: space.lg,
+      gap: space.xs,
     },
     integrationsTitle: {
       fontSize: 11, fontWeight: '600', color: c.textMuted,
       letterSpacing: 0.8, textTransform: 'uppercase',
-      marginBottom: 12,
+      marginBottom: space.md,
     },
     integrationRow: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      paddingVertical: 10,
+      paddingVertical: space.sm,
       borderBottomWidth: 1,
       borderBottomColor: c.borderLight,
     },
-    integrationInfo: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    integrationInfo: { flexDirection: 'row', alignItems: 'center', gap: space.md },
     integrationIcon: {
-      width: 36, height: 36, borderRadius: 10,
+      width: 36, height: 36, borderRadius: radius.md,
       alignItems: 'center', justifyContent: 'center',
     },
     integrationIconText: { fontSize: 16, fontWeight: '700', color: '#4285F4' },
     integrationName: { fontSize: 14, fontWeight: '500', color: c.text },
     integrationStatus: { fontSize: 12, color: c.textMuted, marginTop: 1 },
     integrationBtn: {
-      paddingVertical: 6, paddingHorizontal: 14,
-      borderRadius: 100, borderWidth: 1, borderColor: c.border,
+      paddingVertical: space.sm, paddingHorizontal: space.md,
+      borderRadius: radius.pill, borderWidth: 1, borderColor: c.border,
     },
     integrationBtnDanger: { borderColor: c.dangerBg },
     integrationBtnText: { fontSize: 13, color: c.text, fontWeight: '500' },
     integrationBtnTextDanger: { color: c.danger },
     integrationConnected: {
-      paddingVertical: 6, paddingHorizontal: 14,
-      borderRadius: 100, backgroundColor: c.accentBg,
+      paddingVertical: space.sm, paddingHorizontal: space.md,
+      borderRadius: radius.pill, backgroundColor: c.accentBg,
     },
     integrationConnectedText: { fontSize: 13, color: c.accentText, fontWeight: '500' },
   })

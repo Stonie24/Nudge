@@ -21,6 +21,7 @@ import { showAlert } from '../../lib/alert'
 import { getTagColor } from '../../lib/tagColor'
 import { useEntranceAnimation, useCheckboxAnimation, usePressAnimation, triggerHaptic } from '../../hooks/useAnimation'
 import type { Colors } from '../../lib/theme'
+import { space, radius } from '../../lib/theme'
 import type { Task } from '../../types'
 
 type Filter = 'all' | 'pending' | 'completed'
@@ -322,10 +323,10 @@ function createStyles(c: Colors) {
   return StyleSheet.create({
     safe: { flex: 1, backgroundColor: c.bg },
     desktopWrap: { flex: 1 },
-    content: { paddingHorizontal: 24, paddingBottom: 40 },
-    controls: { paddingHorizontal: 24 },
-    controlsDesktop: { paddingVertical: 8 },
-    header: { marginTop: 32, marginBottom: 20 },
+    content: { paddingHorizontal: space.xxl, paddingBottom: 40 },
+    controls: { paddingHorizontal: space.xxl },
+    controlsDesktop: { paddingVertical: space.sm },
+    header: { marginTop: space.xxxl, marginBottom: space.xl },
     headerRow: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -336,55 +337,55 @@ function createStyles(c: Colors) {
       letterSpacing: -0.5,
       fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
     },
-    subtitle: { fontSize: 14, color: c.textMuted, marginTop: 4, fontWeight: '300' },
+    subtitle: { fontSize: 14, color: c.textMuted, marginTop: space.xs, fontWeight: '300' },
     addBtn: {
-      paddingVertical: 10,
-      paddingHorizontal: 18,
+      paddingVertical: space.sm,
+      paddingHorizontal: space.lg,
       backgroundColor: c.btnPrimary,
-      borderRadius: 100,
+      borderRadius: radius.pill,
     },
     addBtnText: {
       color: c.btnPrimaryText,
       fontSize: 14,
       fontWeight: '500',
     },
-    searchRow: { marginBottom: 12 },
+    searchRow: { marginBottom: space.md },
     searchInput: {
       height: 44, backgroundColor: c.inputBg,
-      borderWidth: 1, borderColor: c.border, borderRadius: 12,
-      paddingHorizontal: 16, fontSize: 15, color: c.text,
+      borderWidth: 1, borderColor: c.border, borderRadius: radius.md,
+      paddingHorizontal: space.lg, fontSize: 15, color: c.text,
     },
-    tagFilterScroll: { marginBottom: 12 },
-    tagFilterContent: { gap: 8, paddingRight: 4 },
+    tagFilterScroll: { marginBottom: space.md },
+    tagFilterContent: { gap: space.sm, paddingRight: space.xs },
     tagAllChip: {
-      paddingVertical: 6, paddingHorizontal: 14,
-      borderRadius: 100, borderWidth: 1, borderColor: c.border,
+      paddingVertical: space.sm, paddingHorizontal: space.md,
+      borderRadius: radius.pill, borderWidth: 1, borderColor: c.border,
       backgroundColor: c.surface,
     },
     tagAllChipActive: { backgroundColor: c.btnPrimary, borderColor: c.btnPrimary },
     tagAllChipText: { fontSize: 13, color: c.textSecondary, fontWeight: '500' },
     tagAllChipTextActive: { color: c.btnPrimaryText },
     tagChip: {
-      paddingVertical: 6, paddingHorizontal: 14,
-      borderRadius: 100, borderWidth: 1,
+      paddingVertical: space.sm, paddingHorizontal: space.md,
+      borderRadius: radius.pill, borderWidth: 1,
     },
     tagChipText: { fontSize: 13, fontWeight: '500' },
-    filterRow: { flexDirection: 'row', gap: 8, marginBottom: 12 },
+    filterRow: { flexDirection: 'row', gap: space.sm, marginBottom: space.md },
     filterTab: {
-      paddingVertical: 6, paddingHorizontal: 14,
-      borderRadius: 100, borderWidth: 1, borderColor: c.border, backgroundColor: c.surface,
+      paddingVertical: space.sm, paddingHorizontal: space.md,
+      borderRadius: radius.pill, borderWidth: 1, borderColor: c.border, backgroundColor: c.surface,
     },
     filterTabActive: { backgroundColor: c.btnPrimary, borderColor: c.btnPrimary },
     filterTabText: { fontSize: 13, color: c.textSecondary, fontWeight: '500' },
     filterTabTextActive: { color: c.btnPrimaryText },
-    sortRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 24 },
+    sortRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm, marginBottom: space.xxl },
     sortLabel: { fontSize: 13, color: c.textMuted },
-    sortBtn: { paddingVertical: 4, paddingHorizontal: 10, borderRadius: 100, borderWidth: 1, borderColor: c.border },
+    sortBtn: { paddingVertical: space.xs, paddingHorizontal: space.sm, borderRadius: radius.pill, borderWidth: 1, borderColor: c.border },
     sortBtnActive: { backgroundColor: c.accentBg, borderColor: c.accentBorder },
     sortBtnText: { fontSize: 12, color: c.textSecondary, fontWeight: '500' },
     sortBtnTextActive: { color: c.accentText },
-    group: { marginBottom: 24 },
-    groupHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
+    group: { marginBottom: space.xxl },
+    groupHeader: { flexDirection: 'row', alignItems: 'center', gap: space.sm, marginBottom: space.xs },
     groupDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: c.accent },
     groupLabel: {
       fontSize: 11, fontWeight: '600', color: c.textMuted,
@@ -393,8 +394,8 @@ function createStyles(c: Colors) {
     groupCount: { fontSize: 11, color: c.textMuted },
     taskRow: {
       flexDirection: 'row', alignItems: 'center',
-      paddingVertical: 13, borderBottomWidth: 1,
-      borderBottomColor: c.borderLight, gap: 14,
+      paddingVertical: space.md, borderBottomWidth: 1,
+      borderBottomColor: c.borderLight, gap: space.md,
     },
     checkboxWrap: {
       width: 22, height: 22,
@@ -416,7 +417,7 @@ function createStyles(c: Colors) {
       borderBottomWidth: 2, borderColor: '#FFFFFF',
       transform: [{ rotate: '40deg' }, { translateY: -1 }],
     },
-    taskContent: { flex: 1, gap: 4 },
+    taskContent: { flex: 1, gap: space.xs },
     taskTitle: { fontSize: 15, color: c.text, lineHeight: 22 },
     taskTitleDone: { color: c.textMuted, textDecorationLine: 'line-through' },
     taskDate: { fontSize: 12, color: c.textMuted },
