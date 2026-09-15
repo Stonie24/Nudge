@@ -306,7 +306,7 @@ function createStyles(c: Colors) {
       paddingVertical: 6, paddingHorizontal: 14,
       borderRadius: 100, borderWidth: 1, borderColor: c.border,
     },
-    integrationBtnDanger: { borderColor: c.danger },
+    integrationBtnDanger: { borderColor: c.dangerBg },
     integrationBtnText: { fontSize: 13, color: c.text, fontWeight: '500' },
     integrationBtnTextDanger: { color: c.danger },
     integrationConnected: {

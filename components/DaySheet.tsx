@@ -381,7 +381,7 @@ function createStyles(c: Colors) {
     taskContent: { flex: 1, gap: 3 },
     taskTitle: { fontSize: 14, color: c.text },
     taskTitleDone: { color: c.textMuted, textDecorationLine: 'line-through' },
-    recurringBadge: { fontSize: 14, color: c.calendarDotRecurring },
+    recurringBadge: { fontSize: 14, color: c.accent },
     addForm: {
       backgroundColor: c.surfaceMuted,
       borderRadius: 16,
