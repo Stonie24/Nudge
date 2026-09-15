@@ -289,7 +289,7 @@ function createStyles(c: Colors) {
       flex: 1,
     },
     rowLabelDestructive: {
-      color: '#E24B4A',
+      color: c.danger,
     },
     rowValue: {
       fontSize: 14,

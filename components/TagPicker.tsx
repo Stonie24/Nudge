@@ -27,14 +27,14 @@ export function TagPicker({
   const [open, setOpen] = useState(false)
   const [custom, setCustom] = useState('')
 
-  const { colors } = useTheme()
+  const { colors, isDark } = useTheme()
   const styles = useMemo(() => createStyles(colors), [colors])
 
   const { data: savedTags, isLoading } = useTags()
   const addTag = useAddTag()
   const deleteTag = useDeleteTag()
 
-  const color = value ? getTagColor(value) : null
+  const color = value ? getTagColor(value, isDark) : null
 
   // Merge presets + saved custom tags, deduplicated
   const savedNames = savedTags?.map(t => t.name) ?? []
@@ -98,7 +98,7 @@ export function TagPicker({
               <ScrollView showsVerticalScrollIndicator={false} style={styles.tagsScroll}>
                 <View style={styles.presets}>
                   {allTags.map(tag => {
-                    const c = getTagColor(tag)
+                    const c = getTagColor(tag, isDark)
                     const isActive = value === tag
                     const isCustom = !PRESET_TAGS.includes(tag)
                     return (
@@ -169,7 +169,8 @@ export function TagPicker({
 }
 
 export function TagBadge({ tag }: { tag: string }) {
-  const color = getTagColor(tag)
+  const { isDark } = useTheme()
+  const color = getTagColor(tag, isDark)
   return (
     <View style={[badgeStyles.badge, { backgroundColor: color.bg, borderColor: color.border }]}>
       <Text style={[badgeStyles.badgeText, { color: color.text }]}>{tag}</Text>
@@ -177,7 +178,6 @@ export function TagBadge({ tag }: { tag: string }) {
   )
 }
 
-// TagBadge uses tag-specific colors, no theme dependency needed
 const badgeStyles = StyleSheet.create({
   badge: {
     alignSelf: 'flex-start',
@@ -319,7 +319,7 @@ function createStyles(c: Colors) {
     },
     clearBtnText: {
       fontSize: 14,
-      color: '#E24B4A',
+      color: c.danger,
       fontWeight: '500',
     },
   })

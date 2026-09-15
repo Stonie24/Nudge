@@ -96,7 +96,7 @@ export default function AllTasksScreen() {
   const [selectedTag, setSelectedTag] = useState<string | null>(null)
   const [sheetOpen, setSheetOpen] = useState(false)
   const { isDesktop } = useLayout()
-  const { colors } = useTheme()
+  const { colors, isDark } = useTheme()
   const styles = useMemo(() => createStyles(colors), [colors])
   const addBtn = usePressAnimation()
 
@@ -198,7 +198,7 @@ export default function AllTasksScreen() {
             </Text>
           </TouchableOpacity>
           {availableTags.map(tag => {
-            const c = getTagColor(tag)
+            const c = getTagColor(tag, isDark)
             const isActive = selectedTag === tag
             return (
               <TouchableOpacity

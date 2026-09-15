@@ -113,7 +113,7 @@ function AddEventForm({
       start_time: start,
       end_time: end,
       all_day: allDay,
-      color: '#F59F0A',
+      color: colors.calendarDotEvent,
     })
     onClose()
   }
@@ -381,7 +381,7 @@ function createStyles(c: Colors) {
     taskContent: { flex: 1, gap: 3 },
     taskTitle: { fontSize: 14, color: c.text },
     taskTitleDone: { color: c.textMuted, textDecorationLine: 'line-through' },
-    recurringBadge: { fontSize: 14, color: '#F59F0A' },
+    recurringBadge: { fontSize: 14, color: c.calendarDotRecurring },
     addForm: {
       backgroundColor: c.surfaceMuted,
       borderRadius: 16,

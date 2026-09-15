@@ -152,7 +152,7 @@ export default function CalendarScreen() {
             <Text style={styles.legendText}>Daily</Text>
           </View>
           <View style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: '#F59F0A' }]} />
+            <View style={[styles.legendDot, { backgroundColor: colors.calendarDotEvent }]} />
             <Text style={styles.legendText}>Events</Text>
           </View>
           {isConnected && (
@@ -306,9 +306,9 @@ function createStyles(c: Colors) {
       paddingVertical: 6, paddingHorizontal: 14,
       borderRadius: 100, borderWidth: 1, borderColor: c.border,
     },
-    integrationBtnDanger: { borderColor: '#F09595' },
+    integrationBtnDanger: { borderColor: c.danger },
     integrationBtnText: { fontSize: 13, color: c.text, fontWeight: '500' },
-    integrationBtnTextDanger: { color: '#E24B4A' },
+    integrationBtnTextDanger: { color: c.danger },
     integrationConnected: {
       paddingVertical: 6, paddingHorizontal: 14,
       borderRadius: 100, backgroundColor: c.accentBg,

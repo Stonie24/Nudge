@@ -82,7 +82,7 @@ function DayCell({
   const recurringTasks = tasks.filter(t => t.recurring)
 
   const dots: string[] = []
-  if (nudgeEvents.length > 0) dots.push('#F59F0A')
+  if (nudgeEvents.length > 0) dots.push(colors.calendarDotEvent)
   if (googleEvents.length > 0) dots.push('#4285F4')
   if (appleEvents.length > 0) dots.push('#FF9500')
   if (scheduledTasks.length > 0) dots.push(colors.calendarDotTask)
