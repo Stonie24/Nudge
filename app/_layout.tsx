@@ -1,7 +1,8 @@
 import { useEffect } from 'react'
 import { Slot, useRouter, useSegments } from 'expo-router'
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
-import { queryClient, persister, PERSIST_MAX_AGE } from '../lib/queryClient'
+import { SafeAreaProvider } from 'react-native-safe-area-context'
+import { queryClient, persistOptions } from '../lib/queryClient'
 import { setupOnlineManager } from '../lib/network'
 import { useAuth } from '../hooks/useAuth'
 import { ThemeProvider, useTheme } from '../lib/ThemeContext'
@@ -42,13 +43,16 @@ function AuthGate() {
 
 export default function RootLayout() {
   return (
-    <PersistQueryClientProvider
-      client={queryClient}
-      persistOptions={{ persister, maxAge: PERSIST_MAX_AGE }}
-    >
-      <ThemeProvider>
-        <AuthGate />
-      </ThemeProvider>
-    </PersistQueryClientProvider>
+    <SafeAreaProvider>
+      <PersistQueryClientProvider
+        client={queryClient}
+        persistOptions={persistOptions}
+        onSuccess={() => queryClient.resumePausedMutations()}
+      >
+        <ThemeProvider>
+          <AuthGate />
+        </ThemeProvider>
+      </PersistQueryClientProvider>
+    </SafeAreaProvider>
   )
 }

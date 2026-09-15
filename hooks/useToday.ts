@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
+import { resumableMutation } from '../lib/resumableMutation'
 import type { Task, DailyCompletion } from '../types'
 
 function today(): string {
@@ -44,48 +45,54 @@ export function useTodayCompletions() {
 }
 
 // Complete a recurring task for today
+const completeRecurring = resumableMutation('completeRecurring', async (taskId: string) => {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not logged in')
+  const { error } = await supabase
+    .from('daily_completions')
+    .upsert({ task_id: taskId, user_id: user.id, completed_on: today() }, { onConflict: 'task_id,completed_on' })
+  if (error) throw error
+})
+
 export function useCompleteRecurring() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (taskId: string) => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Not logged in')
-      const { error } = await supabase
-        .from('daily_completions')
-        .upsert({ task_id: taskId, user_id: user.id, completed_on: today() }, { onConflict: 'task_id,completed_on' })
-      if (error) throw error
-    },
+    ...completeRecurring,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['completions'] }),
   })
 }
 
 // Uncomplete a recurring task for today
+const uncompleteRecurring = resumableMutation('uncompleteRecurring', async (taskId: string) => {
+  const { error } = await supabase
+    .from('daily_completions')
+    .delete()
+    .eq('task_id', taskId)
+    .eq('completed_on', today())
+  if (error) throw error
+})
+
 export function useUncompleteRecurring() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (taskId: string) => {
-      const { error } = await supabase
-        .from('daily_completions')
-        .delete()
-        .eq('task_id', taskId)
-        .eq('completed_on', today())
-      if (error) throw error
-    },
+    ...uncompleteRecurring,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['completions'] }),
   })
 }
 
 // Schedule an existing task for today
+const scheduleForToday = resumableMutation('scheduleForToday', async (taskId: string) => {
+  const { error } = await supabase
+    .from('tasks')
+    .update({ scheduled_date: today() })
+    .eq('id', taskId)
+  if (error) throw error
+})
+
 export function useScheduleForToday() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (taskId: string) => {
-      const { error } = await supabase
-        .from('tasks')
-        .update({ scheduled_date: today() })
-        .eq('id', taskId)
-      if (error) throw error
-    },
+    ...scheduleForToday,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] })
     },
@@ -93,26 +100,28 @@ export function useScheduleForToday() {
 }
 
 // Add a brand new task to today (optionally recurring)
+const addTodayTask = resumableMutation('addTodayTask', async ({ title, tag, recurring }: { title: string; tag?: string; recurring: boolean }) => {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not logged in')
+  const { data, error } = await supabase
+    .from('tasks')
+    .insert({
+      title,
+      tag: tag ?? null,
+      user_id: user.id,
+      recurring,
+      scheduled_date: recurring ? null : today(),
+    })
+    .select()
+    .single()
+  if (error) throw error
+  return data
+})
+
 export function useAddTodayTask() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async ({ title, tag, recurring }: { title: string; tag?: string; recurring: boolean }) => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Not logged in')
-      const { data, error } = await supabase
-        .from('tasks')
-        .insert({
-          title,
-          tag: tag ?? null,
-          user_id: user.id,
-          recurring,
-          scheduled_date: recurring ? null : today(),
-        })
-        .select()
-        .single()
-      if (error) throw error
-      return data
-    },
+    ...addTodayTask,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['tasks'] }),
   })
 }

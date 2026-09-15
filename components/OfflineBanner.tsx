@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react'
 import { View, Text, StyleSheet } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useTheme } from '../lib/ThemeContext'
 import { useNetworkStatus } from '../hooks/useNetworkStatus'
 import type { Colors } from '../lib/theme'
@@ -7,7 +8,8 @@ import type { Colors } from '../lib/theme'
 export function OfflineBanner() {
   const isOnline = useNetworkStatus()
   const { colors } = useTheme()
-  const styles = useMemo(() => createStyles(colors), [colors])
+  const insets = useSafeAreaInsets()
+  const styles = useMemo(() => createStyles(colors, insets.top), [colors, insets.top])
 
   if (isOnline) return null
 
@@ -18,13 +20,14 @@ export function OfflineBanner() {
   )
 }
 
-function createStyles(colors: Colors) {
+function createStyles(colors: Colors, topInset: number) {
   return StyleSheet.create({
     banner: {
       backgroundColor: colors.surfaceAlt,
       borderBottomWidth: 1,
       borderBottomColor: colors.border,
-      paddingVertical: 6,
+      paddingTop: topInset + 6,
+      paddingBottom: 6,
       paddingHorizontal: 16,
       alignItems: 'center',
     },
