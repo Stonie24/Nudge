@@ -14,6 +14,7 @@ import { useTags, useAddTag, useDeleteTag } from '../hooks/useTags'
 import { useTheme } from '../lib/ThemeContext'
 import { getTagColor } from '../lib/tagColor'
 import type { Colors } from '../lib/theme'
+import { space, radius } from '../lib/theme'
 
 const PRESET_TAGS = ['Work', 'Personal', 'Focus', 'Health', 'Errands']
 
@@ -196,8 +197,8 @@ function createStyles(c: Colors) {
   return StyleSheet.create({
     trigger: {
       height: 48,
-      paddingHorizontal: 14,
-      borderRadius: 12,
+      paddingHorizontal: space.md,
+      borderRadius: radius.md,
       borderWidth: 1,
       borderColor: c.border,
       backgroundColor: c.surface,
@@ -216,9 +217,9 @@ function createStyles(c: Colors) {
     },
     sheet: {
       backgroundColor: c.surface,
-      borderTopLeftRadius: 24,
-      borderTopRightRadius: 24,
-      padding: 24,
+      borderTopLeftRadius: radius.sheet,
+      borderTopRightRadius: radius.sheet,
+      padding: space.xxl,
       paddingBottom: 40,
       maxHeight: '80%',
     },
@@ -228,33 +229,33 @@ function createStyles(c: Colors) {
       borderRadius: 2,
       backgroundColor: c.border,
       alignSelf: 'center',
-      marginBottom: 20,
+      marginBottom: space.xl,
     },
     sheetTitle: {
       fontSize: 16,
       fontWeight: '600',
       color: c.text,
-      marginBottom: 16,
+      marginBottom: space.lg,
     },
     loader: {
-      marginVertical: 20,
+      marginVertical: space.xl,
     },
     tagsScroll: {
       maxHeight: 160,
-      marginBottom: 16,
+      marginBottom: space.lg,
     },
     presets: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: 8,
+      gap: space.sm,
     },
     tagWrapper: {
       position: 'relative',
     },
     preset: {
-      paddingVertical: 8,
-      paddingHorizontal: 16,
-      borderRadius: 100,
+      paddingVertical: space.sm,
+      paddingHorizontal: space.lg,
+      borderRadius: radius.pill,
       borderWidth: 1.5,
     },
     presetActive: {
@@ -283,8 +284,8 @@ function createStyles(c: Colors) {
     },
     customRow: {
       flexDirection: 'row',
-      gap: 10,
-      marginBottom: 16,
+      gap: space.sm,
+      marginBottom: space.lg,
     },
     customInput: {
       flex: 1,
@@ -292,16 +293,16 @@ function createStyles(c: Colors) {
       backgroundColor: c.inputBg,
       borderWidth: 1,
       borderColor: c.border,
-      borderRadius: 12,
-      paddingHorizontal: 14,
+      borderRadius: radius.md,
+      paddingHorizontal: space.md,
       fontSize: 14,
       color: c.text,
     },
     customBtn: {
       height: 44,
-      paddingHorizontal: 16,
+      paddingHorizontal: space.lg,
       backgroundColor: c.btnPrimary,
-      borderRadius: 12,
+      borderRadius: radius.md,
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -315,7 +316,7 @@ function createStyles(c: Colors) {
     },
     clearBtn: {
       alignItems: 'center',
-      paddingVertical: 12,
+      paddingVertical: space.md,
     },
     clearBtnText: {
       fontSize: 14,

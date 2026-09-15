@@ -15,6 +15,7 @@ import { supabase } from '../../lib/supabase'
 import { useTheme } from '../../lib/ThemeContext'
 import { triggerHaptic } from '../../hooks/useAnimation'
 import type { Colors } from '../../lib/theme'
+import { space, radius } from '../../lib/theme'
 
 const SCREEN_WIDTH = Dimensions.get('window').width
 
@@ -222,15 +223,15 @@ function createStyles(c: Colors) {
       flex: 1,
       alignItems: 'center',
       justifyContent: 'space-between',
-      paddingVertical: 48,
-      paddingHorizontal: 32,
+      paddingVertical: space.huge,
+      paddingHorizontal: space.xxxl,
       maxWidth: contentWidth,
       alignSelf: 'center',
       width: '100%',
     },
     dots: {
       flexDirection: 'row',
-      gap: 8,
+      gap: space.sm,
       alignItems: 'center',
     },
     dot: {
@@ -247,14 +248,14 @@ function createStyles(c: Colors) {
       flex: 1,
       alignItems: 'center',
       justifyContent: 'center',
-      paddingHorizontal: 8,
-      gap: 20,
+      paddingHorizontal: space.sm,
+      gap: space.xl,
     },
     icon: {
       fontSize: 48,
       color: c.accent,
       fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
-      marginBottom: 8,
+      marginBottom: space.sm,
     },
     title: {
       fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
@@ -274,13 +275,13 @@ function createStyles(c: Colors) {
     },
     actions: {
       width: '100%',
-      gap: 12,
+      gap: space.md,
       alignItems: 'center',
     },
     primaryBtn: {
       height: 52,
       backgroundColor: c.btnPrimary,
-      borderRadius: 100,
+      borderRadius: radius.pill,
       alignItems: 'center',
       justifyContent: 'center',
       width: '100%',
@@ -294,16 +295,16 @@ function createStyles(c: Colors) {
       fontWeight: '500',
     },
     backBtn: {
-      paddingVertical: 10,
-      paddingHorizontal: 20,
+      paddingVertical: space.sm,
+      paddingHorizontal: space.xl,
     },
     backBtnText: {
       fontSize: 14,
       color: c.textSecondary,
     },
     skipBtn: {
-      paddingVertical: 10,
-      paddingHorizontal: 20,
+      paddingVertical: space.sm,
+      paddingHorizontal: space.xl,
     },
     skipBtnText: {
       fontSize: 14,

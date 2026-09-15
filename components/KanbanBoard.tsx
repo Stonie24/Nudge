@@ -11,6 +11,7 @@ import { useTheme } from '../lib/ThemeContext'
 import { TagPicker } from './TagPicker'
 import { showAlert } from '../lib/alert'
 import type { Colors } from '../lib/theme'
+import { space, radius } from '../lib/theme'
 import type { Task } from '../types'
 
 function KanbanCard({
@@ -153,28 +154,28 @@ export function KanbanBoard({
 function createStyles(c: Colors) {
   return StyleSheet.create({
     board: {
-      paddingHorizontal: 24,
+      paddingHorizontal: space.xxl,
       paddingBottom: 40,
-      gap: 16,
+      gap: space.lg,
       alignItems: 'flex-start',
     },
     column: {
       width: 260,
       backgroundColor: c.surfaceMuted,
-      borderRadius: 16,
-      padding: 16,
+      borderRadius: radius.lg,
+      padding: space.lg,
       minHeight: 200,
     },
     columnHeader: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      marginBottom: 8,
+      marginBottom: space.sm,
     },
     columnTag: {
-      paddingVertical: 4,
-      paddingHorizontal: 12,
-      borderRadius: 100,
+      paddingVertical: space.xs,
+      paddingHorizontal: space.md,
+      borderRadius: radius.pill,
       borderWidth: 1.5,
     },
     columnTagDefault: {
@@ -197,7 +198,7 @@ function createStyles(c: Colors) {
       height: 3,
       backgroundColor: c.border,
       borderRadius: 2,
-      marginBottom: 12,
+      marginBottom: space.md,
       overflow: 'hidden',
     },
     progressFill: {
@@ -205,15 +206,15 @@ function createStyles(c: Colors) {
       borderRadius: 2,
     },
     cards: {
-      gap: 8,
+      gap: space.sm,
     },
     card: {
       backgroundColor: c.surface,
-      borderRadius: 12,
-      padding: 14,
+      borderRadius: radius.md,
+      padding: space.md,
       borderWidth: 1,
       borderColor: c.border,
-      gap: 10,
+      gap: space.sm,
     },
     cardDone: {
       opacity: 0.6,
@@ -221,7 +222,7 @@ function createStyles(c: Colors) {
     cardTop: {
       flexDirection: 'row',
       alignItems: 'flex-start',
-      gap: 10,
+      gap: space.sm,
     },
     checkbox: {
       width: 20,
