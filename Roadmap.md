@@ -28,6 +28,7 @@
 - [ ] Streak tracking for recurring tasks
 - [ ] Make it possible to log in with OAuth for both mobile and desktop
 - [ ] Costum profile picture thats get saved in the database, or pull the picture from the login service, if none of these still use defualt.
+- [ ] Inline auth error states (wrong password, account creation failures, duplicate email, etc.) instead of relying on native alert popups
 
 ## v0.23 — Power features
 - [ ] Optional due dates on tasks (overdue indicator, sort by due date)
