@@ -18,9 +18,27 @@ const FALLBACK_COLORS: TagColor[] = [
   { bg: '#F1EFE8', text: '#5F5E5A', border: '#D3D1C7' },
 ]
 
-export function getTagColor(tag: string): TagColor {
-  if (TAG_COLORS[tag]) return TAG_COLORS[tag]
+// Dark-mode set. The light chip colors were previously reused as-is on dark
+// surfaces, which glares — these are tinted for a dark background instead.
+const TAG_COLORS_DARK: Record<string, TagColor> = {
+  Work:     { bg: '#1B2C3D', text: '#7EAEDA', border: '#2E4A63' },
+  Personal: { bg: '#332812', text: '#E0A855', border: '#4F3D1B' },
+  Focus:    { bg: '#241F3D', text: '#A79AE8', border: '#382F5C' },
+  Health:   { bg: '#22300F', text: '#A3CE68', border: '#3A5218' },
+  Errands:  { bg: '#33200F', text: '#E08A5F', border: '#4F311B' },
+}
+
+const FALLBACK_COLORS_DARK: TagColor[] = [
+  { bg: '#331A24', text: '#E08CA8', border: '#4F2A38' },
+  { bg: '#0F2E27', text: '#5FCDA9', border: '#1B4A3E' },
+  { bg: '#272521', text: '#B3AB9E', border: '#3D3A33' },
+]
+
+export function getTagColor(tag: string, isDark: boolean = false): TagColor {
+  const presets = isDark ? TAG_COLORS_DARK : TAG_COLORS
+  if (presets[tag]) return presets[tag]
   // deterministic fallback based on tag string
-  const index = tag.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % FALLBACK_COLORS.length
-  return FALLBACK_COLORS[index]
+  const fallbacks = isDark ? FALLBACK_COLORS_DARK : FALLBACK_COLORS
+  const index = tag.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % fallbacks.length
+  return fallbacks[index]
 }

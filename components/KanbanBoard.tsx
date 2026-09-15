@@ -79,7 +79,7 @@ export function KanbanBoard({
   onDelete: (id: string) => void
   onUpdateTag?: (id: string, tag?: string) => void
 }) {
-  const { colors } = useTheme()
+  const { colors, isDark } = useTheme()
   const styles = useMemo(() => createStyles(colors), [colors])
 
   const groups: Record<string, Task[]> = {}
@@ -98,7 +98,7 @@ export function KanbanBoard({
       contentContainerStyle={styles.board}
     >
       {columns.map(([tag, colTasks]) => {
-        const color = tag !== 'No tag' ? getTagColor(tag) : null
+        const color = tag !== 'No tag' ? getTagColor(tag, isDark) : null
         const done = colTasks.filter(t => t.completed).length
         const total = colTasks.length
 

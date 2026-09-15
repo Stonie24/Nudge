@@ -38,7 +38,7 @@ export function AddTaskSheet({
     const [search, setSearch] = useState('')
     const [selectedTag, setSelectedTag] = useState<string | undefined>()
 
-    const { colors } = useTheme()
+    const { colors, isDark } = useTheme()
     const styles = useMemo(() => createStyles(colors), [colors])
 
     const addTodayTask = useAddTodayTask()
@@ -201,7 +201,7 @@ export function AddTaskSheet({
                                         </Text>
                                     </TouchableOpacity>
                                     {backlogTags.map(t => {
-                                        const c = getTagColor(t)
+                                        const c = getTagColor(t, isDark)
                                         const isActive = selectedTag === t
                                         return (
                                             <TouchableOpacity
