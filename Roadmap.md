@@ -23,8 +23,8 @@
 - [x] GitHub issue feedback integration
 - [x] Animations & micro-interactions
 - [x] Onboarding flow for new users
-- [ ] Push notifications / gentle nudge reminders
-- [ ] Offline support
+- [x] Push notifications / gentle nudge reminders
+- [x] Offline support
 - [ ] Streak tracking for recurring tasks
 - [ ] Make it possible to log in with OAuth for both mobile and desktop
 - [ ] Costum profile picture thats get saved in the database, or pull the picture from the login service, if none of these still use defualt.
@@ -32,15 +32,15 @@
 
 ## Design refresh (from "Nudge Redesign" artifact)
 Token-level reskin (color, type, spacing, icons, elevation) plus a few new pieces of product surface. See the artifact for the full mockups: https://claude.ai/artifact/9e5w5oRWtM77gYTKKVJmQc
-- [ ] Warm-tinted design token pass (color/type/space/radius/elevation) matching `lib/theme.ts` — replaces the current cool-grey borders, Georgia/serif split, and hard-coded hexes
-- [ ] Replace Unicode glyph icons (tab bar, onboarding, calendar integration rows) with real SVG icon set — fixes the empty-box Apple Calendar icon
-- [ ] Dark-mode tag chip palette (today the light chip colors are just reused on dark surfaces)
-- [ ] Task detail sheet — tapping a task opens title/tag/repeat/due date/notes instead of only toggling complete
+- [x] Warm-tinted design token pass (color/type/space/radius/elevation) matching `lib/theme.ts` — replaces the current cool-grey borders, Georgia/serif split, and hard-coded hexes
+- [x] Replace Unicode glyph icons (tab bar, onboarding, calendar integration rows) with real SVG icon set — fixes the empty-box Apple Calendar icon
+- [x] Dark-mode tag chip palette (today the light chip colors are just reused on dark surfaces)
+- [x] Task detail sheet — tapping a task opens title/tag/repeat/due date/notes instead of only toggling complete
 - [ ] Swipe-to-delete with undo toast, replacing long-press + native confirm alert
 - [ ] Inline quick-add on the Today board, replacing the full-screen Add Task modal for the common case
 - [ ] Progress ring on the Today screen showing today's completion + streak
 - [ ] Move calendar integrations (Google/Apple) from the Calendar screen into Settings
-- [ ] "Gentle nudges" reminder toggle + nudge time in Settings
+- [x] "Gentle nudges" reminder toggle + nudge time in Settings
 - [ ] "Export my data" option in Settings
 
 ## v0.23 — Power features
