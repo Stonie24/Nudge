@@ -11,6 +11,7 @@ import { AppText as Text } from '../../components/AppText'
 import { Icon } from '../../components/Icon'
 import { useAuth } from '../../hooks/useAuth'
 import { useTasks } from '../../hooks/useTasks'
+import { useStreak } from '../../hooks/useStreak'
 import { useTheme } from '../../lib/ThemeContext'
 import { showAlert } from '../../lib/alert'
 import { FeedbackSheet } from '../../components/FeedbackSheet'
@@ -53,6 +54,7 @@ function SettingRow({
 export default function SettingsScreen() {
   const { user, signOut } = useAuth()
   const { data: tasks } = useTasks()
+  const { streak } = useStreak()
   const { isDark, toggle, colors } = useTheme()
   const styles = useMemo(() => createStyles(colors), [colors])
   const [feedbackOpen, setFeedbackOpen] = useState(false)
@@ -103,18 +105,18 @@ export default function SettingsScreen() {
         <View style={styles.cardShadow}>
           <View style={styles.statsRow}>
             <View style={styles.statCard}>
-              <Text style={styles.statNumber}>{totalTasks}</Text>
-              <Text style={styles.statLabel}>Total</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statCard}>
               <Text style={styles.statNumber}>{completedTasks}</Text>
-              <Text style={styles.statLabel}>Done</Text>
+              <Text style={styles.statLabel}>Completed</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statCard}>
               <Text style={styles.statNumber}>{pendingTasks}</Text>
-              <Text style={styles.statLabel}>Pending</Text>
+              <Text style={styles.statLabel}>Open</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statCard}>
+              <Text style={styles.statNumber}>{streak}</Text>
+              <Text style={styles.statLabel}>Streak</Text>
             </View>
           </View>
         </View>
