@@ -14,7 +14,7 @@ import { supabase } from '../lib/supabase'
 import { useTheme } from '../lib/ThemeContext'
 import { showAlert } from '../lib/alert'
 import type { Colors } from '../lib/theme'
-import { space, radius } from '../lib/theme'
+import { space, radius, shadow } from '../lib/theme'
 
 export function FeedbackSheet({
   visible,
@@ -139,6 +139,7 @@ function createStyles(c: Colors) {
       padding: space.xxl,
       paddingBottom: 48,
       gap: space.lg,
+      ...shadow.lg,
     },
     handle: {
       width: 36, height: 4, borderRadius: 2,

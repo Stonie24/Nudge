@@ -17,7 +17,7 @@ import { useTheme } from '../lib/ThemeContext'
 import { TagBadge } from './TagPicker'
 import { showAlert } from '../lib/alert'
 import type { Colors } from '../lib/theme'
-import { space, radius } from '../lib/theme'
+import { space, radius, shadow } from '../lib/theme'
 import type { CalendarEvent, Task } from '../types'
 
 function EventRow({
@@ -307,6 +307,7 @@ function createStyles(c: Colors) {
       padding: space.xxl,
       paddingBottom: 48,
       maxHeight: '85%',
+      ...shadow.lg,
     },
     handle: {
       width: 36, height: 4, borderRadius: 2,
@@ -391,6 +392,7 @@ function createStyles(c: Colors) {
       padding: space.lg,
       marginBottom: space.xl,
       gap: space.md,
+      ...shadow.sm,
     },
     addFormTitle: { fontSize: 15, fontWeight: '600', color: c.text },
     input: {

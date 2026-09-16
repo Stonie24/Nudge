@@ -11,7 +11,7 @@ import { useTheme } from '../lib/ThemeContext'
 import { TagPicker } from './TagPicker'
 import { showAlert } from '../lib/alert'
 import type { Colors } from '../lib/theme'
-import { space, radius } from '../lib/theme'
+import { space, radius, shadow } from '../lib/theme'
 import type { Task } from '../types'
 
 function KanbanCard({
@@ -215,6 +215,7 @@ function createStyles(c: Colors) {
       borderWidth: 1,
       borderColor: c.border,
       gap: space.sm,
+      ...shadow.sm,
     },
     cardDone: {
       opacity: 0.6,

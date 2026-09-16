@@ -18,7 +18,7 @@ import { useTheme } from '../lib/ThemeContext'
 import { TagPicker, TagBadge } from './TagPicker'
 import { getTagColor } from '../lib/tagColor'
 import type { Colors } from '../lib/theme'
-import { space, radius } from '../lib/theme'
+import { space, radius, shadow } from '../lib/theme'
 import type { Task } from '../types'
 
 type Tab = 'new' | 'backlog'
@@ -273,6 +273,7 @@ function createStyles(c: Colors) {
             padding: space.xxl,
             paddingBottom: 48,
             maxHeight: '85%',
+            ...shadow.lg,
         },
         handle: {
             width: 36, height: 4, borderRadius: 2,
