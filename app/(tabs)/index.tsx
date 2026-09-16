@@ -1,14 +1,13 @@
 import React, { useState, useMemo } from 'react'
 import {
   View,
-  Text,
   TouchableOpacity,
   FlatList,
   StyleSheet,
-  Platform,
   SafeAreaView,
   Animated,
 } from 'react-native'
+import { AppText as Text } from '../../components/AppText'
 import {
   useTodayTasks,
   useTodayCompletions,
@@ -26,6 +25,7 @@ import { showAlert } from '../../lib/alert'
 import { useEntranceAnimation, useCheckboxAnimation, usePressAnimation, triggerHaptic } from '../../hooks/useAnimation'
 import type { Colors } from '../../lib/theme'
 import { space, radius } from '../../lib/theme'
+import { displayFont } from '../../lib/fonts'
 import type { Task } from '../../types'
 
 function getGreeting() {
@@ -291,7 +291,7 @@ function createStyles(c: Colors) {
     greeting: {
       fontSize: 28, fontWeight: '700', color: c.text,
       letterSpacing: -0.5,
-      fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+      fontFamily: displayFont.bold,
     },
     date: { fontSize: 14, color: c.textMuted, marginTop: space.xs, fontWeight: '300' },
     nudgeBanner: {

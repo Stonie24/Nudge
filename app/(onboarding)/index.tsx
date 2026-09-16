@@ -1,21 +1,21 @@
 import React, { useRef, useState, useMemo } from 'react'
 import {
   View,
-  Text,
   TouchableOpacity,
   StyleSheet,
-  Platform,
   Dimensions,
   Animated,
   SafeAreaView,
   ActivityIndicator,
 } from 'react-native'
+import { AppText as Text } from '../../components/AppText'
 import { useRouter } from 'expo-router'
 import { supabase } from '../../lib/supabase'
 import { useTheme } from '../../lib/ThemeContext'
 import { triggerHaptic } from '../../hooks/useAnimation'
 import type { Colors } from '../../lib/theme'
 import { space, radius } from '../../lib/theme'
+import { displayFont } from '../../lib/fonts'
 
 const SCREEN_WIDTH = Dimensions.get('window').width
 
@@ -254,11 +254,11 @@ function createStyles(c: Colors) {
     icon: {
       fontSize: 48,
       color: c.accent,
-      fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+      fontFamily: displayFont.regular,
       marginBottom: space.sm,
     },
     title: {
-      fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+      fontFamily: displayFont.bold,
       fontSize: isDesktop ? 36 : 30,
       fontWeight: '700',
       color: c.text,

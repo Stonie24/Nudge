@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react'
 import {
   View,
-  Text,
   TextInput,
   TouchableOpacity,
   Modal,
@@ -9,11 +8,12 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native'
+import { AppText as Text } from './AppText'
 import { useAddTask } from '../hooks/useTasks'
 import { useTheme } from '../lib/ThemeContext'
 import { TagPicker } from './TagPicker'
 import type { Colors } from '../lib/theme'
-import { space, radius } from '../lib/theme'
+import { space, radius, shadow } from '../lib/theme'
 
 export function AddBacklogTaskSheet({
   visible,
@@ -109,6 +109,7 @@ function createStyles(c: Colors) {
       padding: space.xxl,
       paddingBottom: 48,
       gap: space.lg,
+      ...shadow.lg,
     },
     handle: {
       width: 36, height: 4, borderRadius: 2,

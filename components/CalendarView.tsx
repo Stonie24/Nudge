@@ -1,14 +1,14 @@
 import React, { useMemo } from 'react'
 import {
   View,
-  Text,
   TouchableOpacity,
   ScrollView,
   StyleSheet,
 } from 'react-native'
+import { AppText as Text } from './AppText'
 import { useTheme } from '../lib/ThemeContext'
 import type { Colors } from '../lib/theme'
-import { space, radius } from '../lib/theme'
+import { space, radius, shadow } from '../lib/theme'
 import type { CalendarEvent, Task } from '../types'
 
 type ViewMode = 'week' | 'month'
@@ -222,6 +222,7 @@ function createStyles(c: Colors) {
       borderWidth: 1,
       borderColor: c.border,
       padding: space.lg,
+      ...shadow.sm,
     },
     navRow: {
       flexDirection: 'row',

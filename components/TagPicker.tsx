@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react'
 import {
   View,
-  Text,
   TouchableOpacity,
   Modal,
   TextInput,
@@ -10,11 +9,12 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native'
+import { AppText as Text } from './AppText'
 import { useTags, useAddTag, useDeleteTag } from '../hooks/useTags'
 import { useTheme } from '../lib/ThemeContext'
 import { getTagColor } from '../lib/tagColor'
 import type { Colors } from '../lib/theme'
-import { space, radius } from '../lib/theme'
+import { space, radius, shadow } from '../lib/theme'
 
 const PRESET_TAGS = ['Work', 'Personal', 'Focus', 'Health', 'Errands']
 
@@ -222,6 +222,7 @@ function createStyles(c: Colors) {
       padding: space.xxl,
       paddingBottom: 40,
       maxHeight: '80%',
+      ...shadow.lg,
     },
     sheetHandle: {
       width: 36,

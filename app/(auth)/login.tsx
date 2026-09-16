@@ -1,19 +1,19 @@
 import { useState, useMemo } from 'react'
 import {
   View,
-  Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Platform,
   ActivityIndicator,
   Alert,
 } from 'react-native'
+import { AppText as Text } from '../../components/AppText'
 import { Link } from 'expo-router'
 import { supabase } from '../../lib/supabase'
 import { useTheme } from '../../lib/ThemeContext'
 import type { Colors } from '../../lib/theme'
 import { space, radius } from '../../lib/theme'
+import { displayFont } from '../../lib/fonts'
 
 // Dev-only quick sign-in — never available in a production build. Reads from
 // .env (gitignored) rather than hardcoding a credential in source.
@@ -158,7 +158,7 @@ function createStyles(c: Colors) {
       marginBottom: space.md,
     },
     logo: {
-      fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+      fontFamily: displayFont.bold,
       fontSize: 36,
       fontWeight: '700',
       color: c.text,

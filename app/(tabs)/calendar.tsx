@@ -1,13 +1,13 @@
 import React, { useState, useMemo } from 'react'
 import {
   View,
-  Text,
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
   ScrollView,
   Platform,
 } from 'react-native'
+import { AppText as Text } from '../../components/AppText'
 import { useNudgeEvents, useGoogleEvents, useAppleEvents } from '../../hooks/useCalendar'
 import { useGoogleCalendarAuth } from '../../hooks/useGoogleCalendarAuth'
 import { useTodayTasks, useTodayCompletions } from '../../hooks/useToday'
@@ -16,7 +16,8 @@ import { useTheme } from '../../lib/ThemeContext'
 import { CalendarView } from '../../components/CalendarView'
 import { DaySheet } from '../../components/DaySheet'
 import type { Colors } from '../../lib/theme'
-import { space, radius } from '../../lib/theme'
+import { space, radius, shadow } from '../../lib/theme'
+import { displayFont } from '../../lib/fonts'
 import type { CalendarEvent, Task } from '../../types'
 
 type ViewMode = 'week' | 'month'
@@ -248,7 +249,7 @@ function createStyles(c: Colors) {
     title: {
       fontSize: 28, fontWeight: '700', color: c.text,
       letterSpacing: -0.5,
-      fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+      fontFamily: displayFont.bold,
     },
     modeToggle: {
       flexDirection: 'row',
@@ -281,6 +282,7 @@ function createStyles(c: Colors) {
       borderColor: c.border,
       padding: space.lg,
       gap: space.xs,
+      ...shadow.sm,
     },
     integrationsTitle: {
       fontSize: 11, fontWeight: '600', color: c.textMuted,
