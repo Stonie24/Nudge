@@ -1,11 +1,11 @@
 import React, { useMemo } from 'react'
 import {
   View,
-  Text,
   ScrollView,
   TouchableOpacity,
   StyleSheet,
 } from 'react-native'
+import { AppText as Text } from './AppText'
 import { getTagColor } from '../lib/tagColor'
 import { useTheme } from '../lib/ThemeContext'
 import { TagPicker } from './TagPicker'

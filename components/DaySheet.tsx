@@ -1,15 +1,14 @@
 import React, { useState, useMemo } from 'react'
 import {
   View,
-  Text,
   TouchableOpacity,
   Modal,
   Pressable,
   ScrollView,
   TextInput,
   StyleSheet,
-  Platform,
 } from 'react-native'
+import { AppText as Text } from './AppText'
 import { useAddEvent, useDeleteEvent } from '../hooks/useCalendar'
 import { useCompleteTask, useUncompleteTask } from '../hooks/useTasks'
 import { useCompleteRecurring, useUncompleteRecurring } from '../hooks/useToday'
@@ -18,6 +17,7 @@ import { TagBadge } from './TagPicker'
 import { showAlert } from '../lib/alert'
 import type { Colors } from '../lib/theme'
 import { space, radius, shadow } from '../lib/theme'
+import { displayFont } from '../lib/fonts'
 import type { CalendarEvent, Task } from '../types'
 
 function EventRow({
@@ -324,7 +324,7 @@ function createStyles(c: Colors) {
       fontSize: 17,
       fontWeight: '600',
       color: c.text,
-      fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+      fontFamily: displayFont.semibold,
     },
     addEventBtn: {
       paddingVertical: space.sm,

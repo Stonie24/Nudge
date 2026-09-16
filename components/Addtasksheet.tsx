@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react'
 import {
     View,
-    Text,
     TextInput,
     TouchableOpacity,
     Modal,
@@ -12,6 +11,7 @@ import {
     ActivityIndicator,
     Switch,
 } from 'react-native'
+import { AppText as Text } from './AppText'
 import { useAddTodayTask, useScheduleForToday } from '../hooks/useToday'
 import { useTasks } from '../hooks/useTasks'
 import { useTheme } from '../lib/ThemeContext'

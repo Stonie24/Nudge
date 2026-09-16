@@ -4,7 +4,6 @@ import { supabase } from '../../lib/supabase'
 import React from 'react'
 import {
   View,
-  Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
@@ -13,9 +12,11 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native'
+import { AppText as Text } from '../../components/AppText'
 import { useTheme } from '../../lib/ThemeContext'
 import type { Colors } from '../../lib/theme'
 import { space, radius } from '../../lib/theme'
+import { displayFont } from '../../lib/fonts'
 
 export default function SignupScreen() {
   const [email, setEmail] = useState('')
@@ -164,7 +165,7 @@ function createStyles(c: Colors) {
       marginBottom: space.md,
     },
     logo: {
-      fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+      fontFamily: displayFont.bold,
       fontSize: 36,
       fontWeight: '700',
       color: c.text,

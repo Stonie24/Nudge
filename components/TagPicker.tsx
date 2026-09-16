@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react'
 import {
   View,
-  Text,
   TouchableOpacity,
   Modal,
   TextInput,
@@ -10,6 +9,7 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native'
+import { AppText as Text } from './AppText'
 import { useTags, useAddTag, useDeleteTag } from '../hooks/useTags'
 import { useTheme } from '../lib/ThemeContext'
 import { getTagColor } from '../lib/tagColor'

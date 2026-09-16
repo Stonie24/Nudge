@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react'
 import {
   View,
-  Text,
   TextInput,
   TouchableOpacity,
   Modal,
@@ -10,6 +9,7 @@ import {
   ActivityIndicator,
   Linking,
 } from 'react-native'
+import { AppText as Text } from './AppText'
 import { supabase } from '../lib/supabase'
 import { useTheme } from '../lib/ThemeContext'
 import { showAlert } from '../lib/alert'

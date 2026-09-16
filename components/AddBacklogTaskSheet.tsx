@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react'
 import {
   View,
-  Text,
   TextInput,
   TouchableOpacity,
   Modal,
@@ -9,6 +8,7 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native'
+import { AppText as Text } from './AppText'
 import { useAddTask } from '../hooks/useTasks'
 import { useTheme } from '../lib/ThemeContext'
 import { TagPicker } from './TagPicker'

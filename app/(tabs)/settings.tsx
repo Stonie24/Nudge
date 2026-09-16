@@ -1,14 +1,13 @@
 import React, { useState, useMemo } from 'react'
 import {
   View,
-  Text,
   TouchableOpacity,
   Switch,
   StyleSheet,
-  Platform,
   SafeAreaView,
   ScrollView,
 } from 'react-native'
+import { AppText as Text } from '../../components/AppText'
 import { useAuth } from '../../hooks/useAuth'
 import { useTasks } from '../../hooks/useTasks'
 import { useTheme } from '../../lib/ThemeContext'
@@ -16,6 +15,7 @@ import { showAlert } from '../../lib/alert'
 import { FeedbackSheet } from '../../components/FeedbackSheet'
 import type { Colors } from '../../lib/theme'
 import { space, radius, shadow } from '../../lib/theme'
+import { displayFont } from '../../lib/fonts'
 
 function SettingRow({
   label,
@@ -205,7 +205,7 @@ function createStyles(c: Colors) {
       fontWeight: '700',
       color: c.text,
       letterSpacing: -0.5,
-      fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+      fontFamily: displayFont.bold,
     },
     avatarSection: {
       alignItems: 'center',
