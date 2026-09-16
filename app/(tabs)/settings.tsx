@@ -1,20 +1,22 @@
 import React, { useState, useMemo } from 'react'
 import {
   View,
-  Text,
   TouchableOpacity,
   Switch,
   StyleSheet,
-  Platform,
   SafeAreaView,
   ScrollView,
 } from 'react-native'
+import { AppText as Text } from '../../components/AppText'
+import { Icon } from '../../components/Icon'
 import { useAuth } from '../../hooks/useAuth'
 import { useTasks } from '../../hooks/useTasks'
 import { useTheme } from '../../lib/ThemeContext'
 import { showAlert } from '../../lib/alert'
 import { FeedbackSheet } from '../../components/FeedbackSheet'
 import type { Colors } from '../../lib/theme'
+import { space, radius, shadow } from '../../lib/theme'
+import { displayFont } from '../../lib/fonts'
 
 function SettingRow({
   label,
@@ -41,7 +43,7 @@ function SettingRow({
         {label}
       </Text>
       {value && <Text style={styles.rowValue}>{value}</Text>}
-      {onPress && !destructive && <Text style={styles.rowChevron}>›</Text>}
+      {onPress && !destructive && <Icon name="chevron" size={18} color={colors.textFaint} strokeWidth={1.8} />}
     </TouchableOpacity>
   )
 }
@@ -95,35 +97,39 @@ export default function SettingsScreen() {
         </View>
 
         {/* Stats */}
-        <View style={styles.statsRow}>
-          <View style={styles.statCard}>
-            <Text style={styles.statNumber}>{totalTasks}</Text>
-            <Text style={styles.statLabel}>Total</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statCard}>
-            <Text style={styles.statNumber}>{completedTasks}</Text>
-            <Text style={styles.statLabel}>Done</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statCard}>
-            <Text style={styles.statNumber}>{pendingTasks}</Text>
-            <Text style={styles.statLabel}>Pending</Text>
+        <View style={styles.cardShadow}>
+          <View style={styles.statsRow}>
+            <View style={styles.statCard}>
+              <Text style={styles.statNumber}>{totalTasks}</Text>
+              <Text style={styles.statLabel}>Total</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statCard}>
+              <Text style={styles.statNumber}>{completedTasks}</Text>
+              <Text style={styles.statLabel}>Done</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statCard}>
+              <Text style={styles.statNumber}>{pendingTasks}</Text>
+              <Text style={styles.statLabel}>Pending</Text>
+            </View>
           </View>
         </View>
 
         {/* Appearance */}
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>Appearance</Text>
-          <View style={styles.sectionCard}>
-            <View style={styles.row}>
-              <Text style={styles.rowLabel}>Dark mode</Text>
-              <Switch
-                value={isDark}
-                onValueChange={toggle}
-                trackColor={{ false: colors.border, true: colors.accent }}
-                thumbColor={colors.surface}
-              />
+          <View style={styles.cardShadow}>
+            <View style={styles.sectionCard}>
+              <View style={styles.row}>
+                <Text style={styles.rowLabel}>Dark mode</Text>
+                <Switch
+                  value={isDark}
+                  onValueChange={toggle}
+                  trackColor={{ false: colors.border, true: colors.accent }}
+                  thumbColor={colors.surface}
+                />
+              </View>
             </View>
           </View>
         </View>
@@ -131,38 +137,44 @@ export default function SettingsScreen() {
         {/* Account section */}
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>Account</Text>
-          <View style={styles.sectionCard}>
-            <SettingRow label="Email" value={user?.email} colors={colors} />
-            <SettingRow
-              label="Change password"
-              onPress={() => showAlert('Coming soon', 'This feature is on the roadmap!')}
-              colors={colors}
-            />
+          <View style={styles.cardShadow}>
+            <View style={styles.sectionCard}>
+              <SettingRow label="Email" value={user?.email} colors={colors} />
+              <SettingRow
+                label="Change password"
+                onPress={() => showAlert('Coming soon', 'This feature is on the roadmap!')}
+                colors={colors}
+              />
+            </View>
           </View>
         </View>
 
         {/* About section */}
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>About</Text>
-          <View style={styles.sectionCard}>
-            <SettingRow label="Version" value="0.2.0" colors={colors} />
-            <SettingRow
-              label="Roadmap"
-              onPress={() => showAlert('Coming soon', 'Public roadmap coming soon!')}
-              colors={colors}
-            />
-            <SettingRow
-              label="Send feedback"
-              onPress={() => setFeedbackOpen(true)}
-              colors={colors}
-            />
+          <View style={styles.cardShadow}>
+            <View style={styles.sectionCard}>
+              <SettingRow label="Version" value="0.2.0" colors={colors} />
+              <SettingRow
+                label="Roadmap"
+                onPress={() => showAlert('Coming soon', 'Public roadmap coming soon!')}
+                colors={colors}
+              />
+              <SettingRow
+                label="Send feedback"
+                onPress={() => setFeedbackOpen(true)}
+                colors={colors}
+              />
+            </View>
           </View>
         </View>
 
         {/* Sign out */}
         <View style={styles.section}>
-          <View style={styles.sectionCard}>
-            <SettingRow label="Sign out" onPress={handleSignOut} destructive colors={colors} />
+          <View style={styles.cardShadow}>
+            <View style={styles.sectionCard}>
+              <SettingRow label="Sign out" onPress={handleSignOut} destructive colors={colors} />
+            </View>
           </View>
         </View>
 
@@ -182,23 +194,23 @@ function createStyles(c: Colors) {
       backgroundColor: c.bg,
     },
     content: {
-      paddingHorizontal: 24,
+      paddingHorizontal: space.xxl,
       paddingBottom: 60,
     },
     header: {
-      marginTop: 32,
-      marginBottom: 24,
+      marginTop: space.xxxl,
+      marginBottom: space.xxl,
     },
     title: {
       fontSize: 28,
       fontWeight: '700',
       color: c.text,
       letterSpacing: -0.5,
-      fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+      fontFamily: displayFont.bold,
     },
     avatarSection: {
       alignItems: 'center',
-      marginBottom: 28,
+      marginBottom: space.xxl,
     },
     avatar: {
       width: 64,
@@ -207,7 +219,7 @@ function createStyles(c: Colors) {
       backgroundColor: c.accentBg,
       alignItems: 'center',
       justifyContent: 'center',
-      marginBottom: 12,
+      marginBottom: space.md,
     },
     avatarText: {
       fontSize: 24,
@@ -218,31 +230,37 @@ function createStyles(c: Colors) {
       fontSize: 15,
       fontWeight: '500',
       color: c.text,
-      marginBottom: 4,
+      marginBottom: space.xs,
     },
     memberText: {
       fontSize: 13,
       color: c.textMuted,
       fontWeight: '300',
     },
+    // Shadow lives on a wrapper View, not the card itself: the card needs
+    // overflow:'hidden' to clip its rows to the rounded corners, and on iOS
+    // that clips the shadow too since both share the layer's masksToBounds.
+    cardShadow: {
+      ...shadow.sm,
+    },
     statsRow: {
       flexDirection: 'row',
       backgroundColor: c.surface,
-      borderRadius: 16,
+      borderRadius: radius.lg,
       borderWidth: 1,
       borderColor: c.border,
-      marginBottom: 28,
+      marginBottom: space.xxl,
       overflow: 'hidden',
     },
     statCard: {
       flex: 1,
       alignItems: 'center',
-      paddingVertical: 16,
+      paddingVertical: space.lg,
     },
     statDivider: {
       width: 1,
       backgroundColor: c.border,
-      marginVertical: 12,
+      marginVertical: space.md,
     },
     statNumber: {
       fontSize: 24,
@@ -257,7 +275,7 @@ function createStyles(c: Colors) {
       fontWeight: '400',
     },
     section: {
-      marginBottom: 20,
+      marginBottom: space.xl,
     },
     sectionLabel: {
       fontSize: 11,
@@ -265,12 +283,12 @@ function createStyles(c: Colors) {
       color: c.textMuted,
       letterSpacing: 0.8,
       textTransform: 'uppercase',
-      marginBottom: 8,
-      marginLeft: 4,
+      marginBottom: space.sm,
+      marginLeft: space.xs,
     },
     sectionCard: {
       backgroundColor: c.surface,
-      borderRadius: 16,
+      borderRadius: radius.lg,
       borderWidth: 1,
       borderColor: c.border,
       overflow: 'hidden',
@@ -278,8 +296,8 @@ function createStyles(c: Colors) {
     row: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingVertical: 14,
-      paddingHorizontal: 16,
+      paddingVertical: space.md,
+      paddingHorizontal: space.lg,
       borderBottomWidth: 1,
       borderBottomColor: c.borderLight,
     },
@@ -289,23 +307,18 @@ function createStyles(c: Colors) {
       flex: 1,
     },
     rowLabelDestructive: {
-      color: '#E24B4A',
+      color: c.danger,
     },
     rowValue: {
       fontSize: 14,
       color: c.textMuted,
-      marginRight: 8,
-    },
-    rowChevron: {
-      fontSize: 18,
-      color: c.textFaint,
-      fontWeight: '300',
+      marginRight: space.sm,
     },
     footer: {
       textAlign: 'center',
       fontSize: 12,
       color: c.textFaint,
-      marginTop: 12,
+      marginTop: space.md,
     },
   })
 }

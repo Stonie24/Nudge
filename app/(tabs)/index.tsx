@@ -1,14 +1,14 @@
 import React, { useState, useMemo } from 'react'
 import {
   View,
-  Text,
   TouchableOpacity,
   FlatList,
   StyleSheet,
-  Platform,
   SafeAreaView,
   Animated,
 } from 'react-native'
+import { AppText as Text } from '../../components/AppText'
+import { Icon } from '../../components/Icon'
 import {
   useTodayTasks,
   useTodayCompletions,
@@ -22,9 +22,12 @@ import { useTheme } from '../../lib/ThemeContext'
 import { TagPicker } from '../../components/TagPicker'
 import { KanbanBoard } from '../../components/KanbanBoard'
 import { AddTaskSheet } from '../../components/Addtasksheet'
+import { TaskDetailSheet } from '../../components/TaskDetailSheet'
 import { showAlert } from '../../lib/alert'
 import { useEntranceAnimation, useCheckboxAnimation, usePressAnimation, triggerHaptic } from '../../hooks/useAnimation'
 import type { Colors } from '../../lib/theme'
+import { space, radius } from '../../lib/theme'
+import { displayFont } from '../../lib/fonts'
 import type { Task } from '../../types'
 
 function getGreeting() {
@@ -54,6 +57,7 @@ function TaskItem({
   onUncomplete,
   onDelete,
   onUpdateTag,
+  onOpenDetail,
   colors,
   index = 0,
 }: {
@@ -63,6 +67,7 @@ function TaskItem({
   onUncomplete: (id: string) => void
   onDelete: (id: string) => void
   onUpdateTag: (id: string, tag?: string) => void
+  onOpenDetail: (task: Task) => void
   colors: Colors
   index?: number
 }) {
@@ -78,7 +83,7 @@ function TaskItem({
   const { opacity, translateY } = useEntranceAnimation(Math.min(index * 40, 200))
   const { scale: checkboxScale, ringScale, ringOpacity, triggerComplete, triggerUncomplete } = useCheckboxAnimation()
 
-  function handlePress() {
+  function handleToggle() {
     if (isDone) {
       triggerUncomplete()
       triggerHaptic('light')
@@ -92,13 +97,12 @@ function TaskItem({
 
   return (
     <Animated.View style={{ opacity, transform: [{ translateY }] }}>
-      <TouchableOpacity
-        style={styles.taskRow}
-        onPress={handlePress}
-        onLongPress={handleLongPress}
-        activeOpacity={0.7}
-      >
-        <View style={styles.checkboxWrap}>
+      <View style={styles.taskRow}>
+        <TouchableOpacity
+          style={styles.checkboxWrap}
+          onPress={handleToggle}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
           {/* Ripple ring — only visible during completion burst */}
           <Animated.View
             style={[styles.checkboxRing, { transform: [{ scale: ringScale }], opacity: ringOpacity }]}
@@ -108,23 +112,32 @@ function TaskItem({
               {isDone && <View style={styles.checkmark} />}
             </View>
           </Animated.View>
-        </View>
-        <View style={styles.taskContent}>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.taskContent}
+          onPress={() => onOpenDetail(task)}
+          onLongPress={handleLongPress}
+          activeOpacity={0.6}
+        >
           <Text style={[styles.taskTitle, isDone && styles.taskTitleDone]}>
             {task.title}
           </Text>
           {task.recurring && (
-            <Text style={styles.recurringBadge}>↻ daily</Text>
+            <View style={styles.recurringBadge}>
+              <Icon name="repeat" size={11} color={colors.accent} strokeWidth={2} />
+              <Text style={styles.recurringBadgeText}>daily</Text>
+            </View>
           )}
-        </View>
+        </TouchableOpacity>
         <TagPicker value={task.tag} onChange={tag => onUpdateTag(task.id, tag)} />
-      </TouchableOpacity>
+      </View>
     </Animated.View>
   )
 }
 
 export default function TodayScreen() {
   const [sheetOpen, setSheetOpen] = useState(false)
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
   const { isDesktop } = useLayout()
   const { colors } = useTheme()
   const styles = useMemo(() => createStyles(colors), [colors])
@@ -194,7 +207,8 @@ export default function TodayScreen() {
           onPressOut={addBtn.onPressOut}
           activeOpacity={1}
         >
-          <Text style={styles.addBtnText}>+ Add task</Text>
+          <Icon name="plus" size={16} color={colors.btnPrimaryText} strokeWidth={2.2} />
+          <Text style={styles.addBtnText}>Add task</Text>
         </TouchableOpacity>
       </Animated.View>
     </View>
@@ -238,6 +252,7 @@ export default function TodayScreen() {
               onUncomplete={() => handleUncomplete(item)}
               onDelete={id => deleteTask.mutate(id)}
               onUpdateTag={(id, tag) => updateTask.mutate({ id, tag })}
+              onOpenDetail={t => setSelectedTaskId(t.id)}
               colors={colors}
               index={index}
             />
@@ -255,6 +270,7 @@ export default function TodayScreen() {
                     onUncomplete={() => handleUncomplete(task)}
                     onDelete={id => deleteTask.mutate(id)}
                     onUpdateTag={(id, tag) => updateTask.mutate({ id, tag })}
+                    onOpenDetail={t => setSelectedTaskId(t.id)}
                     colors={colors}
                     index={i}
                   />
@@ -275,6 +291,12 @@ export default function TodayScreen() {
         onClose={() => setSheetOpen(false)}
         todayTaskIds={todayTaskIds}
       />
+
+      <TaskDetailSheet
+        task={tasks?.find(t => t.id === selectedTaskId) ?? null}
+        completedToday={selectedTaskId ? completedTodayIds.has(selectedTaskId) : false}
+        onClose={() => setSelectedTaskId(null)}
+      />
     </SafeAreaView>
   )
 }
@@ -283,35 +305,36 @@ function createStyles(c: Colors) {
   return StyleSheet.create({
     safe: { flex: 1, backgroundColor: c.bg },
     desktopWrap: { flex: 1 },
-    content: { paddingHorizontal: 24, paddingBottom: 40 },
-    headerWrap: { paddingHorizontal: 24 },
-    headerWrapDesktop: { paddingVertical: 8 },
-    header: { marginTop: 32, marginBottom: 20 },
+    content: { paddingHorizontal: space.xxl, paddingBottom: 40 },
+    headerWrap: { paddingHorizontal: space.xxl },
+    headerWrapDesktop: { paddingVertical: space.sm },
+    header: { marginTop: space.xxxl, marginBottom: space.xl },
     greeting: {
       fontSize: 28, fontWeight: '700', color: c.text,
       letterSpacing: -0.5,
-      fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+      fontFamily: displayFont.bold,
     },
-    date: { fontSize: 14, color: c.textMuted, marginTop: 4, fontWeight: '300' },
+    date: { fontSize: 14, color: c.textMuted, marginTop: space.xs, fontWeight: '300' },
     nudgeBanner: {
-      backgroundColor: c.accentBg, borderRadius: 12,
-      padding: 14, marginBottom: 20,
+      backgroundColor: c.accentBg, borderRadius: radius.md,
+      padding: space.md, marginBottom: space.xl,
     },
     nudgeText: { fontSize: 14, color: c.accentText, fontWeight: '400', lineHeight: 20 },
     addBtn: {
+      flexDirection: 'row', gap: space.xs,
       height: 52, backgroundColor: c.btnPrimary,
-      borderRadius: 100, alignItems: 'center',
-      justifyContent: 'center', marginBottom: 28,
+      borderRadius: radius.pill, alignItems: 'center',
+      justifyContent: 'center', marginBottom: space.xxl,
     },
     addBtnText: { color: c.btnPrimaryText, fontSize: 15, fontWeight: '500' },
     sectionLabel: {
       fontSize: 11, fontWeight: '600', color: c.textMuted,
-      letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 8,
+      letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: space.sm,
     },
     taskRow: {
       flexDirection: 'row', alignItems: 'center',
-      paddingVertical: 13, borderBottomWidth: 1,
-      borderBottomColor: c.borderLight, gap: 14,
+      paddingVertical: space.md, borderBottomWidth: 1,
+      borderBottomColor: c.borderLight, gap: space.md,
     },
     checkboxWrap: {
       width: 22, height: 22,
@@ -333,10 +356,11 @@ function createStyles(c: Colors) {
       borderBottomWidth: 2, borderColor: '#FFFFFF',
       transform: [{ rotate: '40deg' }, { translateY: -1 }],
     },
-    taskContent: { flex: 1, gap: 3 },
+    taskContent: { flex: 1, gap: space.xs },
     taskTitle: { fontSize: 15, color: c.text, lineHeight: 22 },
     taskTitleDone: { color: c.textMuted, textDecorationLine: 'line-through' },
-    recurringBadge: { fontSize: 11, color: c.accent, fontWeight: '500' },
+    recurringBadge: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
+    recurringBadgeText: { fontSize: 11, color: c.accent, fontWeight: '500' },
     emptyText: { fontSize: 14, color: c.textMuted, textAlign: 'center', marginTop: 40 },
   })
 }

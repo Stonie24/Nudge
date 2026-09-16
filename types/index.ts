@@ -8,6 +8,7 @@ export type Task = {
   completed_at?: string
   recurring: boolean
   scheduled_date?: string
+  notes?: string
 }
 
 export type DailyCompletion = {

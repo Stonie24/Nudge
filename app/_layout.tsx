@@ -2,10 +2,12 @@ import { useEffect } from 'react'
 import { Slot, useRouter, useSegments } from 'expo-router'
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
+import { useFonts } from 'expo-font'
 import { queryClient, persistOptions } from '../lib/queryClient'
 import { setupOnlineManager } from '../lib/network'
 import { useAuth } from '../hooks/useAuth'
 import { ThemeProvider, useTheme } from '../lib/ThemeContext'
+import { fontsToLoad } from '../lib/fonts'
 import { StatusBar } from 'expo-status-bar'
 import * as WebBrowser from 'expo-web-browser'
 import { OfflineBanner } from '../components/OfflineBanner'
@@ -42,6 +44,10 @@ function AuthGate() {
 }
 
 export default function RootLayout() {
+  const [fontsLoaded] = useFonts(fontsToLoad)
+
+  if (!fontsLoaded) return null
+
   return (
     <SafeAreaProvider>
       <PersistQueryClientProvider

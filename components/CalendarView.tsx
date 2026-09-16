@@ -1,13 +1,15 @@
 import React, { useMemo } from 'react'
 import {
   View,
-  Text,
   TouchableOpacity,
   ScrollView,
   StyleSheet,
 } from 'react-native'
+import { AppText as Text } from './AppText'
+import { Icon } from './Icon'
 import { useTheme } from '../lib/ThemeContext'
 import type { Colors } from '../lib/theme'
+import { space, radius, shadow } from '../lib/theme'
 import type { CalendarEvent, Task } from '../types'
 
 type ViewMode = 'week' | 'month'
@@ -82,7 +84,7 @@ function DayCell({
   const recurringTasks = tasks.filter(t => t.recurring)
 
   const dots: string[] = []
-  if (nudgeEvents.length > 0) dots.push('#F59F0A')
+  if (nudgeEvents.length > 0) dots.push(colors.calendarDotEvent)
   if (googleEvents.length > 0) dots.push('#4285F4')
   if (appleEvents.length > 0) dots.push('#FF9500')
   if (scheduledTasks.length > 0) dots.push(colors.calendarDotTask)
@@ -161,11 +163,11 @@ export function CalendarView({
       {/* Navigation header */}
       <View style={styles.navRow}>
         <TouchableOpacity style={styles.navBtn} onPress={onPrevious} activeOpacity={0.7}>
-          <Text style={styles.navBtnText}>‹</Text>
+          <Icon name="chevron" rotate={180} size={16} color={colors.text} strokeWidth={2} />
         </TouchableOpacity>
         <Text style={styles.navTitle}>{headerTitle}</Text>
         <TouchableOpacity style={styles.navBtn} onPress={onNext} activeOpacity={0.7}>
-          <Text style={styles.navBtnText}>›</Text>
+          <Icon name="chevron" size={16} color={colors.text} strokeWidth={2} />
         </TouchableOpacity>
       </View>
 
@@ -217,29 +219,25 @@ function createStyles(c: Colors) {
   return StyleSheet.create({
     container: {
       backgroundColor: c.surface,
-      borderRadius: 16,
+      borderRadius: radius.lg,
       borderWidth: 1,
       borderColor: c.border,
-      padding: 16,
+      padding: space.lg,
+      ...shadow.sm,
     },
     navRow: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      marginBottom: 16,
+      marginBottom: space.lg,
     },
     navBtn: {
       width: 36,
       height: 36,
-      borderRadius: 10,
+      borderRadius: radius.md,
       backgroundColor: c.surfaceMuted,
       alignItems: 'center',
       justifyContent: 'center',
-    },
-    navBtnText: {
-      fontSize: 20,
-      color: c.text,
-      lineHeight: 24,
     },
     navTitle: {
       fontSize: 15,
@@ -248,7 +246,7 @@ function createStyles(c: Colors) {
     },
     dayLabels: {
       flexDirection: 'row',
-      marginBottom: 8,
+      marginBottom: space.sm,
     },
     dayLabel: {
       flex: 1,
@@ -265,8 +263,8 @@ function createStyles(c: Colors) {
       flex: 1,
       aspectRatio: 0.85,
       alignItems: 'center',
-      paddingTop: 4,
-      borderRadius: 10,
+      paddingTop: space.xs,
+      borderRadius: radius.sm,
     },
     monthGrid: {
       flexDirection: 'row',
@@ -280,8 +278,8 @@ function createStyles(c: Colors) {
       width: '14.28%',
       aspectRatio: 0.85,
       alignItems: 'center',
-      paddingTop: 4,
-      borderRadius: 10,
+      paddingTop: space.xs,
+      borderRadius: radius.sm,
     },
     dayCellSelected: {
       backgroundColor: c.surfaceMuted,
@@ -314,8 +312,8 @@ function createStyles(c: Colors) {
     },
     dots: {
       flexDirection: 'row',
-      gap: 3,
-      marginTop: 3,
+      gap: space.xs,
+      marginTop: space.xs,
       height: 6,
     },
     dot: {

@@ -1,16 +1,17 @@
 import React, { useMemo } from 'react'
 import {
   View,
-  Text,
   ScrollView,
   TouchableOpacity,
   StyleSheet,
 } from 'react-native'
+import { AppText as Text } from './AppText'
 import { getTagColor } from '../lib/tagColor'
 import { useTheme } from '../lib/ThemeContext'
 import { TagPicker } from './TagPicker'
 import { showAlert } from '../lib/alert'
 import type { Colors } from '../lib/theme'
+import { space, radius, shadow } from '../lib/theme'
 import type { Task } from '../types'
 
 function KanbanCard({
@@ -79,7 +80,7 @@ export function KanbanBoard({
   onDelete: (id: string) => void
   onUpdateTag?: (id: string, tag?: string) => void
 }) {
-  const { colors } = useTheme()
+  const { colors, isDark } = useTheme()
   const styles = useMemo(() => createStyles(colors), [colors])
 
   const groups: Record<string, Task[]> = {}
@@ -98,7 +99,7 @@ export function KanbanBoard({
       contentContainerStyle={styles.board}
     >
       {columns.map(([tag, colTasks]) => {
-        const color = tag !== 'No tag' ? getTagColor(tag) : null
+        const color = tag !== 'No tag' ? getTagColor(tag, isDark) : null
         const done = colTasks.filter(t => t.completed).length
         const total = colTasks.length
 
@@ -153,28 +154,28 @@ export function KanbanBoard({
 function createStyles(c: Colors) {
   return StyleSheet.create({
     board: {
-      paddingHorizontal: 24,
+      paddingHorizontal: space.xxl,
       paddingBottom: 40,
-      gap: 16,
+      gap: space.lg,
       alignItems: 'flex-start',
     },
     column: {
       width: 260,
       backgroundColor: c.surfaceMuted,
-      borderRadius: 16,
-      padding: 16,
+      borderRadius: radius.lg,
+      padding: space.lg,
       minHeight: 200,
     },
     columnHeader: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      marginBottom: 8,
+      marginBottom: space.sm,
     },
     columnTag: {
-      paddingVertical: 4,
-      paddingHorizontal: 12,
-      borderRadius: 100,
+      paddingVertical: space.xs,
+      paddingHorizontal: space.md,
+      borderRadius: radius.pill,
       borderWidth: 1.5,
     },
     columnTagDefault: {
@@ -197,7 +198,7 @@ function createStyles(c: Colors) {
       height: 3,
       backgroundColor: c.border,
       borderRadius: 2,
-      marginBottom: 12,
+      marginBottom: space.md,
       overflow: 'hidden',
     },
     progressFill: {
@@ -205,15 +206,16 @@ function createStyles(c: Colors) {
       borderRadius: 2,
     },
     cards: {
-      gap: 8,
+      gap: space.sm,
     },
     card: {
       backgroundColor: c.surface,
-      borderRadius: 12,
-      padding: 14,
+      borderRadius: radius.md,
+      padding: space.md,
       borderWidth: 1,
       borderColor: c.border,
-      gap: 10,
+      gap: space.sm,
+      ...shadow.sm,
     },
     cardDone: {
       opacity: 0.6,
@@ -221,7 +223,7 @@ function createStyles(c: Colors) {
     cardTop: {
       flexDirection: 'row',
       alignItems: 'flex-start',
-      gap: 10,
+      gap: space.sm,
     },
     checkbox: {
       width: 20,

@@ -22,7 +22,7 @@ const discovery = {
 
 export function useGoogleCalendarAuth() {
   const queryClient = useQueryClient()
-  const codeVerifierRef = useRef<string | undefined>()
+  const codeVerifierRef = useRef<string | undefined>(undefined)
 
   const [request, response, promptAsync] = AuthSession.useAuthRequest(
     {

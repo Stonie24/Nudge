@@ -4,7 +4,6 @@ import { supabase } from '../../lib/supabase'
 import React from 'react'
 import {
   View,
-  Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
@@ -13,8 +12,11 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native'
+import { AppText as Text } from '../../components/AppText'
 import { useTheme } from '../../lib/ThemeContext'
 import type { Colors } from '../../lib/theme'
+import { space, radius } from '../../lib/theme'
+import { displayFont } from '../../lib/fonts'
 
 export default function SignupScreen() {
   const [email, setEmail] = useState('')
@@ -148,27 +150,27 @@ function createStyles(c: Colors) {
     inner: {
       flex: 1,
       justifyContent: 'center',
-      paddingHorizontal: 28,
+      paddingHorizontal: space.xxl,
       paddingBottom: 40,
     },
     header: {
       alignItems: 'center',
-      marginBottom: 40,
+      marginBottom: space.xxxl,
     },
     dot: {
       width: 10,
       height: 10,
       borderRadius: 5,
       backgroundColor: c.accent,
-      marginBottom: 12,
+      marginBottom: space.md,
     },
     logo: {
-      fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+      fontFamily: displayFont.bold,
       fontSize: 36,
       fontWeight: '700',
       color: c.text,
       letterSpacing: -1,
-      marginBottom: 6,
+      marginBottom: space.sm,
     },
     tagline: {
       fontSize: 15,
@@ -176,10 +178,10 @@ function createStyles(c: Colors) {
       fontWeight: '300',
     },
     form: {
-      gap: 14,
+      gap: space.md,
     },
     field: {
-      gap: 6,
+      gap: space.sm,
     },
     label: {
       fontSize: 13,
@@ -191,8 +193,8 @@ function createStyles(c: Colors) {
       height: 50,
       borderWidth: 1,
       borderColor: c.border,
-      borderRadius: 12,
-      paddingHorizontal: 16,
+      borderRadius: radius.md,
+      paddingHorizontal: space.lg,
       fontSize: 15,
       color: c.text,
       backgroundColor: c.inputBg,
@@ -200,10 +202,10 @@ function createStyles(c: Colors) {
     button: {
       height: 52,
       backgroundColor: c.btnPrimary,
-      borderRadius: 100,
+      borderRadius: radius.pill,
       alignItems: 'center',
       justifyContent: 'center',
-      marginTop: 6,
+      marginTop: space.sm,
     },
     buttonDisabled: {
       opacity: 0.6,
@@ -218,12 +220,12 @@ function createStyles(c: Colors) {
       color: c.textMuted,
       textAlign: 'center',
       lineHeight: 16,
-      marginTop: 4,
+      marginTop: space.xs,
     },
     footer: {
       flexDirection: 'row',
       justifyContent: 'center',
-      marginTop: 32,
+      marginTop: space.xxxl,
     },
     footerText: {
       fontSize: 14,
