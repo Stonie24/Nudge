@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
 } from 'react-native'
 import { AppText as Text } from './AppText'
+import { Icon } from './Icon'
 import { useTags, useAddTag, useDeleteTag } from '../hooks/useTags'
 import { useTheme } from '../lib/ThemeContext'
 import { getTagColor } from '../lib/tagColor'
@@ -123,7 +124,7 @@ export function TagPicker({
                             onPress={() => handleDeleteTag(tag)}
                             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                           >
-                            <Text style={styles.removeTagText}>×</Text>
+                            <Icon name="close" size={9} color={colors.textSecondary} strokeWidth={2.2} />
                           </TouchableOpacity>
                         )}
                       </View>
@@ -276,12 +277,6 @@ function createStyles(c: Colors) {
       backgroundColor: c.border,
       alignItems: 'center',
       justifyContent: 'center',
-    },
-    removeTagText: {
-      fontSize: 11,
-      color: c.textSecondary,
-      lineHeight: 14,
-      fontWeight: '600',
     },
     customRow: {
       flexDirection: 'row',

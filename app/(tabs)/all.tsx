@@ -10,6 +10,7 @@ import {
   Animated,
 } from 'react-native'
 import { AppText as Text } from '../../components/AppText'
+import { Icon } from '../../components/Icon'
 import { useTasks, useCompleteTask, useUncompleteTask, useDeleteTask, useUpdateTask } from '../../hooks/useTasks'
 import { useLayout } from '../../hooks/useLayout'
 import { useTheme } from '../../lib/ThemeContext'
@@ -166,12 +167,14 @@ export default function AllTasksScreen() {
               onPressOut={addBtn.onPressOut}
               activeOpacity={1}
             >
-              <Text style={styles.addBtnText}>+ New task</Text>
+              <Icon name="plus" size={14} color={colors.btnPrimaryText} strokeWidth={2.2} />
+              <Text style={styles.addBtnText}>New task</Text>
             </TouchableOpacity>
           </Animated.View>
         </View>
       </View>
       <View style={styles.searchRow}>
+        <Icon name="search" size={16} color={colors.textMuted} strokeWidth={2} style={styles.searchIcon} />
         <TextInput
           style={styles.searchInput}
           placeholder="Search tasks or tags..."
@@ -339,6 +342,9 @@ function createStyles(c: Colors) {
     },
     subtitle: { fontSize: 14, color: c.textMuted, marginTop: space.xs, fontWeight: '300' },
     addBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: space.xs,
       paddingVertical: space.sm,
       paddingHorizontal: space.lg,
       backgroundColor: c.btnPrimary,
@@ -349,11 +355,12 @@ function createStyles(c: Colors) {
       fontSize: 14,
       fontWeight: '500',
     },
-    searchRow: { marginBottom: space.md },
+    searchRow: { marginBottom: space.md, justifyContent: 'center' },
+    searchIcon: { position: 'absolute', left: space.lg, zIndex: 1 },
     searchInput: {
       height: 44, backgroundColor: c.inputBg,
       borderWidth: 1, borderColor: c.border, borderRadius: radius.md,
-      paddingHorizontal: space.lg, fontSize: 15, color: c.text,
+      paddingLeft: space.lg + 16 + space.sm, paddingRight: space.lg, fontSize: 15, color: c.text,
     },
     tagFilterScroll: { marginBottom: space.md },
     tagFilterContent: { gap: space.sm, paddingRight: space.xs },
