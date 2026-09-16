@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import * as ExpoCalendar from 'expo-calendar'
 import { Platform } from 'react-native'
 import { supabase } from '../lib/supabase'
+import { resumableMutation } from '../lib/resumableMutation'
 import type { CalendarEvent } from '../types'
 
 // Fetch Nudge events from Supabase for a date range
@@ -73,6 +74,7 @@ export function useAppleEvents(startDate: string, endDate: string) {
   return useQuery<CalendarEvent[]>({
     queryKey: ['apple_events', startDate, endDate],
     enabled: Platform.OS === 'ios',
+    networkMode: 'always', // reads the local device calendar — has nothing to do with network connectivity
     queryFn: async () => {
       const { status } = await ExpoCalendar.requestCalendarPermissionsAsync()
       if (status !== 'granted') return []
@@ -102,39 +104,43 @@ export function useAppleEvents(startDate: string, endDate: string) {
 }
 
 // Add a manual Nudge event
+const addEvent = resumableMutation('addEvent', async (event: {
+  title: string
+  description?: string
+  start_time: string
+  end_time: string
+  all_day?: boolean
+  color?: string
+}) => {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not logged in')
+  const { data, error } = await supabase
+    .from('events')
+    .insert({ ...event, user_id: user.id, source: 'nudge' })
+    .select()
+    .single()
+  if (error) throw error
+  return data
+})
+
 export function useAddEvent() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (event: {
-      title: string
-      description?: string
-      start_time: string
-      end_time: string
-      all_day?: boolean
-      color?: string
-    }) => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Not logged in')
-      const { data, error } = await supabase
-        .from('events')
-        .insert({ ...event, user_id: user.id, source: 'nudge' })
-        .select()
-        .single()
-      if (error) throw error
-      return data
-    },
+    ...addEvent,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['events'] }),
   })
 }
 
 // Delete a Nudge event
+const deleteEvent = resumableMutation('deleteEvent', async (id: string) => {
+  const { error } = await supabase.from('events').delete().eq('id', id)
+  if (error) throw error
+})
+
 export function useDeleteEvent() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from('events').delete().eq('id', id)
-      if (error) throw error
-    },
+    ...deleteEvent,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['events'] }),
   })
 }
