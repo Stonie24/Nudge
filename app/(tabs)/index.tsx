@@ -228,6 +228,7 @@ export default function TodayScreen() {
                   onUncomplete={id => handleUncomplete(tasks?.find(t => t.id === id)!)}
                   onDelete={id => deleteTask.mutate(id)}
                   onUpdateTag={(id, tag) => updateTask.mutate({ id, tag })}
+                  onOpenDetail={t => setSelectedTaskId(t.id)}
                 />
               : <Text style={styles.emptyText}>Nothing on the board yet — add something above.</Text>
           }
