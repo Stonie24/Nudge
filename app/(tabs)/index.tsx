@@ -22,6 +22,7 @@ import { useTheme } from '../../lib/ThemeContext'
 import { TagPicker } from '../../components/TagPicker'
 import { KanbanBoard } from '../../components/KanbanBoard'
 import { AddTaskSheet } from '../../components/Addtasksheet'
+import { TaskDetailSheet } from '../../components/TaskDetailSheet'
 import { showAlert } from '../../lib/alert'
 import { useEntranceAnimation, useCheckboxAnimation, usePressAnimation, triggerHaptic } from '../../hooks/useAnimation'
 import type { Colors } from '../../lib/theme'
@@ -56,6 +57,7 @@ function TaskItem({
   onUncomplete,
   onDelete,
   onUpdateTag,
+  onOpenDetail,
   colors,
   index = 0,
 }: {
@@ -65,6 +67,7 @@ function TaskItem({
   onUncomplete: (id: string) => void
   onDelete: (id: string) => void
   onUpdateTag: (id: string, tag?: string) => void
+  onOpenDetail: (task: Task) => void
   colors: Colors
   index?: number
 }) {
@@ -80,7 +83,7 @@ function TaskItem({
   const { opacity, translateY } = useEntranceAnimation(Math.min(index * 40, 200))
   const { scale: checkboxScale, ringScale, ringOpacity, triggerComplete, triggerUncomplete } = useCheckboxAnimation()
 
-  function handlePress() {
+  function handleToggle() {
     if (isDone) {
       triggerUncomplete()
       triggerHaptic('light')
@@ -94,13 +97,12 @@ function TaskItem({
 
   return (
     <Animated.View style={{ opacity, transform: [{ translateY }] }}>
-      <TouchableOpacity
-        style={styles.taskRow}
-        onPress={handlePress}
-        onLongPress={handleLongPress}
-        activeOpacity={0.7}
-      >
-        <View style={styles.checkboxWrap}>
+      <View style={styles.taskRow}>
+        <TouchableOpacity
+          style={styles.checkboxWrap}
+          onPress={handleToggle}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
           {/* Ripple ring — only visible during completion burst */}
           <Animated.View
             style={[styles.checkboxRing, { transform: [{ scale: ringScale }], opacity: ringOpacity }]}
@@ -110,8 +112,13 @@ function TaskItem({
               {isDone && <View style={styles.checkmark} />}
             </View>
           </Animated.View>
-        </View>
-        <View style={styles.taskContent}>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.taskContent}
+          onPress={() => onOpenDetail(task)}
+          onLongPress={handleLongPress}
+          activeOpacity={0.6}
+        >
           <Text style={[styles.taskTitle, isDone && styles.taskTitleDone]}>
             {task.title}
           </Text>
@@ -121,15 +128,16 @@ function TaskItem({
               <Text style={styles.recurringBadgeText}>daily</Text>
             </View>
           )}
-        </View>
+        </TouchableOpacity>
         <TagPicker value={task.tag} onChange={tag => onUpdateTag(task.id, tag)} />
-      </TouchableOpacity>
+      </View>
     </Animated.View>
   )
 }
 
 export default function TodayScreen() {
   const [sheetOpen, setSheetOpen] = useState(false)
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
   const { isDesktop } = useLayout()
   const { colors } = useTheme()
   const styles = useMemo(() => createStyles(colors), [colors])
@@ -244,6 +252,7 @@ export default function TodayScreen() {
               onUncomplete={() => handleUncomplete(item)}
               onDelete={id => deleteTask.mutate(id)}
               onUpdateTag={(id, tag) => updateTask.mutate({ id, tag })}
+              onOpenDetail={t => setSelectedTaskId(t.id)}
               colors={colors}
               index={index}
             />
@@ -261,6 +270,7 @@ export default function TodayScreen() {
                     onUncomplete={() => handleUncomplete(task)}
                     onDelete={id => deleteTask.mutate(id)}
                     onUpdateTag={(id, tag) => updateTask.mutate({ id, tag })}
+                    onOpenDetail={t => setSelectedTaskId(t.id)}
                     colors={colors}
                     index={i}
                   />
@@ -280,6 +290,12 @@ export default function TodayScreen() {
         visible={sheetOpen}
         onClose={() => setSheetOpen(false)}
         todayTaskIds={todayTaskIds}
+      />
+
+      <TaskDetailSheet
+        task={tasks?.find(t => t.id === selectedTaskId) ?? null}
+        completedToday={selectedTaskId ? completedTodayIds.has(selectedTaskId) : false}
+        onClose={() => setSelectedTaskId(null)}
       />
     </SafeAreaView>
   )

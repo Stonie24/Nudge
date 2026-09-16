@@ -79,10 +79,26 @@ export function useDeleteTask() {
 export function useUpdateTask() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async ({ id, tag }: { id: string; tag?: string }) => {
+    mutationFn: async ({ id, tag, title, recurring, scheduled_date, notes }: {
+      id: string
+      tag?: string
+      title?: string
+      recurring?: boolean
+      scheduled_date?: string | null
+      notes?: string
+    }) => {
+      // tag always writes (undefined clears it) to preserve every existing
+      // caller's behavior; the rest only update when explicitly provided,
+      // so a partial save (e.g. from the task detail sheet) can't clobber
+      // fields it isn't touching.
+      const updates: Record<string, unknown> = { tag: tag ?? null }
+      if (title !== undefined) updates.title = title
+      if (recurring !== undefined) updates.recurring = recurring
+      if (scheduled_date !== undefined) updates.scheduled_date = scheduled_date
+      if (notes !== undefined) updates.notes = notes || null
       const { error } = await supabase
         .from('tasks')
-        .update({ tag: tag ?? null })
+        .update(updates)
         .eq('id', id)
       if (error) throw error
     },
