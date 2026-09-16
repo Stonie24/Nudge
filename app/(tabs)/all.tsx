@@ -12,11 +12,13 @@ import {
 import { AppText as Text } from '../../components/AppText'
 import { Icon } from '../../components/Icon'
 import { useTasks, useCompleteTask, useUncompleteTask, useDeleteTask, useUpdateTask } from '../../hooks/useTasks'
+import { useTodayCompletions, useCompleteRecurring, useUncompleteRecurring } from '../../hooks/useToday'
 import { useLayout } from '../../hooks/useLayout'
 import { useTheme } from '../../lib/ThemeContext'
 import { TagBadge } from '../../components/TagPicker'
 import { KanbanBoard } from '../../components/KanbanBoard'
 import { AddBacklogTaskSheet } from '../../components/AddBacklogTaskSheet'
+import { TaskDetailSheet } from '../../components/TaskDetailSheet'
 import { showAlert } from '../../lib/alert'
 import { getTagColor } from '../../lib/tagColor'
 import { useEntranceAnimation, useCheckboxAnimation, usePressAnimation, triggerHaptic } from '../../hooks/useAnimation'
@@ -28,11 +30,13 @@ import type { Task } from '../../types'
 type Filter = 'all' | 'pending' | 'completed'
 type Sort = 'newest' | 'oldest'
 
-function TaskItem({ task, onComplete, onUncomplete, onDelete, colors, index = 0 }: {
+function TaskItem({ task, isDone, onComplete, onUncomplete, onDelete, onOpenDetail, colors, index = 0 }: {
   task: Task
+  isDone: boolean
   onComplete: (id: string) => void
   onUncomplete: (id: string) => void
   onDelete: (id: string) => void
+  onOpenDetail: (task: Task) => void
   colors: Colors
   index?: number
 }) {
@@ -47,8 +51,8 @@ function TaskItem({ task, onComplete, onUncomplete, onDelete, colors, index = 0 
     ])
   }
 
-  function handlePress() {
-    if (task.completed) {
+  function handleToggle() {
+    if (isDone) {
       triggerUncomplete()
       triggerHaptic('light')
       onUncomplete(task.id)
@@ -61,32 +65,36 @@ function TaskItem({ task, onComplete, onUncomplete, onDelete, colors, index = 0 
 
   return (
     <Animated.View style={{ opacity, transform: [{ translateY }] }}>
-      <TouchableOpacity
-        style={styles.taskRow}
-        onPress={handlePress}
-        onLongPress={handleLongPress}
-        activeOpacity={0.7}
-      >
-        <View style={styles.checkboxWrap}>
+      <View style={styles.taskRow}>
+        <TouchableOpacity
+          style={styles.checkboxWrap}
+          onPress={handleToggle}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
           <Animated.View
             style={[styles.checkboxRing, { transform: [{ scale: ringScale }], opacity: ringOpacity }]}
           />
           <Animated.View style={{ transform: [{ scale: checkboxScale }] }}>
-            <View style={[styles.checkbox, task.completed && styles.checkboxDone]}>
-              {task.completed && <View style={styles.checkmark} />}
+            <View style={[styles.checkbox, isDone && styles.checkboxDone]}>
+              {isDone && <View style={styles.checkmark} />}
             </View>
           </Animated.View>
-        </View>
-        <View style={styles.taskContent}>
-          <Text style={[styles.taskTitle, task.completed && styles.taskTitleDone]}>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.taskContent}
+          onPress={() => onOpenDetail(task)}
+          onLongPress={handleLongPress}
+          activeOpacity={0.6}
+        >
+          <Text style={[styles.taskTitle, isDone && styles.taskTitleDone]}>
             {task.title}
           </Text>
           {task.tag && <TagBadge tag={task.tag} />}
-        </View>
+        </TouchableOpacity>
         <Text style={styles.taskDate}>
           {new Date(task.created_at).toLocaleDateString('en-SE', { month: 'short', day: 'numeric' })}
         </Text>
-      </TouchableOpacity>
+      </View>
     </Animated.View>
   )
 }
@@ -97,16 +105,32 @@ export default function AllTasksScreen() {
   const [sort, setSort] = useState<Sort>('newest')
   const [selectedTag, setSelectedTag] = useState<string | null>(null)
   const [sheetOpen, setSheetOpen] = useState(false)
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
   const { isDesktop } = useLayout()
   const { colors, isDark } = useTheme()
   const styles = useMemo(() => createStyles(colors), [colors])
   const addBtn = usePressAnimation()
 
   const { data: tasks, isLoading } = useTasks()
+  const { data: completions } = useTodayCompletions()
   const completeTask = useCompleteTask()
   const uncompleteTask = useUncompleteTask()
+  const completeRecurring = useCompleteRecurring()
+  const uncompleteRecurring = useUncompleteRecurring()
   const deleteTask = useDeleteTask()
   const updateTask = useUpdateTask()
+
+  const completedTodayIds = new Set(completions?.map(c => c.task_id) ?? [])
+
+  function handleComplete(task: Task) {
+    if (task.recurring) completeRecurring.mutate(task.id)
+    else completeTask.mutate(task.id)
+  }
+
+  function handleUncomplete(task: Task) {
+    if (task.recurring) uncompleteRecurring.mutate(task.id)
+    else uncompleteTask.mutate(task.id)
+  }
 
   const filtered = useMemo(() => {
     if (!tasks) return []
@@ -264,11 +288,15 @@ export default function AllTasksScreen() {
             ? <Text style={styles.emptyText}>Loading...</Text>
             : filtered.length > 0
               ? <KanbanBoard
-                  tasks={filtered}
-                  onComplete={id => completeTask.mutate(id)}
-                  onUncomplete={id => uncompleteTask.mutate(id)}
+                  tasks={filtered.map(t => ({
+                    ...t,
+                    completed: t.recurring ? completedTodayIds.has(t.id) : t.completed,
+                  }))}
+                  onComplete={id => handleComplete(tasks?.find(t => t.id === id)!)}
+                  onUncomplete={id => handleUncomplete(tasks?.find(t => t.id === id)!)}
                   onDelete={id => deleteTask.mutate(id)}
                   onUpdateTag={(id, tag) => updateTask.mutate({ id, tag })}
+                  onOpenDetail={t => setSelectedTaskId(t.id)}
                 />
               : <Text style={styles.emptyText}>
                   {search || selectedTag ? 'No tasks match your filters.' : 'No tasks yet — add one above!'}
@@ -302,9 +330,11 @@ export default function AllTasksScreen() {
                 <TaskItem
                   key={task.id}
                   task={task}
-                  onComplete={id => completeTask.mutate(id)}
-                  onUncomplete={id => uncompleteTask.mutate(id)}
+                  isDone={task.recurring ? completedTodayIds.has(task.id) : task.completed}
+                  onComplete={() => handleComplete(task)}
+                  onUncomplete={() => handleUncomplete(task)}
                   onDelete={id => deleteTask.mutate(id)}
+                  onOpenDetail={t => setSelectedTaskId(t.id)}
                   colors={colors}
                   index={i}
                 />
@@ -317,6 +347,12 @@ export default function AllTasksScreen() {
       <AddBacklogTaskSheet
         visible={sheetOpen}
         onClose={() => setSheetOpen(false)}
+      />
+
+      <TaskDetailSheet
+        task={tasks?.find(t => t.id === selectedTaskId) ?? null}
+        completedToday={selectedTaskId ? completedTodayIds.has(selectedTaskId) : false}
+        onClose={() => setSelectedTaskId(null)}
       />
     </SafeAreaView>
   )

@@ -20,12 +20,14 @@ function KanbanCard({
   onUncomplete,
   onDelete,
   onUpdateTag,
+  onOpenDetail,
 }: {
   task: Task
   onComplete: (id: string) => void
   onUncomplete: (id: string) => void
   onDelete: (id: string) => void
   onUpdateTag?: (id: string, tag?: string) => void
+  onOpenDetail: (task: Task) => void
 }) {
   const { colors } = useTheme()
   const styles = useMemo(() => createStyles(colors), [colors])
@@ -40,14 +42,18 @@ function KanbanCard({
   return (
     <TouchableOpacity
       style={[styles.card, task.completed && styles.cardDone]}
-      onPress={() => task.completed ? onUncomplete(task.id) : onComplete(task.id)}
+      onPress={() => onOpenDetail(task)}
       onLongPress={handleLongPress}
       activeOpacity={0.75}
     >
       <View style={styles.cardTop}>
-        <View style={[styles.checkbox, task.completed && styles.checkboxDone]}>
+        <TouchableOpacity
+          style={[styles.checkbox, task.completed && styles.checkboxDone]}
+          onPress={() => task.completed ? onUncomplete(task.id) : onComplete(task.id)}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
           {task.completed && <View style={styles.checkmark} />}
-        </View>
+        </TouchableOpacity>
         <Text style={[styles.cardTitle, task.completed && styles.cardTitleDone]}>
           {task.title}
         </Text>
@@ -73,12 +79,14 @@ export function KanbanBoard({
   onUncomplete,
   onDelete,
   onUpdateTag,
+  onOpenDetail,
 }: {
   tasks: Task[]
   onComplete: (id: string) => void
   onUncomplete: (id: string) => void
   onDelete: (id: string) => void
   onUpdateTag?: (id: string, tag?: string) => void
+  onOpenDetail: (task: Task) => void
 }) {
   const { colors, isDark } = useTheme()
   const styles = useMemo(() => createStyles(colors), [colors])
@@ -141,6 +149,7 @@ export function KanbanBoard({
                   onUncomplete={onUncomplete}
                   onDelete={onDelete}
                   onUpdateTag={onUpdateTag}
+                  onOpenDetail={onOpenDetail}
                 />
               ))}
             </ScrollView>
