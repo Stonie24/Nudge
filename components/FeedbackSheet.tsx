@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react'
 import {
   View,
-  Text,
   TextInput,
   TouchableOpacity,
   Modal,
@@ -10,10 +9,12 @@ import {
   ActivityIndicator,
   Linking,
 } from 'react-native'
+import { AppText as Text } from './AppText'
 import { supabase } from '../lib/supabase'
 import { useTheme } from '../lib/ThemeContext'
 import { showAlert } from '../lib/alert'
 import type { Colors } from '../lib/theme'
+import { space, radius, shadow } from '../lib/theme'
 
 export function FeedbackSheet({
   visible,
@@ -133,16 +134,17 @@ function createStyles(c: Colors) {
     },
     sheet: {
       backgroundColor: c.surface,
-      borderTopLeftRadius: 24,
-      borderTopRightRadius: 24,
-      padding: 24,
+      borderTopLeftRadius: radius.sheet,
+      borderTopRightRadius: radius.sheet,
+      padding: space.xxl,
       paddingBottom: 48,
-      gap: 16,
+      gap: space.lg,
+      ...shadow.lg,
     },
     handle: {
       width: 36, height: 4, borderRadius: 2,
       backgroundColor: c.border,
-      alignSelf: 'center', marginBottom: 4,
+      alignSelf: 'center', marginBottom: space.xs,
     },
     title: {
       fontSize: 17,
@@ -155,14 +157,14 @@ function createStyles(c: Colors) {
       lineHeight: 18,
       marginTop: -8,
     },
-    fields: { gap: 12 },
+    fields: { gap: space.md },
     input: {
       backgroundColor: c.inputBg,
       borderWidth: 1,
       borderColor: c.border,
-      borderRadius: 12,
-      paddingHorizontal: 16,
-      paddingVertical: 13,
+      borderRadius: radius.md,
+      paddingHorizontal: space.lg,
+      paddingVertical: space.md,
       fontSize: 15,
       color: c.text,
     },
@@ -172,7 +174,7 @@ function createStyles(c: Colors) {
     submitBtn: {
       height: 52,
       backgroundColor: c.btnPrimary,
-      borderRadius: 100,
+      borderRadius: radius.pill,
       alignItems: 'center',
       justifyContent: 'center',
     },

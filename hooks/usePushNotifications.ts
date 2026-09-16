@@ -40,10 +40,10 @@ async function scheduleDaily(time: NudgeTime) {
       sound: true,
     },
     trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.DAILY,
       hour,
       minute,
-      repeats: true,
-    } as Notifications.DailyTriggerInput,
+    },
   })
 }
 

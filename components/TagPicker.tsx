@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react'
 import {
   View,
-  Text,
   TouchableOpacity,
   Modal,
   TextInput,
@@ -10,10 +9,13 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native'
+import { AppText as Text } from './AppText'
+import { Icon } from './Icon'
 import { useTags, useAddTag, useDeleteTag } from '../hooks/useTags'
 import { useTheme } from '../lib/ThemeContext'
 import { getTagColor } from '../lib/tagColor'
 import type { Colors } from '../lib/theme'
+import { space, radius, shadow } from '../lib/theme'
 
 const PRESET_TAGS = ['Work', 'Personal', 'Focus', 'Health', 'Errands']
 
@@ -27,14 +29,14 @@ export function TagPicker({
   const [open, setOpen] = useState(false)
   const [custom, setCustom] = useState('')
 
-  const { colors } = useTheme()
+  const { colors, isDark } = useTheme()
   const styles = useMemo(() => createStyles(colors), [colors])
 
   const { data: savedTags, isLoading } = useTags()
   const addTag = useAddTag()
   const deleteTag = useDeleteTag()
 
-  const color = value ? getTagColor(value) : null
+  const color = value ? getTagColor(value, isDark) : null
 
   // Merge presets + saved custom tags, deduplicated
   const savedNames = savedTags?.map(t => t.name) ?? []
@@ -98,7 +100,7 @@ export function TagPicker({
               <ScrollView showsVerticalScrollIndicator={false} style={styles.tagsScroll}>
                 <View style={styles.presets}>
                   {allTags.map(tag => {
-                    const c = getTagColor(tag)
+                    const c = getTagColor(tag, isDark)
                     const isActive = value === tag
                     const isCustom = !PRESET_TAGS.includes(tag)
                     return (
@@ -122,7 +124,7 @@ export function TagPicker({
                             onPress={() => handleDeleteTag(tag)}
                             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                           >
-                            <Text style={styles.removeTagText}>×</Text>
+                            <Icon name="close" size={9} color={colors.textSecondary} strokeWidth={2.2} />
                           </TouchableOpacity>
                         )}
                       </View>
@@ -169,7 +171,8 @@ export function TagPicker({
 }
 
 export function TagBadge({ tag }: { tag: string }) {
-  const color = getTagColor(tag)
+  const { isDark } = useTheme()
+  const color = getTagColor(tag, isDark)
   return (
     <View style={[badgeStyles.badge, { backgroundColor: color.bg, borderColor: color.border }]}>
       <Text style={[badgeStyles.badgeText, { color: color.text }]}>{tag}</Text>
@@ -177,7 +180,6 @@ export function TagBadge({ tag }: { tag: string }) {
   )
 }
 
-// TagBadge uses tag-specific colors, no theme dependency needed
 const badgeStyles = StyleSheet.create({
   badge: {
     alignSelf: 'flex-start',
@@ -196,8 +198,8 @@ function createStyles(c: Colors) {
   return StyleSheet.create({
     trigger: {
       height: 48,
-      paddingHorizontal: 14,
-      borderRadius: 12,
+      paddingHorizontal: space.md,
+      borderRadius: radius.md,
       borderWidth: 1,
       borderColor: c.border,
       backgroundColor: c.surface,
@@ -216,11 +218,12 @@ function createStyles(c: Colors) {
     },
     sheet: {
       backgroundColor: c.surface,
-      borderTopLeftRadius: 24,
-      borderTopRightRadius: 24,
-      padding: 24,
+      borderTopLeftRadius: radius.sheet,
+      borderTopRightRadius: radius.sheet,
+      padding: space.xxl,
       paddingBottom: 40,
       maxHeight: '80%',
+      ...shadow.lg,
     },
     sheetHandle: {
       width: 36,
@@ -228,33 +231,33 @@ function createStyles(c: Colors) {
       borderRadius: 2,
       backgroundColor: c.border,
       alignSelf: 'center',
-      marginBottom: 20,
+      marginBottom: space.xl,
     },
     sheetTitle: {
       fontSize: 16,
       fontWeight: '600',
       color: c.text,
-      marginBottom: 16,
+      marginBottom: space.lg,
     },
     loader: {
-      marginVertical: 20,
+      marginVertical: space.xl,
     },
     tagsScroll: {
       maxHeight: 160,
-      marginBottom: 16,
+      marginBottom: space.lg,
     },
     presets: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: 8,
+      gap: space.sm,
     },
     tagWrapper: {
       position: 'relative',
     },
     preset: {
-      paddingVertical: 8,
-      paddingHorizontal: 16,
-      borderRadius: 100,
+      paddingVertical: space.sm,
+      paddingHorizontal: space.lg,
+      borderRadius: radius.pill,
       borderWidth: 1.5,
     },
     presetActive: {
@@ -275,16 +278,10 @@ function createStyles(c: Colors) {
       alignItems: 'center',
       justifyContent: 'center',
     },
-    removeTagText: {
-      fontSize: 11,
-      color: c.textSecondary,
-      lineHeight: 14,
-      fontWeight: '600',
-    },
     customRow: {
       flexDirection: 'row',
-      gap: 10,
-      marginBottom: 16,
+      gap: space.sm,
+      marginBottom: space.lg,
     },
     customInput: {
       flex: 1,
@@ -292,16 +289,16 @@ function createStyles(c: Colors) {
       backgroundColor: c.inputBg,
       borderWidth: 1,
       borderColor: c.border,
-      borderRadius: 12,
-      paddingHorizontal: 14,
+      borderRadius: radius.md,
+      paddingHorizontal: space.md,
       fontSize: 14,
       color: c.text,
     },
     customBtn: {
       height: 44,
-      paddingHorizontal: 16,
+      paddingHorizontal: space.lg,
       backgroundColor: c.btnPrimary,
-      borderRadius: 12,
+      borderRadius: radius.md,
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -315,11 +312,11 @@ function createStyles(c: Colors) {
     },
     clearBtn: {
       alignItems: 'center',
-      paddingVertical: 12,
+      paddingVertical: space.md,
     },
     clearBtnText: {
       fontSize: 14,
-      color: '#E24B4A',
+      color: c.danger,
       fontWeight: '500',
     },
   })

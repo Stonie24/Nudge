@@ -1,23 +1,31 @@
 import { useState, useMemo } from 'react'
 import {
   View,
-  Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Platform,
   ActivityIndicator,
   Alert,
 } from 'react-native'
+import { AppText as Text } from '../../components/AppText'
 import { Link } from 'expo-router'
 import { supabase } from '../../lib/supabase'
 import { useTheme } from '../../lib/ThemeContext'
 import type { Colors } from '../../lib/theme'
+import { space, radius } from '../../lib/theme'
+import { displayFont } from '../../lib/fonts'
+
+// Dev-only quick sign-in — never available in a production build. Reads from
+// .env (gitignored) rather than hardcoding a credential in source.
+const DEV_LOGIN_EMAIL = process.env.EXPO_PUBLIC_DEV_LOGIN_EMAIL
+const DEV_LOGIN_PASSWORD = process.env.EXPO_PUBLIC_DEV_LOGIN_PASSWORD
+const DEV_LOGIN_ENABLED = __DEV__ && !!DEV_LOGIN_EMAIL && !!DEV_LOGIN_PASSWORD
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [devLoading, setDevLoading] = useState(false)
 
   const { colors } = useTheme()
   const styles = useMemo(() => createStyles(colors), [colors])
@@ -34,6 +42,17 @@ export default function LoginScreen() {
 
     if (error) Alert.alert('Login failed', error.message)
     // on success, _layout.tsx AuthGate redirects to /(tabs)/
+  }
+
+  async function handleDevLogin() {
+    if (!DEV_LOGIN_EMAIL || !DEV_LOGIN_PASSWORD) return
+    setDevLoading(true)
+    const { error } = await supabase.auth.signInWithPassword({
+      email: DEV_LOGIN_EMAIL,
+      password: DEV_LOGIN_PASSWORD,
+    })
+    setDevLoading(false)
+    if (error) Alert.alert('Dev login failed', error.message)
   }
 
   return (
@@ -96,6 +115,20 @@ export default function LoginScreen() {
           </Link>
         </View>
 
+        {DEV_LOGIN_ENABLED && (
+          <TouchableOpacity
+            style={styles.devBtn}
+            onPress={handleDevLogin}
+            disabled={devLoading}
+            activeOpacity={0.7}
+          >
+            {devLoading
+              ? <ActivityIndicator color={colors.textSecondary} size="small" />
+              : <Text style={styles.devBtnText}>Dev: sign in as test user</Text>
+            }
+          </TouchableOpacity>
+        )}
+
       </View>
     </View>
   )
@@ -110,27 +143,27 @@ function createStyles(c: Colors) {
     inner: {
       flex: 1,
       justifyContent: 'center',
-      paddingHorizontal: 28,
+      paddingHorizontal: space.xxl,
       paddingBottom: 40,
     },
     header: {
       alignItems: 'center',
-      marginBottom: 48,
+      marginBottom: space.huge,
     },
     dot: {
       width: 10,
       height: 10,
       borderRadius: 5,
       backgroundColor: c.accent,
-      marginBottom: 12,
+      marginBottom: space.md,
     },
     logo: {
-      fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+      fontFamily: displayFont.bold,
       fontSize: 36,
       fontWeight: '700',
       color: c.text,
       letterSpacing: -1,
-      marginBottom: 6,
+      marginBottom: space.sm,
     },
     tagline: {
       fontSize: 15,
@@ -138,10 +171,10 @@ function createStyles(c: Colors) {
       fontWeight: '300',
     },
     form: {
-      gap: 16,
+      gap: space.lg,
     },
     field: {
-      gap: 6,
+      gap: space.sm,
     },
     label: {
       fontSize: 13,
@@ -153,8 +186,8 @@ function createStyles(c: Colors) {
       height: 50,
       borderWidth: 1,
       borderColor: c.border,
-      borderRadius: 12,
-      paddingHorizontal: 16,
+      borderRadius: radius.md,
+      paddingHorizontal: space.lg,
       fontSize: 15,
       color: c.text,
       backgroundColor: c.inputBg,
@@ -162,10 +195,10 @@ function createStyles(c: Colors) {
     button: {
       height: 52,
       backgroundColor: c.btnPrimary,
-      borderRadius: 100,
+      borderRadius: radius.pill,
       alignItems: 'center',
       justifyContent: 'center',
-      marginTop: 8,
+      marginTop: space.sm,
     },
     buttonDisabled: {
       opacity: 0.6,
@@ -178,7 +211,7 @@ function createStyles(c: Colors) {
     footer: {
       flexDirection: 'row',
       justifyContent: 'center',
-      marginTop: 32,
+      marginTop: space.xxxl,
     },
     footerText: {
       fontSize: 14,
@@ -187,6 +220,21 @@ function createStyles(c: Colors) {
     footerLink: {
       fontSize: 14,
       color: c.accentText,
+      fontWeight: '500',
+    },
+    devBtn: {
+      marginTop: space.xl,
+      paddingVertical: space.sm,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderStyle: 'dashed',
+      borderColor: c.warning,
+      borderRadius: radius.sm,
+    },
+    devBtnText: {
+      fontSize: 12,
+      color: c.warning,
       fontWeight: '500',
     },
   })

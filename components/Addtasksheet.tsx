@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react'
 import {
     View,
-    Text,
     TextInput,
     TouchableOpacity,
     Modal,
@@ -12,12 +11,15 @@ import {
     ActivityIndicator,
     Switch,
 } from 'react-native'
+import { AppText as Text } from './AppText'
+import { Icon } from './Icon'
 import { useAddTodayTask, useScheduleForToday } from '../hooks/useToday'
 import { useTasks } from '../hooks/useTasks'
 import { useTheme } from '../lib/ThemeContext'
 import { TagPicker, TagBadge } from './TagPicker'
 import { getTagColor } from '../lib/tagColor'
 import type { Colors } from '../lib/theme'
+import { space, radius, shadow } from '../lib/theme'
 import type { Task } from '../types'
 
 type Tab = 'new' | 'backlog'
@@ -38,7 +40,7 @@ export function AddTaskSheet({
     const [search, setSearch] = useState('')
     const [selectedTag, setSelectedTag] = useState<string | undefined>()
 
-    const { colors } = useTheme()
+    const { colors, isDark } = useTheme()
     const styles = useMemo(() => createStyles(colors), [colors])
 
     const addTodayTask = useAddTodayTask()
@@ -174,15 +176,18 @@ export function AddTaskSheet({
                         </View>
                     ) : (
                         <View style={styles.backlog}>
-                            <TextInput
-                                style={styles.searchInput}
-                                placeholder="Search backlog..."
-                                placeholderTextColor={colors.placeholder}
-                                value={search}
-                                onChangeText={setSearch}
-                                clearButtonMode="while-editing"
-                                returnKeyType="search"
-                            />
+                            <View style={styles.searchRow}>
+                                <Icon name="search" size={16} color={colors.textMuted} strokeWidth={2} style={styles.searchIcon} />
+                                <TextInput
+                                    style={styles.searchInput}
+                                    placeholder="Search backlog..."
+                                    placeholderTextColor={colors.placeholder}
+                                    value={search}
+                                    onChangeText={setSearch}
+                                    clearButtonMode="while-editing"
+                                    returnKeyType="search"
+                                />
+                            </View>
 
                             {backlogTags.length > 0 && (
                                 <ScrollView
@@ -201,7 +206,7 @@ export function AddTaskSheet({
                                         </Text>
                                     </TouchableOpacity>
                                     {backlogTags.map(t => {
-                                        const c = getTagColor(t)
+                                        const c = getTagColor(t, isDark)
                                         const isActive = selectedTag === t
                                         return (
                                             <TouchableOpacity
@@ -245,7 +250,7 @@ export function AddTaskSheet({
                                                 <Text style={styles.backlogTitle}>{item.title}</Text>
                                                 {item.tag && <TagBadge tag={item.tag} />}
                                             </View>
-                                            <Text style={styles.addIcon}>+</Text>
+                                            <Icon name="plus" size={18} color={colors.accent} strokeWidth={2} />
                                         </TouchableOpacity>
                                     )}
                                 />
@@ -267,85 +272,87 @@ function createStyles(c: Colors) {
         },
         sheet: {
             backgroundColor: c.surface,
-            borderTopLeftRadius: 24,
-            borderTopRightRadius: 24,
-            padding: 24,
+            borderTopLeftRadius: radius.sheet,
+            borderTopRightRadius: radius.sheet,
+            padding: space.xxl,
             paddingBottom: 48,
             maxHeight: '85%',
+            ...shadow.lg,
         },
         handle: {
             width: 36, height: 4, borderRadius: 2,
             backgroundColor: c.border,
-            alignSelf: 'center', marginBottom: 20,
+            alignSelf: 'center', marginBottom: space.xl,
         },
         tabs: {
             flexDirection: 'row',
             backgroundColor: c.surfaceAlt,
-            borderRadius: 12,
-            padding: 4,
-            marginBottom: 24,
+            borderRadius: radius.md,
+            padding: space.xs,
+            marginBottom: space.xxl,
         },
         tab: {
-            flex: 1, paddingVertical: 8,
-            borderRadius: 10, alignItems: 'center',
+            flex: 1, paddingVertical: space.sm,
+            borderRadius: radius.sm, alignItems: 'center',
         },
         tabActive: { backgroundColor: c.surface },
         tabText: { fontSize: 14, color: c.textMuted, fontWeight: '500' },
         tabTextActive: { color: c.text },
-        newTask: { gap: 16 },
+        newTask: { gap: space.lg },
         input: {
             height: 50, backgroundColor: c.inputBg,
             borderWidth: 1, borderColor: c.border,
-            borderRadius: 12, paddingHorizontal: 16,
+            borderRadius: radius.md, paddingHorizontal: space.lg,
             fontSize: 15, color: c.text,
         },
         recurringRow: {
             flexDirection: 'row', alignItems: 'center',
-            backgroundColor: c.inputBg, borderRadius: 12,
+            backgroundColor: c.inputBg, borderRadius: radius.md,
             borderWidth: 1, borderColor: c.border,
-            padding: 14, gap: 12,
+            padding: space.md, gap: space.md,
         },
         recurringLabel: { flex: 1 },
         recurringTitle: { fontSize: 15, color: c.text, fontWeight: '500' },
         recurringHint: { fontSize: 12, color: c.textMuted, marginTop: 2 },
         addBtn: {
             height: 52, backgroundColor: c.btnPrimary,
-            borderRadius: 100, alignItems: 'center', justifyContent: 'center',
+            borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center',
         },
         addBtnDisabled: { backgroundColor: c.btnDisabled },
         addBtnText: { color: c.btnPrimaryText, fontSize: 15, fontWeight: '500' },
-        backlog: { gap: 12 },
+        backlog: { gap: space.md },
+        searchRow: { justifyContent: 'center' },
+        searchIcon: { position: 'absolute', left: space.lg, zIndex: 1 },
         searchInput: {
             height: 44, backgroundColor: c.inputBg,
             borderWidth: 1, borderColor: c.border,
-            borderRadius: 12, paddingHorizontal: 16,
+            borderRadius: radius.md, paddingLeft: space.lg + 16 + space.sm, paddingRight: space.lg,
             fontSize: 14, color: c.text,
         },
         tagRow: { flexGrow: 0 },
-        tagRowContent: { flexDirection: 'row', gap: 8 },
+        tagRowContent: { flexDirection: 'row', gap: space.sm },
         tagAllChip: {
-            paddingVertical: 6, paddingHorizontal: 14,
-            borderRadius: 100, borderWidth: 1,
+            paddingVertical: space.sm, paddingHorizontal: space.md,
+            borderRadius: radius.pill, borderWidth: 1,
             borderColor: c.border, backgroundColor: c.surface,
         },
         tagAllChipActive: { backgroundColor: c.btnPrimary, borderColor: c.btnPrimary },
         tagAllChipText: { fontSize: 12, color: c.textSecondary, fontWeight: '500' },
         tagAllChipTextActive: { color: c.btnPrimaryText },
         tagChip: {
-            paddingVertical: 6, paddingHorizontal: 14,
-            borderRadius: 100, borderWidth: 1.5,
+            paddingVertical: space.sm, paddingHorizontal: space.md,
+            borderRadius: radius.pill, borderWidth: 1.5,
         },
         tagChipActive: { borderWidth: 2.5 },
         tagChipText: { fontSize: 12, fontWeight: '500' },
         backlogList: { maxHeight: 320 },
         backlogRow: {
             flexDirection: 'row', alignItems: 'center',
-            paddingVertical: 14, borderBottomWidth: 1,
-            borderBottomColor: c.borderLight, gap: 12,
+            paddingVertical: space.md, borderBottomWidth: 1,
+            borderBottomColor: c.borderLight, gap: space.md,
         },
-        backlogText: { flex: 1, gap: 4 },
+        backlogText: { flex: 1, gap: space.xs },
         backlogTitle: { fontSize: 15, color: c.text },
-        addIcon: { fontSize: 22, color: c.accent, fontWeight: '300' },
         loader: { marginTop: 40 },
         emptyText: {
             fontSize: 14, color: c.textMuted,

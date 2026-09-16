@@ -1,15 +1,15 @@
 import React, { useState, useMemo } from 'react'
 import {
   View,
-  Text,
   TouchableOpacity,
   Modal,
   Pressable,
   ScrollView,
   TextInput,
   StyleSheet,
-  Platform,
 } from 'react-native'
+import { AppText as Text } from './AppText'
+import { Icon } from './Icon'
 import { useAddEvent, useDeleteEvent } from '../hooks/useCalendar'
 import { useCompleteTask, useUncompleteTask } from '../hooks/useTasks'
 import { useCompleteRecurring, useUncompleteRecurring } from '../hooks/useToday'
@@ -17,6 +17,8 @@ import { useTheme } from '../lib/ThemeContext'
 import { TagBadge } from './TagPicker'
 import { showAlert } from '../lib/alert'
 import type { Colors } from '../lib/theme'
+import { space, radius, shadow } from '../lib/theme'
+import { displayFont } from '../lib/fonts'
 import type { CalendarEvent, Task } from '../types'
 
 function EventRow({
@@ -28,7 +30,6 @@ function EventRow({
 }) {
   const { colors } = useTheme()
   const styles = useMemo(() => createStyles(colors), [colors])
-  const sourceIcon = event.source === 'google' ? 'G' : event.source === 'apple' ? '' : '◆'
 
   return (
     <TouchableOpacity
@@ -49,7 +50,10 @@ function EventRow({
         {event.all_day && <Text style={styles.eventTime}>All day</Text>}
       </View>
       <View style={[styles.sourceTag, { backgroundColor: event.color + '22' }]}>
-        <Text style={[styles.sourceText, { color: event.color }]}>{sourceIcon}</Text>
+        {event.source === 'google'
+          ? <Text style={[styles.sourceText, { color: event.color }]}>G</Text>
+          : <Icon name="calendar" size={13} color={event.color} strokeWidth={2} />
+        }
       </View>
     </TouchableOpacity>
   )
@@ -84,7 +88,7 @@ function TaskRow({
         </Text>
         {task.tag && <TagBadge tag={task.tag} />}
       </View>
-      {task.recurring && <Text style={styles.recurringBadge}>↻</Text>}
+      {task.recurring && <Icon name="repeat" size={14} color={colors.accent} strokeWidth={2} />}
     </TouchableOpacity>
   )
 }
@@ -113,7 +117,7 @@ function AddEventForm({
       start_time: start,
       end_time: end,
       all_day: allDay,
-      color: '#F59F0A',
+      color: colors.calendarDotEvent,
     })
     onClose()
   }
@@ -234,7 +238,14 @@ export function DaySheet({
               onPress={() => setShowAddForm(!showAddForm)}
               activeOpacity={0.7}
             >
-              <Text style={styles.addEventBtnText}>{showAddForm ? '✕' : '+ Event'}</Text>
+              {showAddForm ? (
+                <Icon name="close" size={13} color={colors.accentText} strokeWidth={2} />
+              ) : (
+                <>
+                  <Icon name="plus" size={13} color={colors.accentText} strokeWidth={2} />
+                  <Text style={styles.addEventBtnText}>Event</Text>
+                </>
+              )}
             </TouchableOpacity>
           </View>
 
@@ -301,34 +312,38 @@ function createStyles(c: Colors) {
     },
     sheet: {
       backgroundColor: c.surface,
-      borderTopLeftRadius: 24,
-      borderTopRightRadius: 24,
-      padding: 24,
+      borderTopLeftRadius: radius.sheet,
+      borderTopRightRadius: radius.sheet,
+      padding: space.xxl,
       paddingBottom: 48,
       maxHeight: '85%',
+      ...shadow.lg,
     },
     handle: {
       width: 36, height: 4, borderRadius: 2,
       backgroundColor: c.border,
-      alignSelf: 'center', marginBottom: 20,
+      alignSelf: 'center', marginBottom: space.xl,
     },
     sheetHeader: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      marginBottom: 20,
+      marginBottom: space.xl,
     },
     sheetTitle: {
       fontSize: 17,
       fontWeight: '600',
       color: c.text,
-      fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+      fontFamily: displayFont.semibold,
     },
     addEventBtn: {
-      paddingVertical: 6,
-      paddingHorizontal: 14,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: space.xs,
+      paddingVertical: space.sm,
+      paddingHorizontal: space.md,
       backgroundColor: c.accentBg,
-      borderRadius: 100,
+      borderRadius: radius.pill,
     },
     addEventBtnText: {
       fontSize: 13,
@@ -336,16 +351,16 @@ function createStyles(c: Colors) {
       fontWeight: '500',
     },
     scroll: { maxHeight: 500 },
-    section: { marginBottom: 24 },
+    section: { marginBottom: space.xxl },
     sectionLabel: {
       fontSize: 11, fontWeight: '600', color: c.textMuted,
-      letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 8,
+      letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: space.sm,
     },
     eventRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 12,
-      paddingVertical: 10,
+      gap: space.md,
+      paddingVertical: space.sm,
       borderBottomWidth: 1,
       borderBottomColor: c.borderLight,
     },
@@ -364,8 +379,8 @@ function createStyles(c: Colors) {
     sourceText: { fontSize: 11, fontWeight: '700' },
     taskRow: {
       flexDirection: 'row', alignItems: 'center',
-      paddingVertical: 12, borderBottomWidth: 1,
-      borderBottomColor: c.borderLight, gap: 12,
+      paddingVertical: space.md, borderBottomWidth: 1,
+      borderBottomColor: c.borderLight, gap: space.md,
     },
     checkbox: {
       width: 20, height: 20, borderRadius: 10,
@@ -378,47 +393,47 @@ function createStyles(c: Colors) {
       borderBottomWidth: 2, borderColor: '#FFFFFF',
       transform: [{ rotate: '40deg' }, { translateY: -1 }],
     },
-    taskContent: { flex: 1, gap: 3 },
+    taskContent: { flex: 1, gap: space.xs },
     taskTitle: { fontSize: 14, color: c.text },
     taskTitleDone: { color: c.textMuted, textDecorationLine: 'line-through' },
-    recurringBadge: { fontSize: 14, color: '#F59F0A' },
     addForm: {
       backgroundColor: c.surfaceMuted,
-      borderRadius: 16,
+      borderRadius: radius.lg,
       borderWidth: 1,
       borderColor: c.border,
-      padding: 16,
-      marginBottom: 20,
-      gap: 12,
+      padding: space.lg,
+      marginBottom: space.xl,
+      gap: space.md,
+      ...shadow.sm,
     },
     addFormTitle: { fontSize: 15, fontWeight: '600', color: c.text },
     input: {
       height: 44, backgroundColor: c.inputBg,
       borderWidth: 1, borderColor: c.border,
-      borderRadius: 10, paddingHorizontal: 14,
+      borderRadius: radius.sm, paddingHorizontal: space.md,
       fontSize: 14, color: c.text,
     },
-    timeRow: { flexDirection: 'row', gap: 10, alignItems: 'flex-end' },
-    timeField: { flex: 1, gap: 4 },
+    timeRow: { flexDirection: 'row', gap: space.sm, alignItems: 'flex-end' },
+    timeField: { flex: 1, gap: space.xs },
     timeLabel: { fontSize: 11, color: c.textMuted, fontWeight: '500' },
     timeInput: { textAlign: 'center' },
     allDayBtn: {
-      height: 44, paddingHorizontal: 12,
-      borderRadius: 10, borderWidth: 1,
+      height: 44, paddingHorizontal: space.md,
+      borderRadius: radius.sm, borderWidth: 1,
       borderColor: c.border, alignItems: 'center', justifyContent: 'center',
     },
     allDayBtnActive: { backgroundColor: c.accentBg, borderColor: c.accentBorder },
     allDayText: { fontSize: 12, color: c.textSecondary, fontWeight: '500' },
     allDayTextActive: { color: c.accentText },
-    formActions: { flexDirection: 'row', gap: 10 },
+    formActions: { flexDirection: 'row', gap: space.sm },
     cancelBtn: {
-      flex: 1, height: 44, borderRadius: 100,
+      flex: 1, height: 44, borderRadius: radius.pill,
       borderWidth: 1, borderColor: c.border,
       alignItems: 'center', justifyContent: 'center',
     },
     cancelBtnText: { fontSize: 14, color: c.textSecondary },
     saveBtn: {
-      flex: 1, height: 44, borderRadius: 100,
+      flex: 1, height: 44, borderRadius: radius.pill,
       backgroundColor: c.btnPrimary,
       alignItems: 'center', justifyContent: 'center',
     },
@@ -426,7 +441,7 @@ function createStyles(c: Colors) {
     saveBtnText: { fontSize: 14, color: c.btnPrimaryText, fontWeight: '500' },
     emptyText: {
       fontSize: 14, color: c.textMuted,
-      textAlign: 'center', marginTop: 24,
+      textAlign: 'center', marginTop: space.xxl,
     },
   })
 }

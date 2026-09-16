@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import { queryClient, persister } from '../lib/queryClient'
 import type { User } from '@supabase/supabase-js'
 
 export function useAuth() {
@@ -19,7 +20,13 @@ export function useAuth() {
     return () => listener.subscription.unsubscribe()
   }, [])
 
-  const signOut = () => supabase.auth.signOut()
+  const signOut = async () => {
+    await supabase.auth.signOut()
+    // Prevent the next account on this device from seeing (or resuming
+    // offline mutations into) this account's cached tasks/tags/tokens.
+    queryClient.clear()
+    await persister.removeClient()
+  }
 
   const needsOnboarding = user !== null && user.user_metadata?.onboarding_completed !== true
 

@@ -1,15 +1,21 @@
 import { useEffect } from 'react'
 import { Slot, useRouter, useSegments } from 'expo-router'
-import { QueryClientProvider } from '@tanstack/react-query'
-import { queryClient } from '../lib/queryClient'
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
+import { SafeAreaProvider } from 'react-native-safe-area-context'
+import { useFonts } from 'expo-font'
+import { queryClient, persistOptions } from '../lib/queryClient'
+import { setupOnlineManager } from '../lib/network'
 import { useAuth } from '../hooks/useAuth'
 import { ThemeProvider, useTheme } from '../lib/ThemeContext'
+import { fontsToLoad } from '../lib/fonts'
 import { StatusBar } from 'expo-status-bar'
 import * as WebBrowser from 'expo-web-browser'
 import * as Notifications from 'expo-notifications'
 import { Platform } from 'react-native'
+import { OfflineBanner } from '../components/OfflineBanner'
 
 WebBrowser.maybeCompleteAuthSession()
+setupOnlineManager()
 
 if (Platform.OS !== 'web') {
   Notifications.setNotificationHandler({
@@ -43,17 +49,28 @@ function AuthGate() {
   return (
     <>
       <StatusBar style={isDark ? 'light' : 'dark'} />
+      <OfflineBanner />
       <Slot />
     </>
   )
 }
 
 export default function RootLayout() {
+  const [fontsLoaded] = useFonts(fontsToLoad)
+
+  if (!fontsLoaded) return null
+
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <AuthGate />
-      </ThemeProvider>
-    </QueryClientProvider>
+    <SafeAreaProvider>
+      <PersistQueryClientProvider
+        client={queryClient}
+        persistOptions={persistOptions}
+        onSuccess={() => queryClient.resumePausedMutations()}
+      >
+        <ThemeProvider>
+          <AuthGate />
+        </ThemeProvider>
+      </PersistQueryClientProvider>
+    </SafeAreaProvider>
   )
 }
