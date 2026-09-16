@@ -8,6 +8,7 @@ import {
   ScrollView,
 } from 'react-native'
 import { AppText as Text } from '../../components/AppText'
+import { Icon } from '../../components/Icon'
 import { useAuth } from '../../hooks/useAuth'
 import { useTasks } from '../../hooks/useTasks'
 import { useTheme } from '../../lib/ThemeContext'
@@ -42,7 +43,7 @@ function SettingRow({
         {label}
       </Text>
       {value && <Text style={styles.rowValue}>{value}</Text>}
-      {onPress && !destructive && <Text style={styles.rowChevron}>›</Text>}
+      {onPress && !destructive && <Icon name="chevron" size={18} color={colors.textFaint} strokeWidth={1.8} />}
     </TouchableOpacity>
   )
 }
@@ -312,11 +313,6 @@ function createStyles(c: Colors) {
       fontSize: 14,
       color: c.textMuted,
       marginRight: space.sm,
-    },
-    rowChevron: {
-      fontSize: 18,
-      color: c.textFaint,
-      fontWeight: '300',
     },
     footer: {
       textAlign: 'center',

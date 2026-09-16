@@ -8,6 +8,7 @@ import {
   Platform,
 } from 'react-native'
 import { AppText as Text } from '../../components/AppText'
+import { Icon } from '../../components/Icon'
 import { useNudgeEvents, useGoogleEvents, useAppleEvents } from '../../hooks/useCalendar'
 import { useGoogleCalendarAuth } from '../../hooks/useGoogleCalendarAuth'
 import { useTodayTasks, useTodayCompletions } from '../../hooks/useToday'
@@ -204,7 +205,7 @@ export default function CalendarScreen() {
             <View style={styles.integrationRow}>
               <View style={styles.integrationInfo}>
                 <View style={[styles.integrationIcon, { backgroundColor: '#FFF3E0' }]}>
-                  <Text style={styles.integrationIconText}></Text>
+                  <Icon name="calendar" size={18} color="#FF9500" strokeWidth={2} />
                 </View>
                 <View>
                   <Text style={styles.integrationName}>Apple Calendar</Text>

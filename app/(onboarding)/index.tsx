@@ -16,12 +16,15 @@ import { triggerHaptic } from '../../hooks/useAnimation'
 import type { Colors } from '../../lib/theme'
 import { space, radius } from '../../lib/theme'
 import { displayFont } from '../../lib/fonts'
+import { Icon, type IconName } from '../../components/Icon'
 
 const SCREEN_WIDTH = Dimensions.get('window').width
 
 type Step = {
   id: string
-  icon: string
+  // 'dot' is the plain brand mark used for the welcome step — none of the
+  // named icons fit "welcome" well enough to force one.
+  icon: IconName | 'dot'
   title: string
   body: string
 }
@@ -29,31 +32,31 @@ type Step = {
 const STEPS: Step[] = [
   {
     id: 'welcome',
-    icon: '·',
+    icon: 'dot',
     title: 'Welcome to Nudge',
     body: 'A calm, focused task manager. No notifications shouting at you — just gentle nudges to keep you on track.',
   },
   {
     id: 'today',
-    icon: '☀',
+    icon: 'today',
     title: 'Your daily board',
     body: 'Every day starts fresh. Add tasks to your board and check them off as you go. Simple and distraction-free.',
   },
   {
     id: 'tags',
-    icon: '◆',
+    icon: 'tag',
     title: 'Stay organised with tags',
     body: 'Group tasks by project, habit, or area of your life. Create custom tags with your own colours.',
   },
   {
     id: 'recurring',
-    icon: '↺',
+    icon: 'repeat',
     title: 'Build daily habits',
     body: 'Mark any task as recurring and it will appear on your board every day — perfect for morning routines and healthy habits.',
   },
   {
     id: 'ready',
-    icon: '✓',
+    icon: 'check',
     title: "You're all set",
     body: "That's everything you need to know. Start small — add one task and see how it feels.",
   },
@@ -153,7 +156,12 @@ export default function OnboardingScreen() {
             { opacity: contentOpacity, transform: [{ translateX: slideX }] },
           ]}
         >
-          <Text style={styles.icon}>{current.icon}</Text>
+          <View style={styles.icon}>
+            {current.icon === 'dot'
+              ? <View style={[styles.iconDot, { backgroundColor: colors.accent }]} />
+              : <Icon name={current.icon} size={40} color={colors.accent} strokeWidth={1.6} />
+            }
+          </View>
           <Text style={styles.title}>{current.title}</Text>
           <Text style={styles.body}>{current.body}</Text>
         </Animated.View>
@@ -252,10 +260,15 @@ function createStyles(c: Colors) {
       gap: space.xl,
     },
     icon: {
-      fontSize: 48,
-      color: c.accent,
-      fontFamily: displayFont.regular,
+      height: 48,
+      alignItems: 'center',
+      justifyContent: 'center',
       marginBottom: space.sm,
+    },
+    iconDot: {
+      width: 14,
+      height: 14,
+      borderRadius: 7,
     },
     title: {
       fontFamily: displayFont.bold,

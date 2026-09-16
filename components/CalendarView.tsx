@@ -6,6 +6,7 @@ import {
   StyleSheet,
 } from 'react-native'
 import { AppText as Text } from './AppText'
+import { Icon } from './Icon'
 import { useTheme } from '../lib/ThemeContext'
 import type { Colors } from '../lib/theme'
 import { space, radius, shadow } from '../lib/theme'
@@ -162,11 +163,11 @@ export function CalendarView({
       {/* Navigation header */}
       <View style={styles.navRow}>
         <TouchableOpacity style={styles.navBtn} onPress={onPrevious} activeOpacity={0.7}>
-          <Text style={styles.navBtnText}>‹</Text>
+          <Icon name="chevron" rotate={180} size={16} color={colors.text} strokeWidth={2} />
         </TouchableOpacity>
         <Text style={styles.navTitle}>{headerTitle}</Text>
         <TouchableOpacity style={styles.navBtn} onPress={onNext} activeOpacity={0.7}>
-          <Text style={styles.navBtnText}>›</Text>
+          <Icon name="chevron" size={16} color={colors.text} strokeWidth={2} />
         </TouchableOpacity>
       </View>
 
@@ -237,11 +238,6 @@ function createStyles(c: Colors) {
       backgroundColor: c.surfaceMuted,
       alignItems: 'center',
       justifyContent: 'center',
-    },
-    navBtnText: {
-      fontSize: 20,
-      color: c.text,
-      lineHeight: 24,
     },
     navTitle: {
       fontSize: 15,

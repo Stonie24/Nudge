@@ -8,6 +8,7 @@ import {
   Animated,
 } from 'react-native'
 import { AppText as Text } from '../../components/AppText'
+import { Icon } from '../../components/Icon'
 import {
   useTodayTasks,
   useTodayCompletions,
@@ -115,7 +116,10 @@ function TaskItem({
             {task.title}
           </Text>
           {task.recurring && (
-            <Text style={styles.recurringBadge}>↻ daily</Text>
+            <View style={styles.recurringBadge}>
+              <Icon name="repeat" size={11} color={colors.accent} strokeWidth={2} />
+              <Text style={styles.recurringBadgeText}>daily</Text>
+            </View>
           )}
         </View>
         <TagPicker value={task.tag} onChange={tag => onUpdateTag(task.id, tag)} />
@@ -195,7 +199,8 @@ export default function TodayScreen() {
           onPressOut={addBtn.onPressOut}
           activeOpacity={1}
         >
-          <Text style={styles.addBtnText}>+ Add task</Text>
+          <Icon name="plus" size={16} color={colors.btnPrimaryText} strokeWidth={2.2} />
+          <Text style={styles.addBtnText}>Add task</Text>
         </TouchableOpacity>
       </Animated.View>
     </View>
@@ -300,6 +305,7 @@ function createStyles(c: Colors) {
     },
     nudgeText: { fontSize: 14, color: c.accentText, fontWeight: '400', lineHeight: 20 },
     addBtn: {
+      flexDirection: 'row', gap: space.xs,
       height: 52, backgroundColor: c.btnPrimary,
       borderRadius: radius.pill, alignItems: 'center',
       justifyContent: 'center', marginBottom: space.xxl,
@@ -337,7 +343,8 @@ function createStyles(c: Colors) {
     taskContent: { flex: 1, gap: space.xs },
     taskTitle: { fontSize: 15, color: c.text, lineHeight: 22 },
     taskTitleDone: { color: c.textMuted, textDecorationLine: 'line-through' },
-    recurringBadge: { fontSize: 11, color: c.accent, fontWeight: '500' },
+    recurringBadge: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
+    recurringBadgeText: { fontSize: 11, color: c.accent, fontWeight: '500' },
     emptyText: { fontSize: 14, color: c.textMuted, textAlign: 'center', marginTop: 40 },
   })
 }

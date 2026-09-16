@@ -12,6 +12,7 @@ import {
     Switch,
 } from 'react-native'
 import { AppText as Text } from './AppText'
+import { Icon } from './Icon'
 import { useAddTodayTask, useScheduleForToday } from '../hooks/useToday'
 import { useTasks } from '../hooks/useTasks'
 import { useTheme } from '../lib/ThemeContext'
@@ -175,15 +176,18 @@ export function AddTaskSheet({
                         </View>
                     ) : (
                         <View style={styles.backlog}>
-                            <TextInput
-                                style={styles.searchInput}
-                                placeholder="Search backlog..."
-                                placeholderTextColor={colors.placeholder}
-                                value={search}
-                                onChangeText={setSearch}
-                                clearButtonMode="while-editing"
-                                returnKeyType="search"
-                            />
+                            <View style={styles.searchRow}>
+                                <Icon name="search" size={16} color={colors.textMuted} strokeWidth={2} style={styles.searchIcon} />
+                                <TextInput
+                                    style={styles.searchInput}
+                                    placeholder="Search backlog..."
+                                    placeholderTextColor={colors.placeholder}
+                                    value={search}
+                                    onChangeText={setSearch}
+                                    clearButtonMode="while-editing"
+                                    returnKeyType="search"
+                                />
+                            </View>
 
                             {backlogTags.length > 0 && (
                                 <ScrollView
@@ -246,7 +250,7 @@ export function AddTaskSheet({
                                                 <Text style={styles.backlogTitle}>{item.title}</Text>
                                                 {item.tag && <TagBadge tag={item.tag} />}
                                             </View>
-                                            <Text style={styles.addIcon}>+</Text>
+                                            <Icon name="plus" size={18} color={colors.accent} strokeWidth={2} />
                                         </TouchableOpacity>
                                     )}
                                 />
@@ -317,10 +321,12 @@ function createStyles(c: Colors) {
         addBtnDisabled: { backgroundColor: c.btnDisabled },
         addBtnText: { color: c.btnPrimaryText, fontSize: 15, fontWeight: '500' },
         backlog: { gap: space.md },
+        searchRow: { justifyContent: 'center' },
+        searchIcon: { position: 'absolute', left: space.lg, zIndex: 1 },
         searchInput: {
             height: 44, backgroundColor: c.inputBg,
             borderWidth: 1, borderColor: c.border,
-            borderRadius: radius.md, paddingHorizontal: space.lg,
+            borderRadius: radius.md, paddingLeft: space.lg + 16 + space.sm, paddingRight: space.lg,
             fontSize: 14, color: c.text,
         },
         tagRow: { flexGrow: 0 },
@@ -347,7 +353,6 @@ function createStyles(c: Colors) {
         },
         backlogText: { flex: 1, gap: space.xs },
         backlogTitle: { fontSize: 15, color: c.text },
-        addIcon: { fontSize: 22, color: c.accent, fontWeight: '300' },
         loader: { marginTop: 40 },
         emptyText: {
             fontSize: 14, color: c.textMuted,

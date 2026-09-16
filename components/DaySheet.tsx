@@ -9,6 +9,7 @@ import {
   StyleSheet,
 } from 'react-native'
 import { AppText as Text } from './AppText'
+import { Icon } from './Icon'
 import { useAddEvent, useDeleteEvent } from '../hooks/useCalendar'
 import { useCompleteTask, useUncompleteTask } from '../hooks/useTasks'
 import { useCompleteRecurring, useUncompleteRecurring } from '../hooks/useToday'
@@ -29,7 +30,6 @@ function EventRow({
 }) {
   const { colors } = useTheme()
   const styles = useMemo(() => createStyles(colors), [colors])
-  const sourceIcon = event.source === 'google' ? 'G' : event.source === 'apple' ? '' : '◆'
 
   return (
     <TouchableOpacity
@@ -50,7 +50,10 @@ function EventRow({
         {event.all_day && <Text style={styles.eventTime}>All day</Text>}
       </View>
       <View style={[styles.sourceTag, { backgroundColor: event.color + '22' }]}>
-        <Text style={[styles.sourceText, { color: event.color }]}>{sourceIcon}</Text>
+        {event.source === 'google'
+          ? <Text style={[styles.sourceText, { color: event.color }]}>G</Text>
+          : <Icon name="calendar" size={13} color={event.color} strokeWidth={2} />
+        }
       </View>
     </TouchableOpacity>
   )
@@ -85,7 +88,7 @@ function TaskRow({
         </Text>
         {task.tag && <TagBadge tag={task.tag} />}
       </View>
-      {task.recurring && <Text style={styles.recurringBadge}>↻</Text>}
+      {task.recurring && <Icon name="repeat" size={14} color={colors.accent} strokeWidth={2} />}
     </TouchableOpacity>
   )
 }
@@ -235,7 +238,14 @@ export function DaySheet({
               onPress={() => setShowAddForm(!showAddForm)}
               activeOpacity={0.7}
             >
-              <Text style={styles.addEventBtnText}>{showAddForm ? '✕' : '+ Event'}</Text>
+              {showAddForm ? (
+                <Icon name="close" size={13} color={colors.accentText} strokeWidth={2} />
+              ) : (
+                <>
+                  <Icon name="plus" size={13} color={colors.accentText} strokeWidth={2} />
+                  <Text style={styles.addEventBtnText}>Event</Text>
+                </>
+              )}
             </TouchableOpacity>
           </View>
 
@@ -327,6 +337,9 @@ function createStyles(c: Colors) {
       fontFamily: displayFont.semibold,
     },
     addEventBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: space.xs,
       paddingVertical: space.sm,
       paddingHorizontal: space.md,
       backgroundColor: c.accentBg,
@@ -383,7 +396,6 @@ function createStyles(c: Colors) {
     taskContent: { flex: 1, gap: space.xs },
     taskTitle: { fontSize: 14, color: c.text },
     taskTitleDone: { color: c.textMuted, textDecorationLine: 'line-through' },
-    recurringBadge: { fontSize: 14, color: c.accent },
     addForm: {
       backgroundColor: c.surfaceMuted,
       borderRadius: radius.lg,
