@@ -42,6 +42,12 @@
           "iosDisplayInForeground": true
         }
       ]
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "63496dea-edf7-4461-bf1d-9bebb579438b"
+      }
+    }
   }
 }
