@@ -12,7 +12,7 @@ import { StatusBar } from 'expo-status-bar'
 import * as WebBrowser from 'expo-web-browser'
 import * as Notifications from 'expo-notifications'
 import * as Linking from 'expo-linking'
-import { Platform } from 'react-native'
+import { Platform, Alert } from 'react-native'
 import { OfflineBanner } from '../components/OfflineBanner'
 import { createSessionFromUrl } from '../lib/oauth'
 
@@ -51,12 +51,23 @@ function AuthGate() {
 
   // Some OAuth flows (notably Android, where the browser can close before
   // WebBrowser.openAuthSessionAsync's promise resolves) return to the app
-  // via a Linking event instead. Catch that case here so the session still
-  // gets created.
+  // via a Linking event instead — or, if the OS killed the app process while
+  // the browser was open, via the URL that cold-starts it, which never fires
+  // as an 'url' event and has to be read with getInitialURL(). Catch both
+  // cases here so the session still gets created; createSessionFromUrl's own
+  // dedup guard makes it safe if the primary sign-in flow already handled
+  // the same redirect.
   useEffect(() => {
-    const sub = Linking.addEventListener('url', ({ url }) => {
-      createSessionFromUrl(url).catch((err) => console.error('OAuth session error:', err))
+    function handle(url: string) {
+      createSessionFromUrl(url).catch((err) => {
+        console.error('OAuth session error:', err)
+        Alert.alert('Sign-in failed', "We couldn't finish signing you in. Please try again.")
+      })
+    }
+    Linking.getInitialURL().then((url) => {
+      if (url) handle(url)
     })
+    const sub = Linking.addEventListener('url', ({ url }) => handle(url))
     return () => sub.remove()
   }, [])
 

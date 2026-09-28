@@ -8,9 +8,10 @@ import {
   Alert,
 } from 'react-native'
 import { AppText as Text } from '../../components/AppText'
+import { GoogleSignInButton } from '../../components/GoogleSignInButton'
 import { Link } from 'expo-router'
 import { supabase } from '../../lib/supabase'
-import { signInWithOAuth } from '../../lib/oauth'
+import { useOAuthSignIn } from '../../hooks/useOAuthSignIn'
 import { useTheme } from '../../lib/ThemeContext'
 import type { Colors } from '../../lib/theme'
 import { space, radius } from '../../lib/theme'
@@ -27,7 +28,8 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [devLoading, setDevLoading] = useState(false)
-  const [oauthLoading, setOauthLoading] = useState(false)
+  const { loading: oauthLoading, signIn } = useOAuthSignIn()
+  const anyLoading = loading || devLoading || oauthLoading
 
   const { colors } = useTheme()
   const styles = useMemo(() => createStyles(colors), [colors])
@@ -55,18 +57,6 @@ export default function LoginScreen() {
     })
     setDevLoading(false)
     if (error) Alert.alert('Dev login failed', error.message)
-  }
-
-  async function handleGoogleLogin() {
-    setOauthLoading(true)
-    try {
-      await signInWithOAuth('google')
-      // on success, _layout.tsx AuthGate redirects to /(tabs)/
-    } catch (err) {
-      Alert.alert('Google sign-in failed', err instanceof Error ? err.message : 'Please try again.')
-    } finally {
-      setOauthLoading(false)
-    }
   }
 
   return (
@@ -109,9 +99,9 @@ export default function LoginScreen() {
           </View>
 
           <TouchableOpacity
-            style={[styles.button, loading && styles.buttonDisabled]}
+            style={[styles.button, anyLoading && styles.buttonDisabled]}
             onPress={handleLogin}
-            disabled={loading}
+            disabled={anyLoading}
             activeOpacity={0.85}
           >
             {loading
@@ -120,23 +110,11 @@ export default function LoginScreen() {
             }
           </TouchableOpacity>
 
-          <View style={styles.divider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>or</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          <TouchableOpacity
-            style={[styles.oauthButton, oauthLoading && styles.buttonDisabled]}
-            onPress={handleGoogleLogin}
-            disabled={oauthLoading}
-            activeOpacity={0.85}
-          >
-            {oauthLoading
-              ? <ActivityIndicator color={colors.text} />
-              : <Text style={styles.oauthButtonText}>Continue with Google</Text>
-            }
-          </TouchableOpacity>
+          <GoogleSignInButton
+            loading={oauthLoading}
+            disabled={anyLoading && !oauthLoading}
+            onPress={() => signIn('google')}
+          />
         </View>
 
         {/* Footer */}
@@ -151,7 +129,7 @@ export default function LoginScreen() {
           <TouchableOpacity
             style={styles.devBtn}
             onPress={handleDevLogin}
-            disabled={devLoading}
+            disabled={anyLoading}
             activeOpacity={0.7}
           >
             {devLoading
@@ -237,35 +215,6 @@ function createStyles(c: Colors) {
     },
     buttonText: {
       color: c.btnPrimaryText,
-      fontSize: 15,
-      fontWeight: '500',
-    },
-    divider: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: space.md,
-      marginTop: space.sm,
-    },
-    dividerLine: {
-      flex: 1,
-      height: 1,
-      backgroundColor: c.border,
-    },
-    dividerText: {
-      fontSize: 12,
-      color: c.textSecondary,
-    },
-    oauthButton: {
-      height: 52,
-      borderWidth: 1,
-      borderColor: c.border,
-      borderRadius: radius.pill,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: c.inputBg,
-    },
-    oauthButtonText: {
-      color: c.text,
       fontSize: 15,
       fontWeight: '500',
     },
