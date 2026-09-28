@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { Link, useRouter } from 'expo-router'
 import { supabase } from '../../lib/supabase'
+import { signInWithOAuth } from '../../lib/oauth'
 import React from 'react'
 import {
   View,
@@ -23,6 +24,7 @@ export default function SignupScreen() {
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [loading, setLoading] = useState(false)
+  const [oauthLoading, setOauthLoading] = useState(false)
   const router = useRouter()
 
   const { colors } = useTheme()
@@ -54,6 +56,18 @@ export default function SignupScreen() {
         'We sent you a confirmation link. Once confirmed, you can log in.',
         [{ text: 'OK', onPress: () => router.replace('/(auth)/login') }]
       )
+    }
+  }
+
+  async function handleGoogleSignup() {
+    setOauthLoading(true)
+    try {
+      await signInWithOAuth('google')
+      // on success, _layout.tsx AuthGate redirects to onboarding/tabs
+    } catch (err) {
+      Alert.alert('Google sign-in failed', err instanceof Error ? err.message : 'Please try again.')
+    } finally {
+      setOauthLoading(false)
     }
   }
 
@@ -126,6 +140,24 @@ export default function SignupScreen() {
           <Text style={styles.hint}>
             By signing up you agree to our terms of service and privacy policy.
           </Text>
+
+          <View style={styles.divider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>or</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          <TouchableOpacity
+            style={[styles.oauthButton, oauthLoading && styles.buttonDisabled]}
+            onPress={handleGoogleSignup}
+            disabled={oauthLoading}
+            activeOpacity={0.85}
+          >
+            {oauthLoading
+              ? <ActivityIndicator color={colors.text} />
+              : <Text style={styles.oauthButtonText}>Continue with Google</Text>
+            }
+          </TouchableOpacity>
         </View>
 
         {/* Footer */}
@@ -221,6 +253,35 @@ function createStyles(c: Colors) {
       textAlign: 'center',
       lineHeight: 16,
       marginTop: space.xs,
+    },
+    divider: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: space.md,
+      marginTop: space.sm,
+    },
+    dividerLine: {
+      flex: 1,
+      height: 1,
+      backgroundColor: c.border,
+    },
+    dividerText: {
+      fontSize: 12,
+      color: c.textSecondary,
+    },
+    oauthButton: {
+      height: 52,
+      borderWidth: 1,
+      borderColor: c.border,
+      borderRadius: radius.pill,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: c.inputBg,
+    },
+    oauthButtonText: {
+      color: c.text,
+      fontSize: 15,
+      fontWeight: '500',
     },
     footer: {
       flexDirection: 'row',

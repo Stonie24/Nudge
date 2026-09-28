@@ -11,8 +11,10 @@ import { fontsToLoad } from '../lib/fonts'
 import { StatusBar } from 'expo-status-bar'
 import * as WebBrowser from 'expo-web-browser'
 import * as Notifications from 'expo-notifications'
+import * as Linking from 'expo-linking'
 import { Platform } from 'react-native'
 import { OfflineBanner } from '../components/OfflineBanner'
+import { createSessionFromUrl } from '../lib/oauth'
 
 WebBrowser.maybeCompleteAuthSession()
 setupOnlineManager()
@@ -46,6 +48,17 @@ function AuthGate() {
       router.replace('/(tabs)/')
     }
   }, [user, loading, needsOnboarding]) // segments intentionally omitted — we only want to react to auth changes
+
+  // Some OAuth flows (notably Android, where the browser can close before
+  // WebBrowser.openAuthSessionAsync's promise resolves) return to the app
+  // via a Linking event instead. Catch that case here so the session still
+  // gets created.
+  useEffect(() => {
+    const sub = Linking.addEventListener('url', ({ url }) => {
+      createSessionFromUrl(url).catch((err) => console.error('OAuth session error:', err))
+    })
+    return () => sub.remove()
+  }, [])
 
   return (
     <>
