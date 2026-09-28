@@ -8,8 +8,10 @@ import {
   Alert,
 } from 'react-native'
 import { AppText as Text } from '../../components/AppText'
+import { GoogleSignInButton } from '../../components/GoogleSignInButton'
 import { Link } from 'expo-router'
 import { supabase } from '../../lib/supabase'
+import { useOAuthSignIn } from '../../hooks/useOAuthSignIn'
 import { useTheme } from '../../lib/ThemeContext'
 import type { Colors } from '../../lib/theme'
 import { space, radius } from '../../lib/theme'
@@ -26,6 +28,8 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [devLoading, setDevLoading] = useState(false)
+  const { loading: oauthLoading, signIn } = useOAuthSignIn()
+  const anyLoading = loading || devLoading || oauthLoading
 
   const { colors } = useTheme()
   const styles = useMemo(() => createStyles(colors), [colors])
@@ -95,9 +99,9 @@ export default function LoginScreen() {
           </View>
 
           <TouchableOpacity
-            style={[styles.button, loading && styles.buttonDisabled]}
+            style={[styles.button, anyLoading && styles.buttonDisabled]}
             onPress={handleLogin}
-            disabled={loading}
+            disabled={anyLoading}
             activeOpacity={0.85}
           >
             {loading
@@ -105,6 +109,12 @@ export default function LoginScreen() {
               : <Text style={styles.buttonText}>Log in</Text>
             }
           </TouchableOpacity>
+
+          <GoogleSignInButton
+            loading={oauthLoading}
+            disabled={anyLoading && !oauthLoading}
+            onPress={() => signIn('google')}
+          />
         </View>
 
         {/* Footer */}
@@ -119,7 +129,7 @@ export default function LoginScreen() {
           <TouchableOpacity
             style={styles.devBtn}
             onPress={handleDevLogin}
-            disabled={devLoading}
+            disabled={anyLoading}
             activeOpacity={0.7}
           >
             {devLoading

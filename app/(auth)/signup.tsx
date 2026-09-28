@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { Link, useRouter } from 'expo-router'
 import { supabase } from '../../lib/supabase'
+import { useOAuthSignIn } from '../../hooks/useOAuthSignIn'
 import React from 'react'
 import {
   View,
@@ -13,6 +14,7 @@ import {
   Alert,
 } from 'react-native'
 import { AppText as Text } from '../../components/AppText'
+import { GoogleSignInButton } from '../../components/GoogleSignInButton'
 import { useTheme } from '../../lib/ThemeContext'
 import type { Colors } from '../../lib/theme'
 import { space, radius } from '../../lib/theme'
@@ -23,6 +25,8 @@ export default function SignupScreen() {
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [loading, setLoading] = useState(false)
+  const { loading: oauthLoading, signIn } = useOAuthSignIn()
+  const anyLoading = loading || oauthLoading
   const router = useRouter()
 
   const { colors } = useTheme()
@@ -112,9 +116,9 @@ export default function SignupScreen() {
           </View>
 
           <TouchableOpacity
-            style={[styles.button, loading && styles.buttonDisabled]}
+            style={[styles.button, anyLoading && styles.buttonDisabled]}
             onPress={handleSignup}
-            disabled={loading}
+            disabled={anyLoading}
             activeOpacity={0.85}
           >
             {loading
@@ -126,6 +130,12 @@ export default function SignupScreen() {
           <Text style={styles.hint}>
             By signing up you agree to our terms of service and privacy policy.
           </Text>
+
+          <GoogleSignInButton
+            loading={oauthLoading}
+            disabled={anyLoading && !oauthLoading}
+            onPress={() => signIn('google')}
+          />
         </View>
 
         {/* Footer */}
