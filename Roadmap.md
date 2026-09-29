@@ -28,7 +28,7 @@
 - [x] Streak tracking for recurring tasks
 - [x] Make it possible to log in with OAuth for both mobile and desktop
 - [x] Costum profile picture thats get saved in the database, or pull the picture from the login service, if none of these still use defualt.
-- [ ] Inline auth error states (wrong password, account creation failures, duplicate email, etc.) instead of relying on native alert popups
+- [x] Inline auth error states (wrong password, account creation failures, duplicate email, etc.) instead of relying on native alert popups
 
 ## Design refresh (from "Nudge Redesign" artifact)
 Token-level reskin (color, type, spacing, icons, elevation) plus a few new pieces of product surface. See the artifact for the full mockups: https://claude.ai/artifact/9e5w5oRWtM77gYTKKVJmQc
