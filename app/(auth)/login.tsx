@@ -30,9 +30,8 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false)
   const [devLoading, setDevLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const { loading: oauthLoading, error: oauthError, clearError: clearOauthError, signIn } = useOAuthSignIn()
+  const { loading: oauthLoading, signIn } = useOAuthSignIn(setError)
   const anyLoading = loading || devLoading || oauthLoading
-  const displayError = error ?? oauthError
 
   const { colors } = useTheme()
   const styles = useMemo(() => createStyles(colors), [colors])
@@ -40,18 +39,15 @@ export default function LoginScreen() {
   function handleChangeEmail(value: string) {
     setEmail(value)
     setError(null)
-    clearOauthError()
   }
 
   function handleChangePassword(value: string) {
     setPassword(value)
     setError(null)
-    clearOauthError()
   }
 
   async function handleLogin() {
     setError(null)
-    clearOauthError()
 
     if (!email || !password) {
       setError('Please enter your email and password.')
@@ -62,27 +58,20 @@ export default function LoginScreen() {
     const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
     setLoading(false)
 
-    if (signInError) setError(getAuthErrorMessage(signInError, 'signin'))
+    if (signInError) setError(getAuthErrorMessage(signInError))
     // on success, _layout.tsx AuthGate redirects to /(tabs)/
   }
 
   async function handleDevLogin() {
     if (!DEV_LOGIN_EMAIL || !DEV_LOGIN_PASSWORD) return
     setError(null)
-    clearOauthError()
     setDevLoading(true)
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email: DEV_LOGIN_EMAIL,
       password: DEV_LOGIN_PASSWORD,
     })
     setDevLoading(false)
-    if (signInError) setError(getAuthErrorMessage(signInError, 'signin'))
-  }
-
-  function handleGoogleSignIn() {
-    setError(null)
-    clearOauthError()
-    signIn('google')
+    if (signInError) setError(getAuthErrorMessage(signInError))
   }
 
   return (
@@ -98,7 +87,7 @@ export default function LoginScreen() {
 
         {/* Form */}
         <View style={styles.form}>
-          <InlineFormError message={displayError} />
+          <InlineFormError message={error} />
 
           <View style={styles.field}>
             <Text style={styles.label}>Email</Text>
@@ -141,7 +130,7 @@ export default function LoginScreen() {
           <GoogleSignInButton
             loading={oauthLoading}
             disabled={anyLoading && !oauthLoading}
-            onPress={handleGoogleSignIn}
+            onPress={() => signIn('google')}
           />
         </View>
 

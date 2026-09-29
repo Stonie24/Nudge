@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react'
-import { View, StyleSheet } from 'react-native'
-import { AppText as Text } from './AppText'
+import { StyleSheet } from 'react-native'
+import { Banner } from './Banner'
 import { useTheme } from '../lib/ThemeContext'
 import type { Colors } from '../lib/theme'
 import { space, radius } from '../lib/theme'
@@ -11,11 +11,7 @@ export function InlineFormError({ message }: { message?: string | null }) {
 
   if (!message) return null
 
-  return (
-    <View style={styles.banner}>
-      <Text style={styles.text}>{message}</Text>
-    </View>
-  )
+  return <Banner message={message} containerStyle={styles.banner} textStyle={styles.text} />
 }
 
 function createStyles(c: Colors) {

@@ -28,9 +28,8 @@ export default function SignupScreen() {
   const [confirm, setConfirm] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const { loading: oauthLoading, error: oauthError, clearError: clearOauthError, signIn } = useOAuthSignIn()
+  const { loading: oauthLoading, signIn } = useOAuthSignIn(setError)
   const anyLoading = loading || oauthLoading
-  const displayError = error ?? oauthError
   const router = useRouter()
 
   const { colors } = useTheme()
@@ -39,24 +38,20 @@ export default function SignupScreen() {
   function handleChangeEmail(value: string) {
     setEmail(value)
     setError(null)
-    clearOauthError()
   }
 
   function handleChangePassword(value: string) {
     setPassword(value)
     setError(null)
-    clearOauthError()
   }
 
   function handleChangeConfirm(value: string) {
     setConfirm(value)
     setError(null)
-    clearOauthError()
   }
 
   async function handleSignup() {
     setError(null)
-    clearOauthError()
 
     if (!email || !password || !confirm) {
       setError('Please fill in all fields.')
@@ -76,7 +71,7 @@ export default function SignupScreen() {
     setLoading(false)
 
     if (signUpError) {
-      setError(getAuthErrorMessage(signUpError, 'signup'))
+      setError(getAuthErrorMessage(signUpError))
     } else {
       Alert.alert(
         'Check your email',
@@ -84,12 +79,6 @@ export default function SignupScreen() {
         [{ text: 'OK', onPress: () => router.replace('/(auth)/login') }]
       )
     }
-  }
-
-  function handleGoogleSignIn() {
-    setError(null)
-    clearOauthError()
-    signIn('google')
   }
 
   return (
@@ -108,7 +97,7 @@ export default function SignupScreen() {
 
         {/* Form */}
         <View style={styles.form}>
-          <InlineFormError message={displayError} />
+          <InlineFormError message={error} />
 
           <View style={styles.field}>
             <Text style={styles.label}>Email</Text>
@@ -167,7 +156,7 @@ export default function SignupScreen() {
           <GoogleSignInButton
             loading={oauthLoading}
             disabled={anyLoading && !oauthLoading}
-            onPress={handleGoogleSignIn}
+            onPress={() => signIn('google')}
           />
         </View>
 
