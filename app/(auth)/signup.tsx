@@ -86,6 +86,12 @@ export default function SignupScreen() {
     }
   }
 
+  function handleGoogleSignIn() {
+    setError(null)
+    clearOauthError()
+    signIn('google')
+  }
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -161,7 +167,7 @@ export default function SignupScreen() {
           <GoogleSignInButton
             loading={oauthLoading}
             disabled={anyLoading && !oauthLoading}
-            onPress={() => signIn('google')}
+            onPress={handleGoogleSignIn}
           />
         </View>
 

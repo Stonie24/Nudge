@@ -79,6 +79,12 @@ export default function LoginScreen() {
     if (signInError) setError(getAuthErrorMessage(signInError, 'signin'))
   }
 
+  function handleGoogleSignIn() {
+    setError(null)
+    clearOauthError()
+    signIn('google')
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.inner}>
@@ -135,7 +141,7 @@ export default function LoginScreen() {
           <GoogleSignInButton
             loading={oauthLoading}
             disabled={anyLoading && !oauthLoading}
-            onPress={() => signIn('google')}
+            onPress={handleGoogleSignIn}
           />
         </View>
 
