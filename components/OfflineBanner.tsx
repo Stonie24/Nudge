@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react'
-import { View, Text, StyleSheet } from 'react-native'
+import { StyleSheet } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { Banner } from './Banner'
 import { useTheme } from '../lib/ThemeContext'
 import { useNetworkStatus } from '../hooks/useNetworkStatus'
 import type { Colors } from '../lib/theme'
@@ -14,9 +15,11 @@ export function OfflineBanner() {
   if (isOnline) return null
 
   return (
-    <View style={styles.banner}>
-      <Text style={styles.text}>You're offline — changes will sync when you're back online</Text>
-    </View>
+    <Banner
+      message="You're offline — changes will sync when you're back online"
+      containerStyle={styles.banner}
+      textStyle={styles.text}
+    />
   )
 }
 

@@ -5,13 +5,14 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
-  Alert,
 } from 'react-native'
 import { AppText as Text } from '../../components/AppText'
 import { GoogleSignInButton } from '../../components/GoogleSignInButton'
+import { InlineFormError } from '../../components/InlineFormError'
 import { Link } from 'expo-router'
 import { supabase } from '../../lib/supabase'
 import { useOAuthSignIn } from '../../hooks/useOAuthSignIn'
+import { getAuthErrorMessage } from '../../lib/authErrors'
 import { useTheme } from '../../lib/ThemeContext'
 import type { Colors } from '../../lib/theme'
 import { space, radius } from '../../lib/theme'
@@ -28,35 +29,49 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [devLoading, setDevLoading] = useState(false)
-  const { loading: oauthLoading, signIn } = useOAuthSignIn()
+  const [error, setError] = useState<string | null>(null)
+  const { loading: oauthLoading, signIn } = useOAuthSignIn(setError)
   const anyLoading = loading || devLoading || oauthLoading
 
   const { colors } = useTheme()
   const styles = useMemo(() => createStyles(colors), [colors])
 
+  function handleChangeEmail(value: string) {
+    setEmail(value)
+    setError(null)
+  }
+
+  function handleChangePassword(value: string) {
+    setPassword(value)
+    setError(null)
+  }
+
   async function handleLogin() {
+    setError(null)
+
     if (!email || !password) {
-      Alert.alert('Missing fields', 'Please enter your email and password.')
+      setError('Please enter your email and password.')
       return
     }
 
     setLoading(true)
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
     setLoading(false)
 
-    if (error) Alert.alert('Login failed', error.message)
+    if (signInError) setError(getAuthErrorMessage(signInError))
     // on success, _layout.tsx AuthGate redirects to /(tabs)/
   }
 
   async function handleDevLogin() {
     if (!DEV_LOGIN_EMAIL || !DEV_LOGIN_PASSWORD) return
+    setError(null)
     setDevLoading(true)
-    const { error } = await supabase.auth.signInWithPassword({
+    const { error: signInError } = await supabase.auth.signInWithPassword({
       email: DEV_LOGIN_EMAIL,
       password: DEV_LOGIN_PASSWORD,
     })
     setDevLoading(false)
-    if (error) Alert.alert('Dev login failed', error.message)
+    if (signInError) setError(getAuthErrorMessage(signInError))
   }
 
   return (
@@ -72,6 +87,8 @@ export default function LoginScreen() {
 
         {/* Form */}
         <View style={styles.form}>
+          <InlineFormError message={error} />
+
           <View style={styles.field}>
             <Text style={styles.label}>Email</Text>
             <TextInput
@@ -82,7 +99,7 @@ export default function LoginScreen() {
               autoCapitalize="none"
               autoCorrect={false}
               value={email}
-              onChangeText={setEmail}
+              onChangeText={handleChangeEmail}
             />
           </View>
 
@@ -94,7 +111,7 @@ export default function LoginScreen() {
               placeholderTextColor={colors.placeholder}
               secureTextEntry
               value={password}
-              onChangeText={setPassword}
+              onChangeText={handleChangePassword}
             />
           </View>
 
