@@ -6,7 +6,7 @@ type AuthErrorContext = 'signin' | 'signup' | 'oauth'
 // `code` field has changed across SDK versions — so we match on both and
 // fall back to the raw message if nothing known matches.
 export function getAuthErrorMessage(error: AuthError | Error, context: AuthErrorContext): string {
-  const code = 'code' in error ? error.code : undefined
+  const code = (error as { code?: string }).code
   const msg = error.message.toLowerCase()
 
   if (context === 'signin') {
@@ -26,7 +26,7 @@ export function getAuthErrorMessage(error: AuthError | Error, context: AuthError
     ) {
       return 'An account with this email already exists. Try logging in instead.'
     }
-    if (code === 'weak_password' || msg.includes('password') && msg.includes('weak')) {
+    if (code === 'weak_password' || (msg.includes('password') && msg.includes('weak'))) {
       return 'That password is too weak. Please choose a stronger one.'
     }
   }
