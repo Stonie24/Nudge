@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { Link, useRouter } from 'expo-router'
 import { supabase } from '../../lib/supabase'
 import { useOAuthSignIn } from '../../hooks/useOAuthSignIn'
+import { getAuthErrorMessage } from '../../lib/authErrors'
 import React from 'react'
 import {
   View,
@@ -15,6 +16,7 @@ import {
 } from 'react-native'
 import { AppText as Text } from '../../components/AppText'
 import { GoogleSignInButton } from '../../components/GoogleSignInButton'
+import { InlineFormError } from '../../components/InlineFormError'
 import { useTheme } from '../../lib/ThemeContext'
 import type { Colors } from '../../lib/theme'
 import { space, radius } from '../../lib/theme'
@@ -25,33 +27,56 @@ export default function SignupScreen() {
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [loading, setLoading] = useState(false)
-  const { loading: oauthLoading, signIn } = useOAuthSignIn()
+  const [error, setError] = useState<string | null>(null)
+  const { loading: oauthLoading, error: oauthError, clearError: clearOauthError, signIn } = useOAuthSignIn()
   const anyLoading = loading || oauthLoading
+  const displayError = error ?? oauthError
   const router = useRouter()
 
   const { colors } = useTheme()
   const styles = useMemo(() => createStyles(colors), [colors])
 
+  function handleChangeEmail(value: string) {
+    setEmail(value)
+    setError(null)
+    clearOauthError()
+  }
+
+  function handleChangePassword(value: string) {
+    setPassword(value)
+    setError(null)
+    clearOauthError()
+  }
+
+  function handleChangeConfirm(value: string) {
+    setConfirm(value)
+    setError(null)
+    clearOauthError()
+  }
+
   async function handleSignup() {
+    setError(null)
+    clearOauthError()
+
     if (!email || !password || !confirm) {
-      Alert.alert('Missing fields', 'Please fill in all fields.')
+      setError('Please fill in all fields.')
       return
     }
     if (password !== confirm) {
-      Alert.alert('Password mismatch', 'Your passwords don\'t match.')
+      setError('Your passwords don\'t match.')
       return
     }
     if (password.length < 6) {
-      Alert.alert('Password too short', 'Password must be at least 6 characters.')
+      setError('Password must be at least 6 characters.')
       return
     }
 
     setLoading(true)
-    const { error } = await supabase.auth.signUp({ email, password })
+    const { error: signUpError } = await supabase.auth.signUp({ email, password })
     setLoading(false)
 
-    if (error) {
-      Alert.alert('Signup failed', error.message)
+    if (signUpError) {
+      setError(getAuthErrorMessage(signUpError, 'signup'))
     } else {
       Alert.alert(
         'Check your email',
@@ -77,6 +102,8 @@ export default function SignupScreen() {
 
         {/* Form */}
         <View style={styles.form}>
+          <InlineFormError message={displayError} />
+
           <View style={styles.field}>
             <Text style={styles.label}>Email</Text>
             <TextInput
@@ -87,7 +114,7 @@ export default function SignupScreen() {
               autoCapitalize="none"
               autoCorrect={false}
               value={email}
-              onChangeText={setEmail}
+              onChangeText={handleChangeEmail}
             />
           </View>
 
@@ -99,7 +126,7 @@ export default function SignupScreen() {
               placeholderTextColor={colors.placeholder}
               secureTextEntry
               value={password}
-              onChangeText={setPassword}
+              onChangeText={handleChangePassword}
             />
           </View>
 
@@ -111,7 +138,7 @@ export default function SignupScreen() {
               placeholderTextColor={colors.placeholder}
               secureTextEntry
               value={confirm}
-              onChangeText={setConfirm}
+              onChangeText={handleChangeConfirm}
             />
           </View>
 
