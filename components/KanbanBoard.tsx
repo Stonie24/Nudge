@@ -9,7 +9,6 @@ import { AppText as Text } from './AppText'
 import { getTagColor } from '../lib/tagColor'
 import { useTheme } from '../lib/ThemeContext'
 import { TagPicker } from './TagPicker'
-import { showAlert } from '../lib/alert'
 import type { Colors } from '../lib/theme'
 import { space, radius, shadow } from '../lib/theme'
 import type { Task } from '../types'
@@ -32,18 +31,11 @@ function KanbanCard({
   const { colors } = useTheme()
   const styles = useMemo(() => createStyles(colors), [colors])
 
-  function handleLongPress() {
-    showAlert('Delete task', `Remove "${task.title}"?`, [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: () => onDelete(task.id) },
-    ])
-  }
-
   return (
     <TouchableOpacity
       style={[styles.card, task.completed && styles.cardDone]}
       onPress={() => onOpenDetail(task)}
-      onLongPress={handleLongPress}
+      onLongPress={() => onDelete(task.id)}
       activeOpacity={0.75}
     >
       <View style={styles.cardTop}>

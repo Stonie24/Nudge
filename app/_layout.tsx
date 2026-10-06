@@ -15,6 +15,7 @@ import * as Linking from 'expo-linking'
 import { Platform, Alert } from 'react-native'
 import { OfflineBanner } from '../components/OfflineBanner'
 import { createSessionFromUrl } from '../lib/oauth'
+import { UndoDeleteProvider } from '../lib/UndoDeleteContext'
 
 WebBrowser.maybeCompleteAuthSession()
 setupOnlineManager()
@@ -93,7 +94,9 @@ export default function RootLayout() {
         onSuccess={() => queryClient.resumePausedMutations()}
       >
         <ThemeProvider>
-          <AuthGate />
+          <UndoDeleteProvider>
+            <AuthGate />
+          </UndoDeleteProvider>
         </ThemeProvider>
       </PersistQueryClientProvider>
     </SafeAreaProvider>

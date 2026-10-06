@@ -11,7 +11,7 @@ import {
 } from 'react-native'
 import { AppText as Text } from '../../components/AppText'
 import { Icon } from '../../components/Icon'
-import { useTasks, useCompleteTask, useUncompleteTask, useDeleteTask, useUpdateTask } from '../../hooks/useTasks'
+import { useTasks, useCompleteTask, useUncompleteTask, useUpdateTask } from '../../hooks/useTasks'
 import { useTodayCompletions, useCompleteRecurring, useUncompleteRecurring } from '../../hooks/useToday'
 import { useLayout } from '../../hooks/useLayout'
 import { useTheme } from '../../lib/ThemeContext'
@@ -19,7 +19,8 @@ import { TagBadge } from '../../components/TagPicker'
 import { KanbanBoard } from '../../components/KanbanBoard'
 import { AddBacklogTaskSheet } from '../../components/AddBacklogTaskSheet'
 import { TaskDetailSheet } from '../../components/TaskDetailSheet'
-import { showAlert } from '../../lib/alert'
+import { SwipeableRow } from '../../components/SwipeableRow'
+import { useUndoDelete } from '../../lib/UndoDeleteContext'
 import { getTagColor } from '../../lib/tagColor'
 import { useEntranceAnimation, useCheckboxAnimation, usePressAnimation, triggerHaptic } from '../../hooks/useAnimation'
 import type { Colors } from '../../lib/theme'
@@ -35,7 +36,7 @@ function TaskItem({ task, isDone, onComplete, onUncomplete, onDelete, onOpenDeta
   isDone: boolean
   onComplete: (id: string) => void
   onUncomplete: (id: string) => void
-  onDelete: (id: string) => void
+  onDelete: (task: Task) => void
   onOpenDetail: (task: Task) => void
   colors: Colors
   index?: number
@@ -43,13 +44,6 @@ function TaskItem({ task, isDone, onComplete, onUncomplete, onDelete, onOpenDeta
   const styles = useMemo(() => createStyles(colors), [colors])
   const { opacity, translateY } = useEntranceAnimation(Math.min(index * 35, 180))
   const { scale: checkboxScale, ringScale, ringOpacity, triggerComplete, triggerUncomplete } = useCheckboxAnimation()
-
-  function handleLongPress() {
-    showAlert('Delete task', `Remove "${task.title}"?`, [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: () => onDelete(task.id) },
-    ])
-  }
 
   function handleToggle() {
     if (isDone) {
@@ -65,36 +59,37 @@ function TaskItem({ task, isDone, onComplete, onUncomplete, onDelete, onOpenDeta
 
   return (
     <Animated.View style={{ opacity, transform: [{ translateY }] }}>
-      <View style={styles.taskRow}>
-        <TouchableOpacity
-          style={styles.checkboxWrap}
-          onPress={handleToggle}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <Animated.View
-            style={[styles.checkboxRing, { transform: [{ scale: ringScale }], opacity: ringOpacity }]}
-          />
-          <Animated.View style={{ transform: [{ scale: checkboxScale }] }}>
-            <View style={[styles.checkbox, isDone && styles.checkboxDone]}>
-              {isDone && <View style={styles.checkmark} />}
-            </View>
-          </Animated.View>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.taskContent}
-          onPress={() => onOpenDetail(task)}
-          onLongPress={handleLongPress}
-          activeOpacity={0.6}
-        >
-          <Text style={[styles.taskTitle, isDone && styles.taskTitleDone]}>
-            {task.title}
+      <SwipeableRow onDelete={() => onDelete(task)}>
+        <View style={styles.taskRow}>
+          <TouchableOpacity
+            style={styles.checkboxWrap}
+            onPress={handleToggle}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Animated.View
+              style={[styles.checkboxRing, { transform: [{ scale: ringScale }], opacity: ringOpacity }]}
+            />
+            <Animated.View style={{ transform: [{ scale: checkboxScale }] }}>
+              <View style={[styles.checkbox, isDone && styles.checkboxDone]}>
+                {isDone && <View style={styles.checkmark} />}
+              </View>
+            </Animated.View>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.taskContent}
+            onPress={() => onOpenDetail(task)}
+            activeOpacity={0.6}
+          >
+            <Text style={[styles.taskTitle, isDone && styles.taskTitleDone]}>
+              {task.title}
+            </Text>
+            {task.tag && <TagBadge tag={task.tag} />}
+          </TouchableOpacity>
+          <Text style={styles.taskDate}>
+            {new Date(task.created_at).toLocaleDateString('en-SE', { month: 'short', day: 'numeric' })}
           </Text>
-          {task.tag && <TagBadge tag={task.tag} />}
-        </TouchableOpacity>
-        <Text style={styles.taskDate}>
-          {new Date(task.created_at).toLocaleDateString('en-SE', { month: 'short', day: 'numeric' })}
-        </Text>
-      </View>
+        </View>
+      </SwipeableRow>
     </Animated.View>
   )
 }
@@ -117,7 +112,7 @@ export default function AllTasksScreen() {
   const uncompleteTask = useUncompleteTask()
   const completeRecurring = useCompleteRecurring()
   const uncompleteRecurring = useUncompleteRecurring()
-  const deleteTask = useDeleteTask()
+  const { requestDelete } = useUndoDelete()
   const updateTask = useUpdateTask()
 
   const completedTodayIds = new Set(completions?.map(c => c.task_id) ?? [])
@@ -294,7 +289,7 @@ export default function AllTasksScreen() {
                   }))}
                   onComplete={id => handleComplete(tasks?.find(t => t.id === id)!)}
                   onUncomplete={id => handleUncomplete(tasks?.find(t => t.id === id)!)}
-                  onDelete={id => deleteTask.mutate(id)}
+                  onDelete={id => { const t = tasks?.find(x => x.id === id); if (t) requestDelete(t) }}
                   onUpdateTag={(id, tag) => updateTask.mutate({ id, tag })}
                   onOpenDetail={t => setSelectedTaskId(t.id)}
                 />
@@ -333,7 +328,7 @@ export default function AllTasksScreen() {
                   isDone={task.recurring ? completedTodayIds.has(task.id) : task.completed}
                   onComplete={() => handleComplete(task)}
                   onUncomplete={() => handleUncomplete(task)}
-                  onDelete={id => deleteTask.mutate(id)}
+                  onDelete={requestDelete}
                   onOpenDetail={t => setSelectedTaskId(t.id)}
                   colors={colors}
                   index={i}
