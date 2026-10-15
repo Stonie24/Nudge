@@ -1,10 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { resumableMutation, taskWriteScope } from '../lib/resumableMutation'
+import { useMemo } from 'react'
+import { usePendingTicks, applyTaskTicks } from './usePendingTicks'
 import type { Task } from '../types'
 
 export function useTasks() {
-  return useQuery<Task[]>({
+  const query = useQuery<Task[]>({
     queryKey: ['tasks'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -15,6 +17,10 @@ export function useTasks() {
       return data
     },
   })
+  // Ticks show instantly, before the server confirms them
+  const ticks = usePendingTicks()
+  const data = useMemo(() => applyTaskTicks(query.data, ticks), [query.data, ticks])
+  return { ...query, data }
 }
 
 const addTask = resumableMutation('addTask', async ({ title, tag }: { title: string; tag?: string }) => {

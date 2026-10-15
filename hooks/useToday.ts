@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { useQuery, useMutation, useMutationState, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { resumableMutation, taskWriteScope } from '../lib/resumableMutation'
+import { usePendingTicks, applyTaskTicks, applyCompletionTicks } from './usePendingTicks'
 import type { Task, DailyCompletion } from '../types'
 
 function today(): string {
@@ -16,7 +17,7 @@ function today(): string {
 // - recurring tasks (always show)
 // - tasks scheduled for today
 export function useTodayTasks() {
-  return useQuery<Task[]>({
+  const query = useQuery<Task[]>({
     queryKey: ['tasks', 'today'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -28,11 +29,15 @@ export function useTodayTasks() {
       return data
     },
   })
+  // Ticks show instantly, before the server confirms them
+  const ticks = usePendingTicks()
+  const data = useMemo(() => applyTaskTicks(query.data, ticks), [query.data, ticks])
+  return { ...query, data }
 }
 
 // Fetch today's completions (for recurring tasks)
 export function useTodayCompletions() {
-  return useQuery<DailyCompletion[]>({
+  const query = useQuery<DailyCompletion[]>({
     queryKey: ['completions', today()],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -43,6 +48,10 @@ export function useTodayCompletions() {
       return data
     },
   })
+  // Recurring ticks show instantly, before the server confirms them
+  const ticks = usePendingTicks()
+  const data = useMemo(() => applyCompletionTicks(query.data, ticks, today()), [query.data, ticks])
+  return { ...query, data }
 }
 
 // Complete a recurring task for today
@@ -163,6 +172,10 @@ export function usePendingTodayTasks(): Task[] {
       }
     },
   })
+  const ticks = usePendingTicks()
   // useMutationState keeps `pending` referentially stable while nothing changes
-  return useMemo(() => pending.filter((t): t is Task => t !== null), [pending])
+  return useMemo(
+    () => applyTaskTicks(pending.filter((t): t is Task => t !== null), ticks),
+    [pending, ticks]
+  )
 }
