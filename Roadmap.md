@@ -77,4 +77,9 @@ based on real activity.
 ## v1.0 — Launch
 - [ ] Full onboarding flow
 - [ ] App store screenshots & marketing
+- [ ] Launch video built with [Remotion](https://www.remotion.dev) (videos written in React, rendered to MP4)
+  - Reuse real Nudge components through react-native-web so the video matches the app exactly
+  - Animated text, task cards sliding in, feature callouts (daily board, streaks, gentle nudges)
+  - Mix in short real screen recordings of the app for authenticity
+  - Render 16:9 for the landing page/YouTube and 9:16 for socials/App Store preview from the same composition
 - [ ] Public launch
