@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import {
     View,
     TextInput,
@@ -13,7 +13,8 @@ import {
 } from 'react-native'
 import { AppText as Text } from './AppText'
 import { Icon } from './Icon'
-import { useAddTodayTask, useScheduleForToday } from '../hooks/useToday'
+import { useAddTodayTask, useScheduleForToday, newTaskId } from '../hooks/useToday'
+import { showAlert } from '../lib/alert'
 import { useTasks } from '../hooks/useTasks'
 import { useTheme } from '../lib/ThemeContext'
 import { TagPicker, TagBadge } from './TagPicker'
@@ -28,10 +29,15 @@ export function AddTaskSheet({
     visible,
     onClose,
     todayTaskIds,
+    initialTitle = '',
+    onAdded,
 }: {
     visible: boolean
     onClose: () => void
     todayTaskIds: string[]
+    initialTitle?: string
+    /** Called once a new task is submitted (not when scheduling from backlog). */
+    onAdded?: () => void
 }) {
     const [tab, setTab] = useState<Tab>('new')
     const [title, setTitle] = useState('')
@@ -42,6 +48,11 @@ export function AddTaskSheet({
 
     const { colors, isDark } = useTheme()
     const styles = useMemo(() => createStyles(colors), [colors])
+
+    // Carry over whatever was typed in the Today quick-add row
+    useEffect(() => {
+        if (visible) setTitle(initialTitle)
+    }, [visible, initialTitle])
 
     const addTodayTask = useAddTodayTask()
     const scheduleForToday = useScheduleForToday()
@@ -85,10 +96,15 @@ export function AddTaskSheet({
         onClose()
     }
 
-    async function handleAdd() {
+    function handleAdd() {
         const t = title.trim()
         if (!t) return
-        await addTodayTask.mutateAsync({ title: t, tag, recurring })
+        // Shown on the board immediately, so close without waiting on the server
+        addTodayTask.mutate(
+            { id: newTaskId(), title: t, tag, recurring },
+            { onError: () => showAlert('Couldn\'t add task', `"${t}" wasn't saved. Please try again.`) }
+        )
+        onAdded?.()
         reset()
         onClose()
     }
@@ -165,13 +181,10 @@ export function AddTaskSheet({
                             <TouchableOpacity
                                 style={[styles.addBtn, !title.trim() && styles.addBtnDisabled]}
                                 onPress={handleAdd}
-                                disabled={!title.trim() || addTodayTask.isPending}
+                                disabled={!title.trim()}
                                 activeOpacity={0.8}
                             >
-                                {addTodayTask.isPending
-                                    ? <ActivityIndicator color={colors.btnPrimaryText} />
-                                    : <Text style={styles.addBtnText}>Add to today</Text>
-                                }
+                                <Text style={styles.addBtnText}>Add to today</Text>
                             </TouchableOpacity>
                         </View>
                     ) : (
