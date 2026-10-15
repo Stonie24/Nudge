@@ -13,7 +13,8 @@ import {
 } from 'react-native'
 import { AppText as Text } from './AppText'
 import { Icon } from './Icon'
-import { useAddTodayTask, useScheduleForToday } from '../hooks/useToday'
+import { useAddTodayTask, useScheduleForToday, newTaskId } from '../hooks/useToday'
+import { showAlert } from '../lib/alert'
 import { useTasks } from '../hooks/useTasks'
 import { useTheme } from '../lib/ThemeContext'
 import { TagPicker, TagBadge } from './TagPicker'
@@ -92,10 +93,14 @@ export function AddTaskSheet({
         onClose()
     }
 
-    async function handleAdd() {
+    function handleAdd() {
         const t = title.trim()
         if (!t) return
-        await addTodayTask.mutateAsync({ title: t, tag, recurring })
+        // Shown on the board immediately, so close without waiting on the server
+        addTodayTask.mutate(
+            { id: newTaskId(), title: t, tag, recurring },
+            { onError: () => showAlert('Couldn\'t add task', `"${t}" wasn't saved. Please try again.`) }
+        )
         reset()
         onClose()
     }
@@ -172,13 +177,10 @@ export function AddTaskSheet({
                             <TouchableOpacity
                                 style={[styles.addBtn, !title.trim() && styles.addBtnDisabled]}
                                 onPress={handleAdd}
-                                disabled={!title.trim() || addTodayTask.isPending}
+                                disabled={!title.trim()}
                                 activeOpacity={0.8}
                             >
-                                {addTodayTask.isPending
-                                    ? <ActivityIndicator color={colors.btnPrimaryText} />
-                                    : <Text style={styles.addBtnText}>Add to today</Text>
-                                }
+                                <Text style={styles.addBtnText}>Add to today</Text>
                             </TouchableOpacity>
                         </View>
                     ) : (

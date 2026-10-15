@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef } from 'react'
 import { View, TextInput, TouchableOpacity, StyleSheet } from 'react-native'
 import { Icon } from './Icon'
-import { useAddTodayTask } from '../hooks/useToday'
+import { useAddTodayTask, newTaskId } from '../hooks/useToday'
 import { useTheme } from '../lib/ThemeContext'
 import { triggerHaptic } from '../hooks/useAnimation'
 import type { Colors } from '../lib/theme'
@@ -23,9 +23,10 @@ export function QuickAddRow({ onOpenSheet }: { onOpenSheet: (title: string) => v
     if (!t) return
     setTitle('')
     triggerHaptic('light')
-    // mutate (not mutateAsync) so an offline add queues instead of hanging the input
+    // The Today board renders pending adds straight away (usePendingTodayTasks),
+    // so there's nothing to wait for here — online or offline.
     addTodayTask.mutate(
-      { title: t, recurring: false },
+      { id: newTaskId(), title: t, recurring: false },
       { onError: () => setTitle(current => current || t) }
     )
   }

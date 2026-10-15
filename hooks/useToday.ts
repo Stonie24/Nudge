@@ -1,4 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMemo } from 'react'
+import { useQuery, useMutation, useMutationState, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { resumableMutation } from '../lib/resumableMutation'
 import type { Task, DailyCompletion } from '../types'
@@ -100,12 +101,26 @@ export function useScheduleForToday() {
 }
 
 // Add a brand new task to today (optionally recurring)
-const addTodayTask = resumableMutation('addTodayTask', async ({ title, tag, recurring }: { title: string; tag?: string; recurring: boolean }) => {
+type AddTodayTaskVars = { id?: string; title: string; tag?: string; recurring: boolean }
+
+// Client-generated id so a task can be shown before the insert lands and keep
+// the same identity (and list key) once the server row replaces it.
+export function newTaskId(): string {
+  const c = (globalThis as { crypto?: { randomUUID?: () => string } }).crypto
+  if (c?.randomUUID) return c.randomUUID()
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, ch => {
+    const r = Math.random() * 16 | 0
+    return (ch === 'x' ? r : (r & 0x3) | 0x8).toString(16)
+  })
+}
+
+const addTodayTask = resumableMutation('addTodayTask', async ({ id, title, tag, recurring }: AddTodayTaskVars) => {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not logged in')
   const { data, error } = await supabase
     .from('tasks')
     .insert({
+      ...(id ? { id } : {}),
       title,
       tag: tag ?? null,
       user_id: user.id,
@@ -122,6 +137,32 @@ export function useAddTodayTask() {
   const queryClient = useQueryClient()
   return useMutation({
     ...addTodayTask,
+    // Returned so the mutation stays pending until the refetch lands —
+    // otherwise the optimistic row would vanish for a frame in between.
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['tasks'] }),
   })
+}
+
+// Tasks added to today that the server hasn't confirmed yet (in flight, or
+// queued while offline — including queued writes restored after a restart).
+export function usePendingTodayTasks(): Task[] {
+  const pending = useMutationState({
+    filters: { mutationKey: addTodayTask.mutationKey, status: 'pending' },
+    select: (mutation): Task | null => {
+      const vars = mutation.state.variables as AddTodayTaskVars | undefined
+      if (!vars?.id) return null
+      return {
+        id: vars.id,
+        user_id: '',
+        title: vars.title,
+        tag: vars.tag,
+        completed: false,
+        recurring: vars.recurring,
+        scheduled_date: vars.recurring ? undefined : today(),
+        created_at: new Date(mutation.state.submittedAt || Date.now()).toISOString(),
+      }
+    },
+  })
+  // useMutationState keeps `pending` referentially stable while nothing changes
+  return useMemo(() => pending.filter((t): t is Task => t !== null), [pending])
 }

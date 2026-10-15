@@ -15,6 +15,7 @@ import {
   useCompleteRecurring,
   useUncompleteRecurring,
   useScheduleForToday,
+  usePendingTodayTasks,
 } from '../../hooks/useToday'
 import { useCompleteTask, useUncompleteTask, useUpdateTask } from '../../hooks/useTasks'
 import { useLayout } from '../../hooks/useLayout'
@@ -139,7 +140,15 @@ export default function TodayScreen() {
   const { colors } = useTheme()
   const styles = useMemo(() => createStyles(colors), [colors])
 
-  const { data: tasks, isLoading } = useTodayTasks()
+  const { data: serverTasks, isLoading } = useTodayTasks()
+  const pendingAdds = usePendingTodayTasks()
+
+  // Show just-added tasks immediately, before the server confirms them
+  const tasks = useMemo(() => {
+    if (pendingAdds.length === 0) return serverTasks
+    const serverIds = new Set(serverTasks?.map(t => t.id))
+    return [...(serverTasks ?? []), ...pendingAdds.filter(t => !serverIds.has(t.id))]
+  }, [serverTasks, pendingAdds])
   const { data: completions } = useTodayCompletions()
 
   const completeRecurring = useCompleteRecurring()
