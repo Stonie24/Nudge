@@ -6,14 +6,18 @@ import {
   StyleSheet,
   SafeAreaView,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native'
 import { AppText as Text } from '../../components/AppText'
 import { Icon } from '../../components/Icon'
+import { Avatar } from '../../components/Avatar'
 import { useAuth } from '../../hooks/useAuth'
 import { useTasks } from '../../hooks/useTasks'
 import { useStreak } from '../../hooks/useStreak'
+import { useAvatarUpload } from '../../hooks/useAvatarUpload'
 import { useTheme } from '../../lib/ThemeContext'
 import { showAlert } from '../../lib/alert'
+import { getAvatarUrl } from '../../lib/avatar'
 import { FeedbackSheet } from '../../components/FeedbackSheet'
 import { useNudgeNotifications, NUDGE_TIME_LABELS, supportsNotifications } from '../../hooks/usePushNotifications'
 import type { NudgeTime } from '../../hooks/usePushNotifications'
@@ -59,10 +63,19 @@ export default function SettingsScreen() {
   const styles = useMemo(() => createStyles(colors), [colors])
   const [feedbackOpen, setFeedbackOpen] = useState(false)
   const { prefs, loading: notifLoading, enable, disable, changeTime } = useNudgeNotifications()
+  const { uploading, pickAndUpload } = useAvatarUpload()
 
   const totalTasks = tasks?.length ?? 0
   const completedTasks = tasks?.filter(t => t.completed).length ?? 0
   const pendingTasks = totalTasks - completedTasks
+
+  async function handleChangeAvatar() {
+    try {
+      await pickAndUpload()
+    } catch (err) {
+      showAlert('Couldn\'t update photo', err instanceof Error ? err.message : 'Please try again.')
+    }
+  }
 
   function handleSignOut() {
     showAlert(
@@ -92,11 +105,26 @@ export default function SettingsScreen() {
 
         {/* Avatar */}
         <View style={styles.avatarSection}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
-              {user?.email?.[0].toUpperCase() ?? '?'}
-            </Text>
-          </View>
+          <TouchableOpacity
+            style={styles.avatarTouchable}
+            onPress={handleChangeAvatar}
+            disabled={uploading}
+            activeOpacity={0.8}
+          >
+            <Avatar
+              uri={getAvatarUrl(user)}
+              label={user?.email?.[0].toUpperCase() ?? '?'}
+              size={64}
+            />
+            {uploading && (
+              <View style={styles.avatarOverlay}>
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              </View>
+            )}
+            <View style={styles.avatarEditBadge}>
+              <Icon name="plus" size={12} color={colors.btnPrimaryText} strokeWidth={2.2} />
+            </View>
+          </TouchableOpacity>
           <Text style={styles.emailText}>{user?.email}</Text>
           <Text style={styles.memberText}>Nudge member</Text>
         </View>
@@ -257,19 +285,28 @@ function createStyles(c: Colors) {
       alignItems: 'center',
       marginBottom: space.xxl,
     },
-    avatar: {
-      width: 64,
-      height: 64,
-      borderRadius: 32,
-      backgroundColor: c.accentBg,
-      alignItems: 'center',
-      justifyContent: 'center',
+    avatarTouchable: {
       marginBottom: space.md,
     },
-    avatarText: {
-      fontSize: 24,
-      fontWeight: '600',
-      color: c.accentText,
+    avatarOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      borderRadius: 32,
+      backgroundColor: 'rgba(0,0,0,0.4)',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    avatarEditBadge: {
+      position: 'absolute',
+      bottom: 0,
+      right: 0,
+      width: 22,
+      height: 22,
+      borderRadius: 11,
+      backgroundColor: c.btnPrimary,
+      borderWidth: 2,
+      borderColor: c.bg,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     emailText: {
       fontSize: 15,

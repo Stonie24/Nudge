@@ -26,9 +26,9 @@
 - [x] Push notifications / gentle nudge reminders
 - [x] Offline support
 - [x] Streak tracking for recurring tasks
-- [ ] Make it possible to log in with OAuth for both mobile and desktop
-- [ ] Costum profile picture thats get saved in the database, or pull the picture from the login service, if none of these still use defualt.
-- [ ] Inline auth error states (wrong password, account creation failures, duplicate email, etc.) instead of relying on native alert popups
+- [x] Make it possible to log in with OAuth for both mobile and desktop
+- [x] Costum profile picture thats get saved in the database, or pull the picture from the login service, if none of these still use defualt.
+- [x] Inline auth error states (wrong password, account creation failures, duplicate email, etc.) instead of relying on native alert popups
 
 ## Design refresh (from "Nudge Redesign" artifact)
 Token-level reskin (color, type, spacing, icons, elevation) plus a few new pieces of product surface. See the artifact for the full mockups: https://claude.ai/artifact/9e5w5oRWtM77gYTKKVJmQc
@@ -77,4 +77,9 @@ based on real activity.
 ## v1.0 — Launch
 - [ ] Full onboarding flow
 - [ ] App store screenshots & marketing
+- [ ] Launch video built with [Remotion](https://www.remotion.dev) (videos written in React, rendered to MP4)
+  - Reuse real Nudge components through react-native-web so the video matches the app exactly
+  - Animated text, task cards sliding in, feature callouts (daily board, streaks, gentle nudges)
+  - Mix in short real screen recordings of the app for authenticity
+  - Render 16:9 for the landing page/YouTube and 9:16 for socials/App Store preview from the same composition
 - [ ] Public launch

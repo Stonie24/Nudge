@@ -40,6 +40,12 @@
           "icon": "./assets/icon.png",
           "color": "#5B8C1E"
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Nudge uses your photo library to let you set a profile picture."
+        }
       ]
     ],
     "extra": {
