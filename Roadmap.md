@@ -36,7 +36,7 @@ Token-level reskin (color, type, spacing, icons, elevation) plus a few new piece
 - [x] Replace Unicode glyph icons (tab bar, onboarding, calendar integration rows) with real SVG icon set — fixes the empty-box Apple Calendar icon
 - [x] Dark-mode tag chip palette (today the light chip colors are just reused on dark surfaces)
 - [x] Task detail sheet — tapping a task opens title/tag/repeat/due date/notes instead of only toggling complete
-- [ ] Swipe-to-delete with undo toast, replacing long-press + native confirm alert
+- [x] Swipe-to-delete with undo toast, replacing long-press + native confirm alert
 - [ ] Inline quick-add on the Today board, replacing the full-screen Add Task modal for the common case
 - [ ] Progress ring on the Today screen showing today's completion + streak
 - [ ] Move calendar integrations (Google/Apple) from the Calendar screen into Settings
