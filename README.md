@@ -66,15 +66,12 @@ Every pushed branch is published as an [EAS Update](https://docs.expo.dev/eas-up
    - `EXPO_TOKEN` — the token from step 1
    - `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY` — same values as your `.env`
    - `EXPO_PUBLIC_GOOGLE_CLIENT_ID` — for Google sign-in
-3. Make a new development build (needed once, since `expo-updates` is a native module):
-   ```bash
-   eas build --profile development --platform android   # or ios
-   ```
-   and install it from the link EAS gives you. iOS also needs the device registered first: `eas device:create`.
+3. Make a new development build (needed once, since `expo-updates` is a native module): GitHub → **Actions → EAS Build → Run workflow**, pick the platform, then open the build on [expo.dev](https://expo.dev) from your phone and install it when it finishes. (Or locally: `eas build --profile development --platform android`.)
+   The button runs non-interactively, so signing credentials must already exist on EAS — they do if you've built this platform before; otherwise run one `eas build` locally first. iOS also needs the device registered: `eas device:create`.
 
 **Testing a branch**
 
-Push the branch, wait for the **EAS Update** action to finish, then open the Nudge development build → **Extensions** tab → pick the branch's update. A new build is only needed again when native dependencies change (the `fingerprint` runtime version keeps updates from loading into an incompatible build).
+Push the branch, wait for the **EAS Update** action to finish, then open the Nudge development build → **Extensions** tab → pick the branch's update. A new build (the same **EAS Build** button) is only needed again when native dependencies change (the `fingerprint` runtime version keeps updates from loading into an incompatible build).
 
 ## Project Structure
 
