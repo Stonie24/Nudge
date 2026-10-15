@@ -13,10 +13,10 @@ import {
 import { AppText as Text } from './AppText'
 import { Icon } from './Icon'
 import { TagPicker } from './TagPicker'
-import { useCompleteTask, useUncompleteTask, useUpdateTask, useDeleteTask } from '../hooks/useTasks'
+import { useCompleteTask, useUncompleteTask, useUpdateTask } from '../hooks/useTasks'
 import { useCompleteRecurring, useUncompleteRecurring } from '../hooks/useToday'
 import { useTheme } from '../lib/ThemeContext'
-import { showAlert } from '../lib/alert'
+import { useUndoDelete } from '../lib/UndoDeleteContext'
 import type { Colors } from '../lib/theme'
 import { space, radius, shadow } from '../lib/theme'
 import type { Task } from '../types'
@@ -61,7 +61,7 @@ export function TaskDetailSheet({
   const completeRecurring = useCompleteRecurring()
   const uncompleteRecurring = useUncompleteRecurring()
   const updateTask = useUpdateTask()
-  const deleteTask = useDeleteTask()
+  const { requestDelete } = useUndoDelete()
 
   useEffect(() => {
     if (!task) return
@@ -109,17 +109,8 @@ export function TaskDetailSheet({
 
   function handleDelete() {
     if (!task) return
-    showAlert('Delete task', `Remove "${task.title}"?`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          await deleteTask.mutateAsync(task.id)
-          onClose()
-        },
-      },
-    ])
+    requestDelete(task)
+    onClose()
   }
 
   return (
