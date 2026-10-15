@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import {
     View,
     TextInput,
@@ -28,10 +28,12 @@ export function AddTaskSheet({
     visible,
     onClose,
     todayTaskIds,
+    initialTitle = '',
 }: {
     visible: boolean
     onClose: () => void
     todayTaskIds: string[]
+    initialTitle?: string
 }) {
     const [tab, setTab] = useState<Tab>('new')
     const [title, setTitle] = useState('')
@@ -42,6 +44,11 @@ export function AddTaskSheet({
 
     const { colors, isDark } = useTheme()
     const styles = useMemo(() => createStyles(colors), [colors])
+
+    // Carry over whatever was typed in the Today quick-add row
+    useEffect(() => {
+        if (visible) setTitle(initialTitle)
+    }, [visible, initialTitle])
 
     const addTodayTask = useAddTodayTask()
     const scheduleForToday = useScheduleForToday()

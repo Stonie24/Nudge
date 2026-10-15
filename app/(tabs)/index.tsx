@@ -24,8 +24,9 @@ import { KanbanBoard } from '../../components/KanbanBoard'
 import { AddTaskSheet } from '../../components/Addtasksheet'
 import { TaskDetailSheet } from '../../components/TaskDetailSheet'
 import { SwipeableRow } from '../../components/SwipeableRow'
+import { QuickAddRow } from '../../components/QuickAddRow'
 import { useUndoDelete } from '../../lib/UndoDeleteContext'
-import { useEntranceAnimation, useCheckboxAnimation, usePressAnimation, triggerHaptic } from '../../hooks/useAnimation'
+import { useEntranceAnimation, useCheckboxAnimation, triggerHaptic } from '../../hooks/useAnimation'
 import type { Colors } from '../../lib/theme'
 import { space, radius } from '../../lib/theme'
 import { displayFont } from '../../lib/fonts'
@@ -132,11 +133,11 @@ function TaskItem({
 
 export default function TodayScreen() {
   const [sheetOpen, setSheetOpen] = useState(false)
+  const [sheetTitle, setSheetTitle] = useState('')
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
   const { isDesktop } = useLayout()
   const { colors } = useTheme()
   const styles = useMemo(() => createStyles(colors), [colors])
-  const addBtn = usePressAnimation()
 
   const { data: tasks, isLoading } = useTodayTasks()
   const { data: completions } = useTodayCompletions()
@@ -194,18 +195,7 @@ export default function TodayScreen() {
       <View style={styles.nudgeBanner}>
         <Text style={styles.nudgeText}>{getNudgeMessage(total, completed)}</Text>
       </View>
-      <Animated.View style={{ transform: [{ scale: addBtn.scale }] }}>
-        <TouchableOpacity
-          style={styles.addBtn}
-          onPress={() => setSheetOpen(true)}
-          onPressIn={addBtn.onPressIn}
-          onPressOut={addBtn.onPressOut}
-          activeOpacity={1}
-        >
-          <Icon name="plus" size={16} color={colors.btnPrimaryText} strokeWidth={2.2} />
-          <Text style={styles.addBtnText}>Add task</Text>
-        </TouchableOpacity>
-      </Animated.View>
+      <QuickAddRow onOpenSheet={title => { setSheetTitle(title); setSheetOpen(true) }} />
     </View>
   )
 
@@ -286,6 +276,7 @@ export default function TodayScreen() {
         visible={sheetOpen}
         onClose={() => setSheetOpen(false)}
         todayTaskIds={todayTaskIds}
+        initialTitle={sheetTitle}
       />
 
       <TaskDetailSheet
@@ -316,13 +307,6 @@ function createStyles(c: Colors) {
       padding: space.md, marginBottom: space.xl,
     },
     nudgeText: { fontSize: 14, color: c.accentText, fontWeight: '400', lineHeight: 20 },
-    addBtn: {
-      flexDirection: 'row', gap: space.xs,
-      height: 52, backgroundColor: c.btnPrimary,
-      borderRadius: radius.pill, alignItems: 'center',
-      justifyContent: 'center', marginBottom: space.xxl,
-    },
-    addBtnText: { color: c.btnPrimaryText, fontSize: 15, fontWeight: '500' },
     sectionLabel: {
       fontSize: 11, fontWeight: '600', color: c.textMuted,
       letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: space.sm,
