@@ -6,6 +6,7 @@ name: EAS Update
 
 on:
   push:
+    branches: ['**']
   workflow_dispatch:
 
 concurrency:
@@ -57,5 +58,6 @@ jobs:
         run: |
           eas update \
             --branch "$BRANCH" \
+            --environment development \
             --message "$(git log -1 --format=%s)" \
             --non-interactive

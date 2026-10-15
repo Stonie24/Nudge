@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useQuery, useMutation, useMutationState, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
-import { resumableMutation } from '../lib/resumableMutation'
+import { resumableMutation, taskWriteScope } from '../lib/resumableMutation'
 import type { Task, DailyCompletion } from '../types'
 
 function today(): string {
@@ -53,7 +53,7 @@ const completeRecurring = resumableMutation('completeRecurring', async (taskId: 
     .from('daily_completions')
     .upsert({ task_id: taskId, user_id: user.id, completed_on: today() }, { onConflict: 'task_id,completed_on' })
   if (error) throw error
-})
+}, taskWriteScope)
 
 export function useCompleteRecurring() {
   const queryClient = useQueryClient()
@@ -71,7 +71,7 @@ const uncompleteRecurring = resumableMutation('uncompleteRecurring', async (task
     .eq('task_id', taskId)
     .eq('completed_on', today())
   if (error) throw error
-})
+}, taskWriteScope)
 
 export function useUncompleteRecurring() {
   const queryClient = useQueryClient()
@@ -88,7 +88,7 @@ const scheduleForToday = resumableMutation('scheduleForToday', async (taskId: st
     .update({ scheduled_date: today() })
     .eq('id', taskId)
   if (error) throw error
-})
+}, taskWriteScope)
 
 export function useScheduleForToday() {
   const queryClient = useQueryClient()
@@ -131,7 +131,7 @@ const addTodayTask = resumableMutation('addTodayTask', async ({ id, title, tag, 
     .single()
   if (error) throw error
   return data
-})
+}, taskWriteScope)
 
 export function useAddTodayTask() {
   const queryClient = useQueryClient()

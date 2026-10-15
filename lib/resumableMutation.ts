@@ -12,9 +12,19 @@ import { queryClient } from './queryClient'
  */
 export function resumableMutation<TData, TVariables>(
   key: string,
-  mutationFn: MutationFunction<TData, TVariables>
+  mutationFn: MutationFunction<TData, TVariables>,
+  options: { scope?: { id: string } } = {}
 ) {
   const mutationKey: MutationKey = [key]
-  queryClient.setMutationDefaults(mutationKey, { mutationFn })
-  return { mutationKey, mutationFn }
+  queryClient.setMutationDefaults(mutationKey, { mutationFn, ...options })
+  return { mutationKey, mutationFn, ...options }
 }
+
+/**
+ * Shared scope for every write that touches a task row (or a row pointing at
+ * one, like daily_completions). Mutations in one scope run strictly in order —
+ * including queued offline writes replayed after reconnect — so a task that is
+ * still being created can be completed, tagged, edited or deleted right away
+ * without that write reaching Supabase before the insert does.
+ */
+export const taskWriteScope = { scope: { id: 'task-writes' } }

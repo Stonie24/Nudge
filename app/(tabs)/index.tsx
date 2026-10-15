@@ -135,6 +135,7 @@ function TaskItem({
 export default function TodayScreen() {
   const [sheetOpen, setSheetOpen] = useState(false)
   const [sheetTitle, setSheetTitle] = useState('')
+  const [quickTitle, setQuickTitle] = useState('')
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
   const { isDesktop } = useLayout()
   const { colors } = useTheme()
@@ -142,20 +143,21 @@ export default function TodayScreen() {
 
   const { data: serverTasks, isLoading } = useTodayTasks()
   const pendingAdds = usePendingTodayTasks()
+  const { requestDelete, hiddenTaskIds } = useUndoDelete()
 
   // Show just-added tasks immediately, before the server confirms them
   const tasks = useMemo(() => {
-    if (pendingAdds.length === 0) return serverTasks
+    const unsaved = pendingAdds.filter(t => !hiddenTaskIds.has(t.id))
+    if (unsaved.length === 0) return serverTasks
     const serverIds = new Set(serverTasks?.map(t => t.id))
-    return [...(serverTasks ?? []), ...pendingAdds.filter(t => !serverIds.has(t.id))]
-  }, [serverTasks, pendingAdds])
+    return [...(serverTasks ?? []), ...unsaved.filter(t => !serverIds.has(t.id))]
+  }, [serverTasks, pendingAdds, hiddenTaskIds])
   const { data: completions } = useTodayCompletions()
 
   const completeRecurring = useCompleteRecurring()
   const uncompleteRecurring = useUncompleteRecurring()
   const completeTask = useCompleteTask()
   const uncompleteTask = useUncompleteTask()
-  const { requestDelete } = useUndoDelete()
   const updateTask = useUpdateTask()
 
   const completedTodayIds = new Set(completions?.map(c => c.task_id) ?? [])
@@ -204,7 +206,11 @@ export default function TodayScreen() {
       <View style={styles.nudgeBanner}>
         <Text style={styles.nudgeText}>{getNudgeMessage(total, completed)}</Text>
       </View>
-      <QuickAddRow onOpenSheet={title => { setSheetTitle(title); setSheetOpen(true) }} />
+      <QuickAddRow
+        title={quickTitle}
+        onChangeTitle={setQuickTitle}
+        onOpenSheet={() => { setSheetTitle(quickTitle.trim()); setSheetOpen(true) }}
+      />
     </View>
   )
 
@@ -232,6 +238,9 @@ export default function TodayScreen() {
           data={pending}
           keyExtractor={item => item.id}
           contentContainerStyle={styles.content}
+          // First tap on a task / the "more" button works while typing a quick-add
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
           ListHeaderComponent={
             <View>
               {header}
@@ -286,6 +295,7 @@ export default function TodayScreen() {
         onClose={() => setSheetOpen(false)}
         todayTaskIds={todayTaskIds}
         initialTitle={sheetTitle}
+        onAdded={() => setQuickTitle('')}
       />
 
       <TaskDetailSheet

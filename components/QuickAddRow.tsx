@@ -10,8 +10,16 @@ import { space, radius } from '../lib/theme'
 // Inline quick-add for the Today board. Enter adds a plain task to today and
 // keeps focus so several can be typed in a row; the trailing button hands the
 // current text to the full Add Task sheet for tags, repeat, or backlog.
-export function QuickAddRow({ onOpenSheet }: { onOpenSheet: (title: string) => void }) {
-  const [title, setTitle] = useState('')
+// The text is owned by the parent so it survives opening and dismissing that sheet.
+export function QuickAddRow({
+  title,
+  onChangeTitle: setTitle,
+  onOpenSheet,
+}: {
+  title: string
+  onChangeTitle: (title: string | ((current: string) => string)) => void
+  onOpenSheet: () => void
+}) {
   const [focused, setFocused] = useState(false)
   const inputRef = useRef<TextInput>(null)
   const { colors } = useTheme()
@@ -32,10 +40,8 @@ export function QuickAddRow({ onOpenSheet }: { onOpenSheet: (title: string) => v
   }
 
   function handleOpenSheet() {
-    const t = title.trim()
-    setTitle('')
     inputRef.current?.blur()
-    onOpenSheet(t)
+    onOpenSheet()
   }
 
   return (
@@ -83,7 +89,8 @@ function createStyles(c: Colors) {
       marginBottom: space.xxl,
     },
     rowFocused: { borderStyle: 'solid', borderColor: c.accentBorder },
-    input: { flex: 1, height: '100%', fontSize: 15, color: c.text },
+    // outlineWidth: hides the browser focus ring on web; the row border shows focus instead
+    input: { flex: 1, height: '100%', fontSize: 15, color: c.text, outlineWidth: 0 },
     moreBtn: { paddingHorizontal: space.xs },
   })
 }

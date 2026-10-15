@@ -30,11 +30,14 @@ export function AddTaskSheet({
     onClose,
     todayTaskIds,
     initialTitle = '',
+    onAdded,
 }: {
     visible: boolean
     onClose: () => void
     todayTaskIds: string[]
     initialTitle?: string
+    /** Called once a new task is submitted (not when scheduling from backlog). */
+    onAdded?: () => void
 }) {
     const [tab, setTab] = useState<Tab>('new')
     const [title, setTitle] = useState('')
@@ -101,6 +104,7 @@ export function AddTaskSheet({
             { id: newTaskId(), title: t, tag, recurring },
             { onError: () => showAlert('Couldn\'t add task', `"${t}" wasn't saved. Please try again.`) }
         )
+        onAdded?.()
         reset()
         onClose()
     }
