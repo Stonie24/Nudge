@@ -23,6 +23,13 @@ const NUDGE_IDENTIFIER = 'daily-nudge'
 export const supportsNotifications = Platform.OS !== 'web'
 
 async function requestPermission(): Promise<boolean> {
+  // Android 13+ only shows the permission prompt once a channel exists.
+  if (Platform.OS === 'android') {
+    await Notifications.setNotificationChannelAsync('default', {
+      name: 'Daily nudges',
+      importance: Notifications.AndroidImportance.DEFAULT,
+    })
+  }
   const { status: existing } = await Notifications.getPermissionsAsync()
   if (existing === 'granted') return true
   const { status } = await Notifications.requestPermissionsAsync()
