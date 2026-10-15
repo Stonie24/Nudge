@@ -6,6 +6,12 @@
     "name": "nudge",
     "slug": "nudge",
     "version": "1.0.0",
+    "runtimeVersion": {
+      "policy": "fingerprint"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/63496dea-edf7-4461-bf1d-9bebb579438b"
+    },
     "scheme": "nudge",
     "orientation": "portrait",
     "icon": "./assets/icon.png",

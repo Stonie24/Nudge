@@ -55,6 +55,27 @@ npm run android  # Android emulator
 npm run web      # Browser
 ```
 
+## Testing on your phone (over-the-air updates)
+
+Every pushed branch is published as an [EAS Update](https://docs.expo.dev/eas-update/introduction/) on an update branch with the same name (see `.github/workflows/eas-update.yml`), so you can try it on a phone without a computer.
+
+**One-time setup**
+
+1. Create an Expo access token at [expo.dev → Account settings → Access tokens](https://expo.dev/settings/access-tokens).
+2. In GitHub → Settings → Secrets and variables → Actions, add:
+   - `EXPO_TOKEN` — the token from step 1
+   - `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY` — same values as your `.env`
+   - `EXPO_PUBLIC_GOOGLE_CLIENT_ID` — for Google sign-in
+3. Make a new development build (needed once, since `expo-updates` is a native module):
+   ```bash
+   eas build --profile development --platform android   # or ios
+   ```
+   and install it from the link EAS gives you. iOS also needs the device registered first: `eas device:create`.
+
+**Testing a branch**
+
+Push the branch, wait for the **EAS Update** action to finish, then open the Nudge development build → **Extensions** tab → pick the branch's update. A new build is only needed again when native dependencies change (the `fingerprint` runtime version keeps updates from loading into an incompatible build).
+
 ## Project Structure
 
 ```
