@@ -17,6 +17,7 @@ import {
   useScheduleForToday,
 } from '../../hooks/useToday'
 import { useCompleteTask, useUncompleteTask, useUpdateTask } from '../../hooks/useTasks'
+import { useStreak } from '../../hooks/useStreak'
 import { useLayout } from '../../hooks/useLayout'
 import { useTheme } from '../../lib/ThemeContext'
 import { TagPicker } from '../../components/TagPicker'
@@ -24,6 +25,7 @@ import { KanbanBoard } from '../../components/KanbanBoard'
 import { AddTaskSheet } from '../../components/Addtasksheet'
 import { TaskDetailSheet } from '../../components/TaskDetailSheet'
 import { SwipeableRow } from '../../components/SwipeableRow'
+import { ProgressRing } from '../../components/ProgressRing'
 import { useUndoDelete } from '../../lib/UndoDeleteContext'
 import { useEntranceAnimation, useCheckboxAnimation, usePressAnimation, triggerHaptic } from '../../hooks/useAnimation'
 import type { Colors } from '../../lib/theme'
@@ -140,6 +142,7 @@ export default function TodayScreen() {
 
   const { data: tasks, isLoading } = useTodayTasks()
   const { data: completions } = useTodayCompletions()
+  const { streak } = useStreak()
 
   const completeRecurring = useCompleteRecurring()
   const uncompleteRecurring = useUncompleteRecurring()
@@ -192,7 +195,16 @@ export default function TodayScreen() {
         <Text style={styles.date}>{formatDate()}</Text>
       </View>
       <View style={styles.nudgeBanner}>
-        <Text style={styles.nudgeText}>{getNudgeMessage(total, completed)}</Text>
+        <ProgressRing completed={completed} total={total} />
+        <View style={styles.nudgeBody}>
+          <Text style={styles.nudgeText}>{getNudgeMessage(total, completed)}</Text>
+          {streak > 0 && (
+            <View style={styles.streakRow}>
+              <Icon name="streak" size={13} color={colors.accent} strokeWidth={2} />
+              <Text style={styles.streakText}>{streak}-day streak</Text>
+            </View>
+          )}
+        </View>
       </View>
       <Animated.View style={{ transform: [{ scale: addBtn.scale }] }}>
         <TouchableOpacity
@@ -314,8 +326,12 @@ function createStyles(c: Colors) {
     nudgeBanner: {
       backgroundColor: c.accentBg, borderRadius: radius.md,
       padding: space.md, marginBottom: space.xl,
+      flexDirection: 'row', alignItems: 'center', gap: space.lg,
     },
+    nudgeBody: { flex: 1, gap: space.xs },
     nudgeText: { fontSize: 14, color: c.accentText, fontWeight: '400', lineHeight: 20 },
+    streakRow: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
+    streakText: { fontSize: 12, color: c.accent, fontWeight: '600' },
     addBtn: {
       flexDirection: 'row', gap: space.xs,
       height: 52, backgroundColor: c.btnPrimary,
