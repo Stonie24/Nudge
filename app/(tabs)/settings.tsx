@@ -7,6 +7,7 @@ import {
   SafeAreaView,
   ScrollView,
   ActivityIndicator,
+  Platform,
 } from 'react-native'
 import { AppText as Text } from '../../components/AppText'
 import { Icon } from '../../components/Icon'
@@ -15,6 +16,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { useTasks } from '../../hooks/useTasks'
 import { useStreak } from '../../hooks/useStreak'
 import { useAvatarUpload } from '../../hooks/useAvatarUpload'
+import { useGoogleCalendarAuth } from '../../hooks/useGoogleCalendarAuth'
 import { useTheme } from '../../lib/ThemeContext'
 import { showAlert } from '../../lib/alert'
 import { getAvatarUrl } from '../../lib/avatar'
@@ -64,6 +66,12 @@ export default function SettingsScreen() {
   const [feedbackOpen, setFeedbackOpen] = useState(false)
   const { prefs, loading: notifLoading, enable, disable, changeTime } = useNudgeNotifications()
   const { uploading, pickAndUpload } = useAvatarUpload()
+  const {
+    isConnected: googleConnected,
+    isLoading: googleLoading,
+    connect: connectGoogle,
+    disconnect: disconnectGoogle,
+  } = useGoogleCalendarAuth()
 
   const totalTasks = tasks?.length ?? 0
   const completedTasks = tasks?.filter(t => t.completed).length ?? 0
@@ -75,6 +83,17 @@ export default function SettingsScreen() {
     } catch (err) {
       showAlert('Couldn\'t update photo', err instanceof Error ? err.message : 'Please try again.')
     }
+  }
+
+  function handleDisconnectGoogle() {
+    showAlert(
+      'Disconnect Google Calendar',
+      'Your Google events will no longer show in Nudge. You can reconnect anytime.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Disconnect', style: 'destructive', onPress: disconnectGoogle },
+      ]
+    )
   }
 
   function handleSignOut() {
@@ -221,6 +240,53 @@ export default function SettingsScreen() {
             </View>
           </View>
         )}
+
+        {/* Calendar integrations */}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Calendar integrations</Text>
+          <View style={styles.cardShadow}>
+            <View style={styles.sectionCard}>
+              {/* Google Calendar */}
+              <View style={styles.row}>
+                <View style={[styles.integrationIcon, { backgroundColor: '#E8F0FE' }]}>
+                  <Text style={styles.integrationIconText}>G</Text>
+                </View>
+                <View style={styles.integrationInfo}>
+                  <Text style={styles.integrationName}>Google Calendar</Text>
+                  <Text style={styles.integrationStatus}>
+                    {googleLoading ? 'Checking…' : googleConnected ? 'Connected' : 'Not connected'}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={[styles.integrationBtn, googleConnected && styles.integrationBtnDanger]}
+                  onPress={googleConnected ? handleDisconnectGoogle : connectGoogle}
+                  disabled={googleLoading}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.integrationBtnText, googleConnected && styles.integrationBtnTextDanger]}>
+                    {googleConnected ? 'Disconnect' : 'Connect'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Apple Calendar (iOS only) */}
+              {Platform.OS === 'ios' && (
+                <View style={styles.row}>
+                  <View style={[styles.integrationIcon, { backgroundColor: '#FFF3E0' }]}>
+                    <Icon name="calendar" size={18} color="#FF9500" strokeWidth={2} />
+                  </View>
+                  <View style={styles.integrationInfo}>
+                    <Text style={styles.integrationName}>Apple Calendar</Text>
+                    <Text style={styles.integrationStatus}>Auto-synced on iOS</Text>
+                  </View>
+                  <View style={styles.integrationActive}>
+                    <Text style={styles.integrationActiveText}>Active</Text>
+                  </View>
+                </View>
+              )}
+            </View>
+          </View>
+        </View>
 
         {/* About section */}
         <View style={styles.section}>
@@ -426,6 +492,60 @@ function createStyles(c: Colors) {
       color: c.textMuted,
     },
     timeChipTextActive: {
+      color: c.accentText,
+      fontWeight: '500',
+    },
+    integrationIcon: {
+      width: 36,
+      height: 36,
+      borderRadius: radius.md,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: space.md,
+    },
+    integrationIconText: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: '#4285F4',
+    },
+    integrationInfo: {
+      flex: 1,
+    },
+    integrationName: {
+      fontSize: 15,
+      color: c.text,
+    },
+    integrationStatus: {
+      fontSize: 12,
+      color: c.textMuted,
+      marginTop: 1,
+    },
+    integrationBtn: {
+      paddingVertical: space.sm,
+      paddingHorizontal: space.md,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    integrationBtnDanger: {
+      borderColor: c.dangerBg,
+    },
+    integrationBtnText: {
+      fontSize: 13,
+      color: c.text,
+      fontWeight: '500',
+    },
+    integrationBtnTextDanger: {
+      color: c.danger,
+    },
+    integrationActive: {
+      paddingVertical: space.sm,
+      paddingHorizontal: space.md,
+      borderRadius: radius.pill,
+      backgroundColor: c.accentBg,
+    },
+    integrationActiveText: {
+      fontSize: 13,
       color: c.accentText,
       fontWeight: '500',
     },
