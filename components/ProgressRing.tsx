@@ -1,10 +1,8 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { View, Animated, Easing, StyleSheet } from 'react-native'
 import Svg, { Circle } from 'react-native-svg'
 import { AppText as Text } from './AppText'
 import { useTheme } from '../lib/ThemeContext'
-
-const AnimatedCircle = Animated.createAnimatedComponent(Circle)
 
 /**
  * Circular completion meter for the Today screen. The arc eases to the new
@@ -27,27 +25,29 @@ export function ProgressRing({
   const circumference = 2 * Math.PI * r
   const fraction = total > 0 ? Math.min(completed / total, 1) : 0
 
+  // Animated drives a plain number in state rather than animating SVG props
+  // directly: Animated.createAnimatedComponent(Circle) leaks `collapsable` onto
+  // the DOM <circle> on web. The tween is 450ms, so the extra renders are cheap.
   const progress = useRef(new Animated.Value(fraction)).current
+  const [shown, setShown] = useState(fraction)
+
+  useEffect(() => {
+    const id = progress.addListener(({ value }) => setShown(value))
+    return () => progress.removeListener(id)
+  }, [progress])
 
   useEffect(() => {
     Animated.timing(progress, {
       toValue: fraction,
       duration: 450,
       easing: Easing.out(Easing.cubic),
-      // strokeDashoffset is an SVG prop, not a transform — native driver can't animate it.
       useNativeDriver: false,
     }).start()
   }, [fraction, progress])
 
-  const dashOffset = progress.interpolate({
-    inputRange: [0, 1],
-    outputRange: [circumference, 0],
-  })
+  const dashOffset = circumference * (1 - shown)
   // A round line cap draws a dot even at zero length — hide the arc at 0%.
-  const arcOpacity = progress.interpolate({
-    inputRange: [0, 0.001, 1],
-    outputRange: [0, 1, 1],
-  })
+  const arcOpacity = shown < 0.001 ? 0 : 1
 
   return (
     <View
@@ -67,7 +67,7 @@ export function ProgressRing({
           strokeWidth={strokeWidth}
           fill="none"
         />
-        <AnimatedCircle
+        <Circle
           cx={size / 2}
           cy={size / 2}
           r={r}
