@@ -118,10 +118,40 @@ const addTodayTask = resumableMutation('addTodayTask', async ({ title, tag, recu
   return data
 })
 
+export const PENDING_TASK_PREFIX = 'pending-'
+
+export function isPendingTask(task: Pick<Task, 'id'>) {
+  return task.id.startsWith(PENDING_TASK_PREFIX)
+}
+
+// Optimistically shows the new task on the Today board straight away (also
+// while offline), then swaps in the real row once the insert lands.
 export function useAddTodayTask() {
   const queryClient = useQueryClient()
+  const todayKey = ['tasks', 'today']
   return useMutation({
     ...addTodayTask,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['tasks'] }),
+    onMutate: async ({ title, tag, recurring }) => {
+      await queryClient.cancelQueries({ queryKey: todayKey })
+      const placeholder: Task = {
+        id: `${PENDING_TASK_PREFIX}${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        user_id: '',
+        title,
+        tag,
+        recurring,
+        completed: false,
+        created_at: new Date().toISOString(),
+        scheduled_date: recurring ? undefined : today(),
+      }
+      queryClient.setQueryData<Task[]>(todayKey, old => [...(old ?? []), placeholder])
+      return { placeholderId: placeholder.id }
+    },
+    onError: (_err, _vars, context) => {
+      if (!context) return
+      queryClient.setQueryData<Task[]>(todayKey, old =>
+        old?.filter(t => t.id !== context.placeholderId)
+      )
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['tasks'] }),
   })
 }
