@@ -18,3 +18,12 @@ entrypoint = "./functions/google-token-exchange/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/google-token-exchange/*.html" ]
+
+[functions.delete-account]
+enabled = true
+# Same reasoning as submit-feedback: verify_jwt = false so the CORS preflight
+# (sent without a JWT) isn't blocked. The function verifies the caller's JWT
+# itself and only ever deletes that user.
+verify_jwt = false
+import_map = "./functions/delete-account/deno.json"
+entrypoint = "./functions/delete-account/index.ts"

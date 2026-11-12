@@ -19,6 +19,7 @@ import { useTheme } from '../../lib/ThemeContext'
 import { showAlert } from '../../lib/alert'
 import { getAvatarUrl } from '../../lib/avatar'
 import { FeedbackSheet } from '../../components/FeedbackSheet'
+import { DeleteAccountSheet } from '../../components/DeleteAccountSheet'
 import { useNudgeNotifications, NUDGE_TIME_LABELS, supportsNotifications } from '../../hooks/usePushNotifications'
 import type { NudgeTime } from '../../hooks/usePushNotifications'
 import type { Colors } from '../../lib/theme'
@@ -56,12 +57,13 @@ function SettingRow({
 }
 
 export default function SettingsScreen() {
-  const { user, signOut } = useAuth()
+  const { user, signOut, deleteAccount } = useAuth()
   const { data: tasks } = useTasks()
   const { streak } = useStreak()
   const { isDark, toggle, colors } = useTheme()
   const styles = useMemo(() => createStyles(colors), [colors])
   const [feedbackOpen, setFeedbackOpen] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
   const { prefs, loading: notifLoading, enable, disable, changeTime } = useNudgeNotifications()
   const { uploading, pickAndUpload } = useAvatarUpload()
 
@@ -247,6 +249,7 @@ export default function SettingsScreen() {
           <View style={styles.cardShadow}>
             <View style={styles.sectionCard}>
               <SettingRow label="Sign out" onPress={handleSignOut} destructive colors={colors} />
+              <SettingRow label="Delete account" onPress={() => setDeleteOpen(true)} destructive colors={colors} />
             </View>
           </View>
         </View>
@@ -256,6 +259,12 @@ export default function SettingsScreen() {
       </ScrollView>
 
       <FeedbackSheet visible={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
+      <DeleteAccountSheet
+        visible={deleteOpen}
+        email={user?.email}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={deleteAccount}
+      />
     </SafeAreaView>
   )
 }
