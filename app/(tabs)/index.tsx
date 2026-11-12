@@ -28,6 +28,7 @@ import { TaskDetailSheet } from '../../components/TaskDetailSheet'
 import { SwipeableRow } from '../../components/SwipeableRow'
 import { QuickAddRow } from '../../components/QuickAddRow'
 import { ProgressRing } from '../../components/ProgressRing'
+import { DueBadge } from '../../components/DueBadge'
 import { useUndoDelete } from '../../lib/UndoDeleteContext'
 import { useEntranceAnimation, useCheckboxAnimation, triggerHaptic } from '../../hooks/useAnimation'
 import type { Colors } from '../../lib/theme'
@@ -126,6 +127,7 @@ function TaskItem({
                 <Text style={styles.recurringBadgeText}>daily</Text>
               </View>
             )}
+            <DueBadge task={task} done={isDone} />
           </TouchableOpacity>
           <TagPicker value={task.tag} onChange={tag => onUpdateTag(task.id, tag)} />
         </View>

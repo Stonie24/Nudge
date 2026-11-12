@@ -91,12 +91,13 @@ export function useDeleteTask() {
   })
 }
 
-const updateTask = resumableMutation('updateTask', async ({ id, tag, title, recurring, scheduled_date, notes }: {
+const updateTask = resumableMutation('updateTask', async ({ id, tag, title, recurring, scheduled_date, due_date, notes }: {
   id: string
   tag?: string
   title?: string
   recurring?: boolean
   scheduled_date?: string | null
+  due_date?: string | null
   notes?: string
 }) => {
   // tag always writes (undefined clears it) to preserve every existing
@@ -107,6 +108,7 @@ const updateTask = resumableMutation('updateTask', async ({ id, tag, title, recu
   if (title !== undefined) updates.title = title
   if (recurring !== undefined) updates.recurring = recurring
   if (scheduled_date !== undefined) updates.scheduled_date = scheduled_date
+  if (due_date !== undefined) updates.due_date = due_date
   if (notes !== undefined) updates.notes = notes || null
   const { error } = await supabase
     .from('tasks')
