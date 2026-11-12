@@ -31,6 +31,8 @@ import { ProgressRing } from '../../components/ProgressRing'
 import { DueBadge } from '../../components/DueBadge'
 import { useUndoDelete } from '../../lib/UndoDeleteContext'
 import { UndoToast } from '../../components/UndoToast'
+import { SuggestionsCard } from '../../components/SuggestionsCard'
+import { useSuggestions } from '../../hooks/useSuggestions'
 import { useEntranceAnimation, useCheckboxAnimation, triggerHaptic } from '../../hooks/useAnimation'
 import type { Colors } from '../../lib/theme'
 import { space, radius } from '../../lib/theme'
@@ -163,15 +165,29 @@ export default function TodayScreen() {
   const [backlogUndo, setBacklogUndo] = useState<Task | null>(null)
   const backlogTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // Smart suggestions: overdue / left-over / due-soon backlog tasks.
+  const boardIds = useMemo(() => new Set(serverTasks?.map(t => t.id) ?? []), [serverTasks])
+  const suggestionExcludes = useMemo(
+    () => new Set([...hiddenTaskIds, ...backlogHiddenIds]),
+    [hiddenTaskIds, backlogHiddenIds]
+  )
+  const {
+    suggestions,
+    justScheduled,
+    add: addSuggestion,
+    addAll: addAllSuggestions,
+    dismiss: dismissSuggestion,
+  } = useSuggestions(boardIds, suggestionExcludes)
+
   // Show just-added tasks immediately, before the server confirms them
   const tasks = useMemo(() => {
-    const unsaved = pendingAdds.filter(t => !hiddenTaskIds.has(t.id))
+    const unsaved = [...pendingAdds, ...justScheduled].filter(t => !hiddenTaskIds.has(t.id))
     const all = unsaved.length === 0 ? serverTasks : (() => {
       const serverIds = new Set(serverTasks?.map(t => t.id))
       return [...(serverTasks ?? []), ...unsaved.filter(t => !serverIds.has(t.id))]
     })()
     return backlogHiddenIds.size ? all?.filter(t => !backlogHiddenIds.has(t.id)) : all
-  }, [serverTasks, pendingAdds, hiddenTaskIds, backlogHiddenIds])
+  }, [serverTasks, pendingAdds, justScheduled, hiddenTaskIds, backlogHiddenIds])
   const { data: completions } = useTodayCompletions()
   const { streak } = useStreak()
 
@@ -285,6 +301,12 @@ export default function TodayScreen() {
         title={quickTitle}
         onChangeTitle={setQuickTitle}
         onOpenSheet={() => { setSheetTitle(quickTitle.trim()); setSheetOpen(true) }}
+      />
+      <SuggestionsCard
+        suggestions={suggestions}
+        onAdd={addSuggestion}
+        onAddAll={addAllSuggestions}
+        onDismiss={dismissSuggestion}
       />
     </View>
   )
