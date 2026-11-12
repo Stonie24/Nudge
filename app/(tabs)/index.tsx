@@ -14,7 +14,7 @@ import {
   useTodayCompletions,
   useCompleteRecurring,
   useUncompleteRecurring,
-  isPendingTask,
+  useScheduleForToday,
 } from '../../hooks/useToday'
 import { useCompleteTask, useUncompleteTask, useUpdateTask } from '../../hooks/useTasks'
 import { useLayout } from '../../hooks/useLayout'
@@ -22,11 +22,10 @@ import { useTheme } from '../../lib/ThemeContext'
 import { TagPicker } from '../../components/TagPicker'
 import { KanbanBoard } from '../../components/KanbanBoard'
 import { AddTaskSheet } from '../../components/Addtasksheet'
-import { QuickAddBar } from '../../components/QuickAddBar'
 import { TaskDetailSheet } from '../../components/TaskDetailSheet'
 import { SwipeableRow } from '../../components/SwipeableRow'
 import { useUndoDelete } from '../../lib/UndoDeleteContext'
-import { useEntranceAnimation, useCheckboxAnimation, triggerHaptic } from '../../hooks/useAnimation'
+import { useEntranceAnimation, useCheckboxAnimation, usePressAnimation, triggerHaptic } from '../../hooks/useAnimation'
 import type { Colors } from '../../lib/theme'
 import { space, radius } from '../../lib/theme'
 import { displayFont } from '../../lib/fonts'
@@ -74,9 +73,6 @@ function TaskItem({
   index?: number
 }) {
   const isDone = task.recurring ? completedToday : task.completed
-  // Optimistic row from quick-add that hasn't reached the server yet — it has
-  // no real id, so completing/deleting/editing it would fail.
-  const pending = isPendingTask(task)
   const styles = useMemo(() => createStyles(colors), [colors])
   const { opacity, translateY } = useEntranceAnimation(Math.min(index * 40, 200))
   const { scale: checkboxScale, ringScale, ringOpacity, triggerComplete, triggerUncomplete } = useCheckboxAnimation()
@@ -94,10 +90,7 @@ function TaskItem({
   }
 
   return (
-    <Animated.View
-      style={{ opacity: pending ? Animated.multiply(opacity, 0.5) : opacity, transform: [{ translateY }] }}
-      pointerEvents={pending ? 'none' : 'auto'}
-    >
+    <Animated.View style={{ opacity, transform: [{ translateY }] }}>
       <SwipeableRow onDelete={() => onDelete(task)}>
         <View style={styles.taskRow}>
           <TouchableOpacity
@@ -139,11 +132,11 @@ function TaskItem({
 
 export default function TodayScreen() {
   const [sheetOpen, setSheetOpen] = useState(false)
-  const [sheetDraft, setSheetDraft] = useState('')
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
   const { isDesktop } = useLayout()
   const { colors } = useTheme()
   const styles = useMemo(() => createStyles(colors), [colors])
+  const addBtn = usePressAnimation()
 
   const { data: tasks, isLoading } = useTodayTasks()
   const { data: completions } = useTodayCompletions()
@@ -187,12 +180,6 @@ export default function TodayScreen() {
     }
   }
 
-  // Ignores optimistic quick-add rows that don't exist server-side yet.
-  function findReal(id: string) {
-    const t = tasks?.find(x => x.id === id)
-    return t && !isPendingTask(t) ? t : undefined
-  }
-
   const augmentedTasks = tasks?.map(t => ({
     ...t,
     completed: t.recurring ? completedTodayIds.has(t.id) : t.completed,
@@ -207,9 +194,18 @@ export default function TodayScreen() {
       <View style={styles.nudgeBanner}>
         <Text style={styles.nudgeText}>{getNudgeMessage(total, completed)}</Text>
       </View>
-      <QuickAddBar
-        onOpenFullSheet={draft => { setSheetDraft(draft); setSheetOpen(true) }}
-      />
+      <Animated.View style={{ transform: [{ scale: addBtn.scale }] }}>
+        <TouchableOpacity
+          style={styles.addBtn}
+          onPress={() => setSheetOpen(true)}
+          onPressIn={addBtn.onPressIn}
+          onPressOut={addBtn.onPressOut}
+          activeOpacity={1}
+        >
+          <Icon name="plus" size={16} color={colors.btnPrimaryText} strokeWidth={2.2} />
+          <Text style={styles.addBtnText}>Add task</Text>
+        </TouchableOpacity>
+      </Animated.View>
     </View>
   )
 
@@ -223,13 +219,13 @@ export default function TodayScreen() {
             : augmentedTasks.length > 0
               ? <KanbanBoard
                   tasks={augmentedTasks}
-                  onComplete={id => { const t = findReal(id); if (t) handleComplete(t) }}
-                  onUncomplete={id => { const t = findReal(id); if (t) handleUncomplete(t) }}
-                  onDelete={id => { const t = findReal(id); if (t) requestDelete(t) }}
-                  onUpdateTag={(id, tag) => { if (findReal(id)) updateTask.mutate({ id, tag }) }}
-                  onOpenDetail={t => { if (!isPendingTask(t)) setSelectedTaskId(t.id) }}
+                  onComplete={id => handleComplete(tasks?.find(t => t.id === id)!)}
+                  onUncomplete={id => handleUncomplete(tasks?.find(t => t.id === id)!)}
+                  onDelete={id => { const t = tasks?.find(x => x.id === id); if (t) requestDelete(t) }}
+                  onUpdateTag={(id, tag) => updateTask.mutate({ id, tag })}
+                  onOpenDetail={t => setSelectedTaskId(t.id)}
                 />
-              : <Text style={styles.emptyText}>Nothing on the board yet — type above to add one.</Text>
+              : <Text style={styles.emptyText}>Nothing on the board yet — add something above.</Text>
           }
         </View>
       ) : (
@@ -280,7 +276,7 @@ export default function TodayScreen() {
           }
           ListEmptyComponent={
             !isLoading ? (
-              <Text style={styles.emptyText}>Nothing here yet — type above to add one.</Text>
+              <Text style={styles.emptyText}>Nothing here yet — add something above.</Text>
             ) : null
           }
         />
@@ -288,9 +284,8 @@ export default function TodayScreen() {
 
       <AddTaskSheet
         visible={sheetOpen}
-        onClose={() => { setSheetOpen(false); setSheetDraft('') }}
+        onClose={() => setSheetOpen(false)}
         todayTaskIds={todayTaskIds}
-        initialTitle={sheetDraft}
       />
 
       <TaskDetailSheet
@@ -321,6 +316,13 @@ function createStyles(c: Colors) {
       padding: space.md, marginBottom: space.xl,
     },
     nudgeText: { fontSize: 14, color: c.accentText, fontWeight: '400', lineHeight: 20 },
+    addBtn: {
+      flexDirection: 'row', gap: space.xs,
+      height: 52, backgroundColor: c.btnPrimary,
+      borderRadius: radius.pill, alignItems: 'center',
+      justifyContent: 'center', marginBottom: space.xxl,
+    },
+    addBtnText: { color: c.btnPrimaryText, fontSize: 15, fontWeight: '500' },
     sectionLabel: {
       fontSize: 11, fontWeight: '600', color: c.textMuted,
       letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: space.sm,

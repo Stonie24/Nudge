@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react'
+import React, { useState, useMemo } from 'react'
 import {
     View,
     TextInput,
@@ -28,13 +28,10 @@ export function AddTaskSheet({
     visible,
     onClose,
     todayTaskIds,
-    initialTitle,
 }: {
     visible: boolean
     onClose: () => void
     todayTaskIds: string[]
-    /** Draft carried over from the inline quick-add bar. */
-    initialTitle?: string
 }) {
     const [tab, setTab] = useState<Tab>('new')
     const [title, setTitle] = useState('')
@@ -42,10 +39,6 @@ export function AddTaskSheet({
     const [recurring, setRecurring] = useState(false)
     const [search, setSearch] = useState('')
     const [selectedTag, setSelectedTag] = useState<string | undefined>()
-
-    useEffect(() => {
-        if (visible && initialTitle) setTitle(initialTitle)
-    }, [visible, initialTitle])
 
     const { colors, isDark } = useTheme()
     const styles = useMemo(() => createStyles(colors), [colors])
