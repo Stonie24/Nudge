@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect, useRef } from 'react'
 import {
   View,
   TouchableOpacity,
@@ -30,6 +30,7 @@ import { QuickAddRow } from '../../components/QuickAddRow'
 import { ProgressRing } from '../../components/ProgressRing'
 import { DueBadge } from '../../components/DueBadge'
 import { useUndoDelete } from '../../lib/UndoDeleteContext'
+import { UndoToast } from '../../components/UndoToast'
 import { useEntranceAnimation, useCheckboxAnimation, triggerHaptic } from '../../hooks/useAnimation'
 import type { Colors } from '../../lib/theme'
 import { space, radius } from '../../lib/theme'
@@ -62,6 +63,7 @@ function TaskItem({
   onComplete,
   onUncomplete,
   onDelete,
+  onMoveToBacklog,
   onUpdateTag,
   onOpenDetail,
   colors,
@@ -72,6 +74,7 @@ function TaskItem({
   onComplete: (id: string) => void
   onUncomplete: (id: string) => void
   onDelete: (task: Task) => void
+  onMoveToBacklog: (task: Task) => void
   onUpdateTag: (id: string, tag?: string) => void
   onOpenDetail: (task: Task) => void
   colors: Colors
@@ -96,7 +99,11 @@ function TaskItem({
 
   return (
     <Animated.View style={{ opacity, transform: [{ translateY }] }}>
-      <SwipeableRow onDelete={() => onDelete(task)}>
+      <SwipeableRow
+        onDelete={() => onDelete(task)}
+        // Recurring tasks live on the board every day, so they have no backlog.
+        onSwipeRight={task.recurring ? undefined : () => onMoveToBacklog(task)}
+      >
         <View style={styles.taskRow}>
           <TouchableOpacity
             style={styles.checkboxWrap}
@@ -149,13 +156,22 @@ export default function TodayScreen() {
   const pendingAdds = usePendingTodayTasks()
   const { requestDelete, hiddenTaskIds } = useUndoDelete()
 
+  // Swipe right → back to the backlog (clears the board day and due date).
+  // The row hides immediately; the write runs in the background, with an
+  // undo toast that puts the board day and due date back.
+  const [backlogHiddenIds, setBacklogHiddenIds] = useState<ReadonlySet<string>>(() => new Set())
+  const [backlogUndo, setBacklogUndo] = useState<Task | null>(null)
+  const backlogTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   // Show just-added tasks immediately, before the server confirms them
   const tasks = useMemo(() => {
     const unsaved = pendingAdds.filter(t => !hiddenTaskIds.has(t.id))
-    if (unsaved.length === 0) return serverTasks
-    const serverIds = new Set(serverTasks?.map(t => t.id))
-    return [...(serverTasks ?? []), ...unsaved.filter(t => !serverIds.has(t.id))]
-  }, [serverTasks, pendingAdds, hiddenTaskIds])
+    const all = unsaved.length === 0 ? serverTasks : (() => {
+      const serverIds = new Set(serverTasks?.map(t => t.id))
+      return [...(serverTasks ?? []), ...unsaved.filter(t => !serverIds.has(t.id))]
+    })()
+    return backlogHiddenIds.size ? all?.filter(t => !backlogHiddenIds.has(t.id)) : all
+  }, [serverTasks, pendingAdds, hiddenTaskIds, backlogHiddenIds])
   const { data: completions } = useTodayCompletions()
   const { streak } = useStreak()
 
@@ -164,6 +180,51 @@ export default function TodayScreen() {
   const completeTask = useCompleteTask()
   const uncompleteTask = useUncompleteTask()
   const updateTask = useUpdateTask()
+
+  function setBacklogHidden(id: string, hidden: boolean) {
+    setBacklogHiddenIds(prev => {
+      const next = new Set(prev)
+      if (hidden) next.add(id); else next.delete(id)
+      return next
+    })
+  }
+
+  function moveToBacklog(task: Task) {
+    if (task.recurring) return
+    setBacklogHidden(task.id, true)
+    // tag is always written by updateTask, so pass the current one through.
+    updateTask.mutate(
+      { id: task.id, tag: task.tag, scheduled_date: null, due_date: null },
+      { onError: () => setBacklogHidden(task.id, false) }
+    )
+    if (backlogTimer.current) clearTimeout(backlogTimer.current)
+    setBacklogUndo(task)
+    backlogTimer.current = setTimeout(() => setBacklogUndo(null), 4000)
+  }
+
+  function undoMoveToBacklog() {
+    const task = backlogUndo
+    if (!task) return
+    if (backlogTimer.current) clearTimeout(backlogTimer.current)
+    setBacklogUndo(null)
+    updateTask.mutate({
+      id: task.id,
+      tag: task.tag,
+      scheduled_date: task.scheduled_date ?? null,
+      due_date: task.due_date ?? null,
+    })
+    setBacklogHidden(task.id, false)
+  }
+
+  // Once the server list no longer has a moved task, stop tracking it.
+  useEffect(() => {
+    if (!backlogHiddenIds.size || !serverTasks) return
+    const onServer = new Set(serverTasks.map(t => t.id))
+    const stale = [...backlogHiddenIds].filter(id => !onServer.has(id) && id !== backlogUndo?.id)
+    if (stale.length) setBacklogHiddenIds(prev => new Set([...prev].filter(id => !stale.includes(id))))
+  }, [serverTasks, backlogHiddenIds, backlogUndo])
+
+  useEffect(() => () => { if (backlogTimer.current) clearTimeout(backlogTimer.current) }, [])
 
   const completedTodayIds = new Set(completions?.map(c => c.task_id) ?? [])
   const todayTaskIds = tasks?.map(t => t.id) ?? []
@@ -269,6 +330,7 @@ export default function TodayScreen() {
               onComplete={() => handleComplete(item)}
               onUncomplete={() => handleUncomplete(item)}
               onDelete={requestDelete}
+              onMoveToBacklog={moveToBacklog}
               onUpdateTag={(id, tag) => updateTask.mutate({ id, tag })}
               onOpenDetail={t => setSelectedTaskId(t.id)}
               colors={colors}
@@ -287,6 +349,7 @@ export default function TodayScreen() {
                     onComplete={() => handleComplete(task)}
                     onUncomplete={() => handleUncomplete(task)}
                     onDelete={requestDelete}
+                    onMoveToBacklog={moveToBacklog}
                     onUpdateTag={(id, tag) => updateTask.mutate({ id, tag })}
                     onOpenDetail={t => setSelectedTaskId(t.id)}
                     colors={colors}
@@ -310,6 +373,12 @@ export default function TodayScreen() {
         todayTaskIds={todayTaskIds}
         initialTitle={sheetTitle}
         onAdded={() => setQuickTitle('')}
+      />
+
+      <UndoToast
+        visible={!!backlogUndo}
+        message={backlogUndo ? `Moved "${backlogUndo.title}" to backlog` : ''}
+        onUndo={undoMoveToBacklog}
       />
 
       <TaskDetailSheet
