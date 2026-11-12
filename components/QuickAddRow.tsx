@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef } from 'react'
-import { View, TextInput, TouchableOpacity, StyleSheet } from 'react-native'
+import { View, TextInput, TouchableOpacity, StyleSheet, Platform } from 'react-native'
 import { Icon } from './Icon'
 import { useAddTodayTask, newTaskId } from '../hooks/useToday'
 import { useTheme } from '../lib/ThemeContext'
@@ -64,6 +64,9 @@ export function QuickAddRow({
         onBlur={() => setFocused(false)}
         onSubmitEditing={handleSubmit}
         submitBehavior="submit"
+        // react-native-web ignores submitBehavior and blurs single-line inputs on
+        // Enter unless blurOnSubmit is false (no longer in RN's types, so spread).
+        {...(Platform.OS === 'web' ? ({ blurOnSubmit: false } as object) : null)}
         returnKeyType="done"
         accessibilityLabel="New task title"
       />
@@ -89,8 +92,14 @@ function createStyles(c: Colors) {
       marginBottom: space.xxl,
     },
     rowFocused: { borderStyle: 'solid', borderColor: c.accentBorder },
-    // outlineWidth: hides the browser focus ring on web; the row border shows focus instead
-    input: { flex: 1, height: '100%', fontSize: 15, color: c.text, outlineWidth: 0 },
+    // minWidth: 0 lets the input shrink on web, where it otherwise keeps its
+    // intrinsic width and pushes the ⋯ button outside the row.
+    // outlineStyle 'none' (web only): Chrome ignores outlineWidth for its default
+    // 'auto' focus ring, so it needs this to hide it; the row border shows focus.
+    input: {
+      flex: 1, minWidth: 0, height: '100%', fontSize: 15, color: c.text, outlineWidth: 0,
+      ...(Platform.OS === 'web' ? ({ outlineStyle: 'none' } as object) : null),
+    },
     moreBtn: { paddingHorizontal: space.xs },
   })
 }
