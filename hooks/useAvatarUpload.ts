@@ -26,14 +26,19 @@ export function useAvatarUpload() {
     const asset = result.assets[0]
     setUploading(true)
     try {
+      // ArrayBuffer, not Blob: on React Native (Android especially) a fetched
+      // Blob uploads to Supabase Storage as a 0-byte file.
       const response = await fetch(asset.uri)
-      const blob = await response.blob()
-      const ext = asset.uri.split('.').pop()?.toLowerCase() || 'jpg'
+      const bytes = await response.arrayBuffer()
+      const contentType = asset.mimeType ?? 'image/jpeg'
+      // Android picker URIs can be content:// with no usable extension, so
+      // derive it from the MIME type instead of the URI.
+      const ext = contentType.split('/')[1]?.replace('jpeg', 'jpg') || 'jpg'
       const path = `${user.id}/${Date.now()}.${ext}`
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(path, blob, { contentType: asset.mimeType ?? `image/${ext}`, upsert: true })
+        .upload(path, bytes, { contentType, upsert: true })
       if (uploadError) throw uploadError
 
       const { data: publicUrlData } = supabase.storage.from('avatars').getPublicUrl(path)
