@@ -59,6 +59,9 @@ function AuthGate() {
   // dedup guard makes it safe if the primary sign-in flow already handled
   // the same redirect.
   useEffect(() => {
+    // Web returns from OAuth with a full-page load of /callback, and
+    // app/(auth)/callback.tsx handles that URL (including showing errors).
+    if (Platform.OS === 'web') return
     function handle(url: string) {
       createSessionFromUrl(url).catch((err) => {
         console.error('OAuth session error:', err)

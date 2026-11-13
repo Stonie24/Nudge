@@ -9,7 +9,7 @@ import {
 import { AppText as Text } from '../../components/AppText'
 import { GoogleSignInButton } from '../../components/GoogleSignInButton'
 import { InlineFormError } from '../../components/InlineFormError'
-import { Link } from 'expo-router'
+import { Link, useLocalSearchParams } from 'expo-router'
 import { supabase } from '../../lib/supabase'
 import { useOAuthSignIn } from '../../hooks/useOAuthSignIn'
 import { getAuthErrorMessage } from '../../lib/authErrors'
@@ -29,7 +29,11 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [devLoading, setDevLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  // Set by app/(auth)/callback.tsx when a web OAuth redirect comes back with an error.
+  const { oauthError } = useLocalSearchParams<{ oauthError?: string }>()
+  const [error, setError] = useState<string | null>(
+    oauthError ? "We couldn't finish signing you in with Google. Please try again." : null,
+  )
   const { loading: oauthLoading, signIn } = useOAuthSignIn(setError)
   const anyLoading = loading || devLoading || oauthLoading
 

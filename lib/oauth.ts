@@ -1,6 +1,7 @@
 import * as WebBrowser from 'expo-web-browser'
 import * as AuthSession from 'expo-auth-session'
 import * as QueryParams from 'expo-auth-session/build/QueryParams'
+import { Platform } from 'react-native'
 import { supabase } from './supabase'
 import type { Session } from '@supabase/supabase-js'
 
@@ -37,6 +38,10 @@ let lastHandledAccessToken: string | null = null
 export async function createSessionFromUrl(url: string): Promise<Session | null> {
   const { params, errorCode } = QueryParams.getQueryParams(url)
   if (errorCode) throw new Error(errorCode)
+  // Supabase reports provider/exchange failures as ?error=…&error_description=…
+  // (and repeats them in the hash). Surface them instead of silently finding
+  // no tokens and leaving the callback screen spinning.
+  if (params.error) throw new Error(params.error_description || params.error)
 
   const { access_token, refresh_token } = params
   if (!access_token || !refresh_token) return null
@@ -58,11 +63,28 @@ export async function createSessionFromUrl(url: string): Promise<Session | null>
 }
 
 /**
- * Kicks off the OAuth flow for the given provider: opens the provider's
- * consent screen in an in-app browser tab, then exchanges the redirect
- * back into a Supabase session. Works the same way on native and web.
+ * Kicks off the OAuth flow for the given provider.
+ *
+ * Native: opens the provider's consent screen in an in-app browser tab, then
+ * exchanges the redirect back into a Supabase session.
+ *
+ * Web: navigates the whole page to the provider instead of using a popup.
+ * Google's sign-in pages send a Cross-Origin-Opener-Policy header that cuts
+ * the popup off from its opener, so the popup can't hand the tokens back and
+ * the sign-in silently does nothing. With a full-page redirect the browser
+ * comes back to /callback in the same tab, and app/(auth)/callback.tsx turns
+ * the tokens in the URL into a session.
  */
 export async function signInWithOAuth(provider: OAuthProvider) {
+  if (Platform.OS === 'web') {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo },
+    })
+    if (error) throw error
+    return null // the page is navigating away
+  }
+
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {

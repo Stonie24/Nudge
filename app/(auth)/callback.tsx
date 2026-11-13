@@ -22,7 +22,12 @@ export default function AuthCallback() {
   useEffect(() => {
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
       createSessionFromUrl(window.location.href).catch((err) => {
-        console.error('OAuth callback error:', err)
+        // Handled: the login screen shows it inline. warn, not error, so the
+        // dev-only error overlay doesn't cover the screen.
+        console.warn('OAuth callback error:', err)
+        // Alert.alert is a no-op on web, so hand the failure to the login
+        // screen's inline error banner instead of spinning here.
+        router.replace({ pathname: '/(auth)/login', params: { oauthError: '1' } })
       })
       return
     }
