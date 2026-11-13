@@ -275,7 +275,10 @@ export default function TodayScreen() {
             ) : null
           }
           ListEmptyComponent={
-            !isLoading ? (
+            // The list's data is only the pending tasks, so it's "empty" once
+            // everything is ticked off. Done tasks still render in the footer,
+            // so only show the empty message when there are no tasks at all.
+            !isLoading && done.length === 0 ? (
               <Text style={styles.emptyText}>Nothing here yet — add something above.</Text>
             ) : null
           }
