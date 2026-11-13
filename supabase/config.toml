@@ -8,6 +8,12 @@ verify_jwt = false
 import_map = "./functions/submit-feedback/deno.json"
 entrypoint = "./functions/submit-feedback/index.ts"
 
+[functions.google-calendar-redirect]
+enabled = true
+# Google's OAuth redirect lands here with no Supabase JWT.
+verify_jwt = false
+entrypoint = "./functions/google-calendar-redirect/index.ts"
+
 [functions.google-token-exchange]
 enabled = true
 verify_jwt = true
