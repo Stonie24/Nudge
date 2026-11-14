@@ -8,7 +8,6 @@ import {
   ScrollView,
   StyleSheet,
   Switch,
-  ActivityIndicator,
 } from 'react-native'
 import { AppText as Text } from './AppText'
 import { Icon } from './Icon'
@@ -17,6 +16,7 @@ import { useCompleteTask, useUncompleteTask, useUpdateTask } from '../hooks/useT
 import { useCompleteRecurring, useUncompleteRecurring } from '../hooks/useToday'
 import { useTheme } from '../lib/ThemeContext'
 import { useUndoDelete } from '../lib/UndoDeleteContext'
+import { showAlert } from '../lib/alert'
 import type { Colors } from '../lib/theme'
 import { space, radius, shadow } from '../lib/theme'
 import type { Task } from '../types'
@@ -92,9 +92,12 @@ export function TaskDetailSheet({
     }
   }
 
-  async function handleSave() {
+  function handleSave() {
     if (!task || !title.trim()) return
-    await updateTask.mutateAsync({
+    // Don't wait for the server: the change shows everywhere at once (see
+    // usePendingEdits) and is queued while offline, so close right away.
+    const savedTitle = title.trim()
+    updateTask.mutate({
       id: task.id,
       title: title.trim(),
       tag,
@@ -102,6 +105,8 @@ export function TaskDetailSheet({
       scheduled_date: recurring ? null : (boardDate ?? null),
       due_date: recurring ? null : dueDate,
       notes,
+    }, {
+      onError: () => showAlert("Couldn't save changes", `Your changes to "${savedTitle}" weren't saved. Please try again.`),
     })
     onClose()
   }
@@ -281,13 +286,10 @@ export function TaskDetailSheet({
             <TouchableOpacity
               style={[styles.saveBtn, (!title.trim() || !dirty) && styles.saveBtnDisabled]}
               onPress={handleSave}
-              disabled={!title.trim() || !dirty || updateTask.isPending}
+              disabled={!title.trim() || !dirty}
               activeOpacity={0.85}
             >
-              {updateTask.isPending
-                ? <ActivityIndicator color={colors.btnPrimaryText} />
-                : <Text style={styles.saveBtnText}>Save changes</Text>
-              }
+              <Text style={styles.saveBtnText}>Save changes</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete} activeOpacity={0.7}>
