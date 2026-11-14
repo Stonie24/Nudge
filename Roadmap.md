@@ -18,7 +18,7 @@
 - [x] Search for tasks in backlog with Tags aswell
 - [x] Daily tasks should be a different color node in calendar
 
-## v0.22 — Polish & experience ← we are here
+## v0.22 — Polish & experience ✅
 - [x] Dark mode
 - [x] GitHub issue feedback integration
 - [x] Animations & micro-interactions
@@ -38,19 +38,21 @@ Token-level reskin (color, type, spacing, icons, elevation) plus a few new piece
 - [x] Task detail sheet — tapping a task opens title/tag/repeat/due date/notes instead of only toggling complete
 - [x] Swipe-to-delete with undo toast, replacing long-press + native confirm alert
 - [x] Inline quick-add on the Today board, replacing the full-screen Add Task modal for the common case
-- [ ] Progress ring on the Today screen showing today's completion + streak
-- [ ] Move calendar integrations (Google/Apple) from the Calendar screen into Settings
+- [x] Progress ring on the Today screen showing today's completion + streak
+- [x] Move calendar integrations (Google/Apple) from the Calendar screen into Settings
 - [x] "Gentle nudges" reminder toggle + nudge time in Settings
 - [ ] "Export my data" option in Settings
 
-## v0.23 — Power features
-- [ ] Optional due dates on tasks (overdue indicator, sort by due date)
+## v0.23 — Power features ← we are here
+- [x] Optional due dates on tasks (overdue indicator, sort by due date)
+- [x] Swipe right on a Today task to move it back to the backlog (clears its due date, with undo)
 - [ ] Subtasks / checklists inside a task (flat checklist, progress shown on task card)
-- [ ] Smart daily suggestions (surface overdue + due-soon backlog items automatically)
+- [x] Smart daily suggestions (surface overdue + due-soon backlog items automatically)
 - [ ] Weekly overview screen (tasks completed, active tags, streak summary)
 - [ ] Focus mode (one task at a time, full screen, optional timer)
 
 ## v0.3 — Growth
+- [x] In-app account deletion (required by the App Store and Play Store)
 - [ ] iOS App Store submission
 - [ ] Android Play Store submission
 - [ ] Public web app
