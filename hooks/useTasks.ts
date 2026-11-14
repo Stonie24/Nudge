@@ -1,8 +1,9 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useMutationState, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { resumableMutation, taskWriteScope } from '../lib/resumableMutation'
 import { useMemo } from 'react'
 import { usePendingTicks, applyTaskTicks } from './usePendingTicks'
+import { usePendingEdits, applyTaskEdits } from './usePendingEdits'
 import type { Task } from '../types'
 
 export function useTasks() {
@@ -17,18 +18,32 @@ export function useTasks() {
       return data
     },
   })
-  // Ticks show instantly, before the server confirms them
+  // Adds, ticks and edits show instantly, before the server confirms them
+  // (also while offline).
   const ticks = usePendingTicks()
-  const data = useMemo(() => applyTaskTicks(query.data, ticks), [query.data, ticks])
+  const edits = usePendingEdits()
+  const adds = usePendingBacklogAdds()
+  const data = useMemo(() => {
+    let list = query.data
+    if (adds.length) {
+      const ids = new Set(list?.map(t => t.id))
+      const unsaved = adds.filter(t => !ids.has(t.id))
+      if (unsaved.length) list = [...unsaved, ...(list ?? [])] // newest first, like the query
+    }
+    return applyTaskEdits(applyTaskTicks(list, ticks), edits)
+  }, [query.data, ticks, edits, adds])
   return { ...query, data }
 }
 
-const addTask = resumableMutation('addTask', async ({ title, tag }: { title: string; tag?: string }) => {
+type AddTaskVars = { id?: string; title: string; tag?: string }
+
+const addTask = resumableMutation('addTask', async ({ id, title, tag }: AddTaskVars) => {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not logged in')
   const { data, error } = await supabase
     .from('tasks')
-    .insert({ title, tag: tag ?? null, user_id: user.id })
+    // A client-generated id lets the task show before the insert lands.
+    .insert({ ...(id ? { id } : {}), title, tag: tag ?? null, user_id: user.id })
     .select()
     .single()
   if (error) throw error
@@ -41,6 +56,27 @@ export function useAddTask() {
     ...addTask,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['tasks'] }),
   })
+}
+
+/** Backlog tasks still being added (or queued offline), shown before the server has them. */
+function usePendingBacklogAdds(): Task[] {
+  const pending = useMutationState({
+    filters: { mutationKey: addTask.mutationKey, status: 'pending' },
+    select: (m): Task | null => {
+      const v = m.state.variables as AddTaskVars | undefined
+      if (!v?.id) return null
+      return {
+        id: v.id,
+        user_id: '',
+        title: v.title,
+        tag: v.tag,
+        completed: false,
+        recurring: false,
+        created_at: new Date(m.state.submittedAt || Date.now()).toISOString(),
+      }
+    },
+  })
+  return useMemo(() => pending.filter((t): t is Task => t !== null).reverse(), [pending])
 }
 
 const completeTask = resumableMutation('completeTask', async (id: string) => {

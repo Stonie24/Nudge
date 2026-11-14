@@ -6,10 +6,11 @@ import {
   Modal,
   Pressable,
   StyleSheet,
-  ActivityIndicator,
 } from 'react-native'
 import { AppText as Text } from './AppText'
 import { useAddTask } from '../hooks/useTasks'
+import { newTaskId } from '../hooks/useToday'
+import { showAlert } from '../lib/alert'
 import { useTheme } from '../lib/ThemeContext'
 import { TagPicker } from './TagPicker'
 import type { Colors } from '../lib/theme'
@@ -39,10 +40,14 @@ export function AddBacklogTaskSheet({
     onClose()
   }
 
-  async function handleAdd() {
+  function handleAdd() {
     const t = title.trim()
     if (!t) return
-    await addTask.mutateAsync({ title: t, tag })
+    // Shown in the list immediately and queued while offline, so close right away.
+    addTask.mutate(
+      { id: newTaskId(), title: t, tag },
+      { onError: () => showAlert('Couldn\'t add task', `"${t}" wasn't saved. Please try again.`) }
+    )
     reset()
     onClose()
   }
@@ -81,13 +86,10 @@ export function AddBacklogTaskSheet({
           <TouchableOpacity
             style={[styles.addBtn, !title.trim() && styles.addBtnDisabled]}
             onPress={handleAdd}
-            disabled={!title.trim() || addTask.isPending}
+            disabled={!title.trim()}
             activeOpacity={0.8}
           >
-            {addTask.isPending
-              ? <ActivityIndicator color={colors.btnPrimaryText} />
-              : <Text style={styles.addBtnText}>Add to backlog</Text>
-            }
+            <Text style={styles.addBtnText}>Add to backlog</Text>
           </TouchableOpacity>
         </Pressable>
       </Pressable>
