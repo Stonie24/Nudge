@@ -51,6 +51,14 @@ Token-level reskin (color, type, spacing, icons, elevation) plus a few new piece
 - [x] Weekly overview screen (tasks completed, active tags, streak summary)
 - [ ] Focus mode (one task at a time, full screen, optional timer)
 
+### Smarter suggestions (learned from your own history, on the device)
+Every suggestion says why it's shown; nothing is sent anywhere and nothing moves without a tap.
+- [x] Know your pace: how many tasks you usually finish on this weekday; Today shows it, and suggestions only fill the room left (overdue tasks always shown)
+- [x] Your rhythms: tags you tend to do on certain weekdays ("You often do Errands on Saturdays") rank matching backlog tasks into the suggestions
+- [ ] Habits at risk: flag a habit you've been slipping on ("Missed 2 of the last 3 days"), and in the evening "1 habit left to keep your 5-day streak"
+- [ ] Backlog clean-up: tasks untouched for over a month get "Still want to do this?" with Add to today / Delete / Keep
+- [ ] Weekly insight: one plain sentence at the top of the weekly overview ("Your best day was Friday, and Health was your most consistent tag")
+
 ## v0.3 — Growth
 - [x] In-app account deletion (required by the App Store and Play Store)
 - [ ] iOS App Store submission

@@ -54,6 +54,12 @@ function formatDate() {
   })
 }
 
+/** "You usually finish about 3 tasks on Saturdays" (+ a gentle note if today's plan is bigger). */
+function paceMessage(typical: number, weekdays: string, planned: number) {
+  const usual = `You usually finish about ${typical} task${typical === 1 ? '' : 's'} on ${weekdays}`
+  return planned > typical ? `${usual}, and you've planned ${planned}.` : `${usual}.`
+}
+
 function getNudgeMessage(total: number, completed: number) {
   if (total === 0) return "Nothing on the board yet. Add something to get started."
   if (completed === 0) return `${total} thing${total > 1 ? 's' : ''} for today. No rush.`
@@ -184,6 +190,8 @@ export default function TodayScreen() {
     add: addSuggestion,
     addAll: addAllSuggestions,
     dismiss: dismissSuggestion,
+    pace,
+    room,
   } = useSuggestions(boardIds, suggestionExcludes)
 
   // Show just-added tasks immediately, before the server confirms them
@@ -296,6 +304,11 @@ export default function TodayScreen() {
         <ProgressRing completed={completed} total={total} />
         <View style={styles.nudgeBody}>
           <Text style={styles.nudgeText}>{getNudgeMessage(total, completed)}</Text>
+          {pace && (
+            <Text style={styles.paceText}>
+              {paceMessage(pace.typical, pace.weekdayLabel, tasks?.filter(t => !t.recurring).length ?? 0)}
+            </Text>
+          )}
           <View style={styles.bannerFooter}>
             {streak > 0 && (
               <View style={styles.streakRow}>
@@ -326,6 +339,7 @@ export default function TodayScreen() {
         onAdd={addSuggestion}
         onAddAll={addAllSuggestions}
         onDismiss={dismissSuggestion}
+        room={room}
       />
     </View>
   )
@@ -456,6 +470,7 @@ function createStyles(c: Colors) {
     nudgeBody: { flex: 1, gap: space.xs },
     nudgeText: { fontSize: 14, color: c.accentText, fontWeight: '400', lineHeight: 20 },
     streakRow: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
+    paceText: { fontSize: 12, color: c.accentText, lineHeight: 17, opacity: 0.85 },
     bannerFooter: { flexDirection: 'row', alignItems: 'center', gap: space.md, flexWrap: 'wrap' },
     weekLink: { flexDirection: 'row', alignItems: 'center', gap: 2 },
     weekLinkText: { fontSize: 12, color: c.accentText, fontWeight: '600', textDecorationLine: 'underline' },

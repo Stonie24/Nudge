@@ -1,12 +1,16 @@
 import type { Task } from '../types'
 import { addDays, daysBetween, parseDateStr, getDueInfo } from './dueDate'
+import type { Rhythm } from './insights'
 
 /** Due within this many days (today included) counts as "due soon". */
 export const DUE_SOON_DAYS = 3
 /** Never suggest more than this many at once, so the card stays a nudge, not a second list. */
 export const MAX_SUGGESTIONS = 5
 
-export type SuggestionReason = 'overdue' | 'leftover' | 'dueSoon'
+export type SuggestionReason = 'overdue' | 'leftover' | 'dueSoon' | 'rhythm'
+
+/** At most this many "you often do X on <day>" suggestions at once. */
+export const MAX_RHYTHM_SUGGESTIONS = 2
 
 export type Suggestion = {
   task: Task
@@ -15,14 +19,18 @@ export type Suggestion = {
   label: string
 }
 
-const REASON_RANK: Record<SuggestionReason, number> = { overdue: 0, leftover: 1, dueSoon: 2 }
+const REASON_RANK: Record<SuggestionReason, number> = { overdue: 0, leftover: 1, dueSoon: 2, rhythm: 3 }
 
 /**
  * Picks backlog tasks worth putting on today's board:
  *  1. overdue: due date has passed
  *  2. leftover: was on an earlier day's board and never finished
  *  3. dueSoon: due today or within the next few days
+ *  4. rhythm: undated backlog task with a tag you usually do on this weekday
  * Recurring, completed and already-on-today tasks are never suggested.
+ *
+ * `room` (from your usual pace) limits how many are offered: overdue tasks
+ * are always included, the rest only fill the room left on today's board.
  */
 export function getSuggestions(
   tasks: readonly Task[] | undefined,
@@ -30,7 +38,16 @@ export function getSuggestions(
     today,
     excludeIds = new Set<string>(),
     limit = MAX_SUGGESTIONS,
-  }: { today: string; excludeIds?: ReadonlySet<string>; limit?: number }
+    rhythms = [],
+    room = null,
+  }: {
+    today: string
+    excludeIds?: ReadonlySet<string>
+    limit?: number
+    rhythms?: readonly Rhythm[]
+    /** Slots left on today's board by your usual pace; null when pace isn't known yet. */
+    room?: number | null
+  }
 ): Suggestion[] {
   if (!tasks) return []
   const soonLimit = addDays(today, DUE_SOON_DAYS)
@@ -47,6 +64,9 @@ export function getSuggestions(
       out.push({ task, reason: 'leftover', label: leftoverLabel(task.scheduled_date, today) })
     } else if (due && due <= soonLimit) {
       out.push({ task, reason: 'dueSoon', label: getDueInfo(due, { today })!.label })
+    } else if (!task.scheduled_date && !due && task.tag) {
+      const rhythm = rhythms.find(r => r.tag === task.tag)
+      if (rhythm) out.push({ task, reason: 'rhythm', label: rhythm.label })
     }
   }
 
@@ -56,7 +76,14 @@ export function getSuggestions(
     sortKey(a).localeCompare(sortKey(b)) ||
     a.task.created_at.localeCompare(b.task.created_at)
   )
-  return out.slice(0, limit)
+  // Keep only the first few rhythm suggestions (they're a gentle hint, not a to-do list).
+  let rhythmCount = 0
+  const ranked = out.filter(s => s.reason !== 'rhythm' || ++rhythmCount <= MAX_RHYTHM_SUGGESTIONS)
+
+  if (room === null || room === undefined) return ranked.slice(0, limit)
+  const overdue = ranked.filter(s => s.reason === 'overdue')
+  const rest = ranked.filter(s => s.reason !== 'overdue').slice(0, Math.max(0, room - overdue.length))
+  return [...overdue, ...rest].slice(0, limit)
 }
 
 function sortKey(s: Suggestion): string {
