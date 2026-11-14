@@ -12,6 +12,7 @@ import {
 import { AppText as Text } from './AppText'
 import { Icon } from './Icon'
 import { TagPicker } from './TagPicker'
+import { ChecklistSection } from './ChecklistSection'
 import { useCompleteTask, useUncompleteTask, useUpdateTask } from '../hooks/useTasks'
 import { useCompleteRecurring, useUncompleteRecurring } from '../hooks/useToday'
 import { useTheme } from '../lib/ThemeContext'
@@ -19,7 +20,7 @@ import { useUndoDelete } from '../lib/UndoDeleteContext'
 import { showAlert } from '../lib/alert'
 import type { Colors } from '../lib/theme'
 import { space, radius, shadow } from '../lib/theme'
-import type { Task } from '../types'
+import type { Task, ChecklistItem } from '../types'
 import { toDateStr, addDays, parseDateStr, getDueInfo } from '../lib/dueDate'
 
 // How many upcoming days the due-date strip offers (no native date picker needed).
@@ -66,7 +67,11 @@ export function TaskDetailSheet({
     setBoardDate(task.scheduled_date)
     setDueDate(task.due_date ?? null)
     setNotes(task.notes ?? '')
-  }, [task])
+    // Only when a different task opens: the same task re-renders whenever a
+    // change to it lands (e.g. each checklist tick, which saves at once), and
+    // resetting then would wipe unsaved edits to the other fields.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [task?.id])
 
   if (!task) return null
 
@@ -90,6 +95,16 @@ export function TaskDetailSheet({
     } else {
       isDone ? uncompleteTask.mutate(task.id) : completeTask.mutate(task.id)
     }
+  }
+
+  // Checklist changes save immediately (not via "Save changes"), so ticks are
+  // kept even if the sheet is dismissed. Shown at once via usePendingEdits.
+  function saveChecklist(next: ChecklistItem[]) {
+    if (!task) return
+    updateTask.mutate(
+      { id: task.id, tag: task.tag, checklist: next }, // tag is always written; keep the saved one
+      { onError: () => showAlert("Couldn't save checklist", 'Your last checklist change wasn\'t saved. Please try again.') }
+    )
   }
 
   function handleSave() {
@@ -150,6 +165,13 @@ export function TaskDetailSheet({
                 {isDone ? 'Marked done' : 'Mark done'}
               </Text>
             </TouchableOpacity>
+
+            {/* Repeating tasks have no checklist for now: items would need a daily reset. */}
+            {!recurring && (
+              <View style={styles.field}>
+                <ChecklistSection items={task.checklist ?? []} onChange={saveChecklist} />
+              </View>
+            )}
 
             <View style={styles.field}>
               <Text style={styles.fieldLabel}>Tag</Text>

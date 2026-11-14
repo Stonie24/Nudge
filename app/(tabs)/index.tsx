@@ -29,6 +29,7 @@ import { SwipeableRow } from '../../components/SwipeableRow'
 import { QuickAddRow } from '../../components/QuickAddRow'
 import { ProgressRing } from '../../components/ProgressRing'
 import { DueBadge } from '../../components/DueBadge'
+import { ChecklistBadge } from '../../components/ChecklistBadge'
 import { useUndoDelete } from '../../lib/UndoDeleteContext'
 import { UndoToast } from '../../components/UndoToast'
 import { SuggestionsCard } from '../../components/SuggestionsCard'
@@ -136,7 +137,12 @@ function TaskItem({
                 <Text style={styles.recurringBadgeText}>daily</Text>
               </View>
             )}
-            <DueBadge task={task} done={isDone} />
+            {!task.recurring && (task.due_date || (task.checklist?.length ?? 0) > 0) && (
+              <View style={styles.metaRow}>
+                <DueBadge task={task} done={isDone} />
+                <ChecklistBadge task={task} />
+              </View>
+            )}
           </TouchableOpacity>
           <TagPicker value={task.tag} onChange={tag => onUpdateTag(task.id, tag)} />
         </View>
@@ -468,6 +474,7 @@ function createStyles(c: Colors) {
       transform: [{ rotate: '40deg' }, { translateY: -1 }],
     },
     taskContent: { flex: 1, gap: space.xs },
+    metaRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, flexWrap: 'wrap' },
     taskTitle: { fontSize: 15, color: c.text, lineHeight: 22 },
     taskTitleDone: { color: c.textMuted, textDecorationLine: 'line-through' },
     recurringBadge: { flexDirection: 'row', alignItems: 'center', gap: space.xs },

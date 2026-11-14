@@ -17,6 +17,7 @@ import { useLayout } from '../../hooks/useLayout'
 import { useTheme } from '../../lib/ThemeContext'
 import { TagBadge } from '../../components/TagPicker'
 import { DueBadge } from '../../components/DueBadge'
+import { ChecklistBadge } from '../../components/ChecklistBadge'
 import { compareDueDates } from '../../lib/dueDate'
 import { KanbanBoard } from '../../components/KanbanBoard'
 import { AddBacklogTaskSheet } from '../../components/AddBacklogTaskSheet'
@@ -88,7 +89,12 @@ function TaskItem({ task, isDone, onComplete, onUncomplete, onDelete, onOpenDeta
               {task.title}
             </Text>
             {task.tag && <TagBadge tag={task.tag} />}
-            <DueBadge task={task} done={isDone} />
+            {!task.recurring && (task.due_date || (task.checklist?.length ?? 0) > 0) && (
+              <View style={styles.metaRow}>
+                <DueBadge task={task} done={isDone} />
+                <ChecklistBadge task={task} />
+              </View>
+            )}
           </TouchableOpacity>
           <Text style={styles.taskDate}>
             {new Date(task.created_at).toLocaleDateString('en-SE', { month: 'short', day: 'numeric' })}
@@ -467,6 +473,7 @@ function createStyles(c: Colors) {
       transform: [{ rotate: '40deg' }, { translateY: -1 }],
     },
     taskContent: { flex: 1, gap: space.xs },
+    metaRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, flexWrap: 'wrap' },
     taskTitle: { fontSize: 15, color: c.text, lineHeight: 22 },
     taskTitleDone: { color: c.textMuted, textDecorationLine: 'line-through' },
     taskDate: { fontSize: 12, color: c.textMuted },

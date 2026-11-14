@@ -5,7 +5,7 @@ import { useMemo } from 'react'
 import { usePendingTicks, applyTaskTicks } from './usePendingTicks'
 import { usePendingEdits, applyTaskEdits } from './usePendingEdits'
 import { toDateStr } from '../lib/dueDate'
-import type { Task } from '../types'
+import type { Task, ChecklistItem } from '../types'
 
 export function useTasks() {
   const query = useQuery<Task[]>({
@@ -137,7 +137,7 @@ export function useDeleteTask() {
   })
 }
 
-const updateTask = resumableMutation('updateTask', async ({ id, tag, title, recurring, scheduled_date, due_date, notes }: {
+const updateTask = resumableMutation('updateTask', async ({ id, tag, title, recurring, scheduled_date, due_date, notes, checklist }: {
   id: string
   tag?: string
   title?: string
@@ -145,6 +145,7 @@ const updateTask = resumableMutation('updateTask', async ({ id, tag, title, recu
   scheduled_date?: string | null
   due_date?: string | null
   notes?: string
+  checklist?: ChecklistItem[]
 }) => {
   // tag always writes (undefined clears it) to preserve every existing
   // caller's behavior; the rest only update when explicitly provided,
@@ -156,6 +157,7 @@ const updateTask = resumableMutation('updateTask', async ({ id, tag, title, recu
   if (scheduled_date !== undefined) updates.scheduled_date = scheduled_date
   if (due_date !== undefined) updates.due_date = due_date
   if (notes !== undefined) updates.notes = notes || null
+  if (checklist !== undefined) updates.checklist = checklist
   const { error } = await supabase
     .from('tasks')
     .update(updates)
