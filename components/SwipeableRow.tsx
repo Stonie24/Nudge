@@ -145,19 +145,24 @@ export function SwipeableRow({
     }).start()
   }
 
-  const iconOpacity = translateX.interpolate({
-    inputRange: [-DELETE_THRESHOLD, -space.xxxl, 0],
-    outputRange: [1, 0.4, 0],
-    extrapolate: 'clamp',
-  })
-  const rightIconOpacity = translateX.interpolate({
-    inputRange: [0, space.xxxl, DELETE_THRESHOLD],
-    outputRange: [0, 0.4, 1],
-    extrapolate: 'clamp',
-  })
-  // Only one background shows at a time, depending on drag direction.
-  const deleteBgOpacity = translateX.interpolate({ inputRange: [-1, 0], outputRange: [1, 0], extrapolate: 'clamp' })
-  const rightBgOpacity = translateX.interpolate({ inputRange: [0, 1], outputRange: [0, 1], extrapolate: 'clamp' })
+  // Built once per row: re-creating these on every render (e.g. when a row
+  // re-renders while its spring-back runs on the native driver) can leave
+  // the backgrounds bound to a detached animation node on iOS/Android.
+  const { iconOpacity, rightIconOpacity, deleteBgOpacity, rightBgOpacity } = useMemo(() => ({
+    iconOpacity: translateX.interpolate({
+      inputRange: [-DELETE_THRESHOLD, -space.xxxl, 0],
+      outputRange: [1, 0.4, 0],
+      extrapolate: 'clamp',
+    }),
+    rightIconOpacity: translateX.interpolate({
+      inputRange: [0, space.xxxl, DELETE_THRESHOLD],
+      outputRange: [0, 0.4, 1],
+      extrapolate: 'clamp',
+    }),
+    // Only one background shows at a time, depending on drag direction.
+    deleteBgOpacity: translateX.interpolate({ inputRange: [-1, 0], outputRange: [1, 0], extrapolate: 'clamp' }),
+    rightBgOpacity: translateX.interpolate({ inputRange: [0, 1], outputRange: [0, 1], extrapolate: 'clamp' }),
+  }), [translateX])
 
   const actions = [
     { name: 'delete', label: 'Delete task' },
