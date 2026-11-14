@@ -109,8 +109,11 @@ export function AddTaskSheet({
         onClose()
     }
 
-    async function handleSchedule(task: Task) {
-        await scheduleForToday.mutateAsync(task.id)
+    function handleSchedule(task: Task) {
+        // Shown on the board immediately (see usePendingEdits), so close without waiting
+        scheduleForToday.mutate(task.id, {
+            onError: () => showAlert('Couldn\'t add task', `"${task.title}" wasn't added to today. Please try again.`),
+        })
         onClose()
     }
 

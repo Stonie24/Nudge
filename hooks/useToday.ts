@@ -3,6 +3,7 @@ import { useQuery, useMutation, useMutationState, useQueryClient } from '@tansta
 import { supabase } from '../lib/supabase'
 import { resumableMutation, taskWriteScope } from '../lib/resumableMutation'
 import { usePendingTicks, applyTaskTicks, applyCompletionTicks } from './usePendingTicks'
+import { usePendingEdits, applyTodayEdits, applyTaskEdits } from './usePendingEdits'
 import type { Task, DailyCompletion } from '../types'
 
 function today(): string {
@@ -29,9 +30,18 @@ export function useTodayTasks() {
       return data
     },
   })
-  // Ticks show instantly, before the server confirms them
+  // Ticks and edits (rename, moving on/off today, …) show instantly, before
+  // the server confirms them (also while offline).
+  const queryClient = useQueryClient()
   const ticks = usePendingTicks()
-  const data = useMemo(() => applyTaskTicks(query.data, ticks), [query.data, ticks])
+  const edits = usePendingEdits()
+  const data = useMemo(
+    () => applyTaskTicks(
+      applyTodayEdits(query.data, edits, today(), queryClient.getQueryData<Task[]>(['tasks'])),
+      ticks
+    ),
+    [query.data, ticks, edits, queryClient]
+  )
   return { ...query, data }
 }
 
@@ -103,9 +113,9 @@ export function useScheduleForToday() {
   const queryClient = useQueryClient()
   return useMutation({
     ...scheduleForToday,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] })
-    },
+    // Returned so the mutation stays pending until the refetch lands, so the
+    // instantly-shown change doesn't flicker back in between.
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['tasks'] }),
   })
 }
 
@@ -173,9 +183,14 @@ export function usePendingTodayTasks(): Task[] {
     },
   })
   const ticks = usePendingTicks()
-  // useMutationState keeps `pending` referentially stable while nothing changes
-  return useMemo(
-    () => applyTaskTicks(pending.filter((t): t is Task => t !== null), ticks),
-    [pending, ticks]
-  )
+  const edits = usePendingEdits()
+  // useMutationState keeps `pending` referentially stable while nothing changes.
+  // Queued edits apply here too, so a task added and then renamed (or moved
+  // off today) while offline shows its latest state, not what it was added as.
+  return useMemo(() => {
+    const today_ = today()
+    const added = pending.filter((t): t is Task => t !== null)
+    const edited = applyTaskEdits(added, edits).filter(t => t.recurring || t.scheduled_date === today_)
+    return applyTaskTicks(edited, ticks)
+  }, [pending, ticks, edits])
 }
