@@ -11,9 +11,14 @@ const GOOGLE_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID ?? ''
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? ''
 const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? ''
 
+// Web: Google redirects back to the page. Native: Google can't redirect a Web
+// client to `nudge://`, so it goes to the google-calendar-redirect edge
+// function, which bounces the browser on to APP_RETURN_URL. (The old
+// auth.expo.io proxy only worked in Expo Go, never in a dev or store build.)
 const REDIRECT_URI = Platform.OS === 'web'
   ? 'http://localhost:8081'
-  : 'https://auth.expo.io/@stonie24/nudge'
+  : `${SUPABASE_URL}/functions/v1/google-calendar-redirect`
+const APP_RETURN_URL = 'nudge://calendar-callback'
 
 const discovery = {
   authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
@@ -127,10 +132,26 @@ export function useGoogleCalendarAuth() {
     }
   }
 
+  // promptAsync waits for the browser to reach REDIRECT_URI, but on native the
+  // bounce function sends it on to APP_RETURN_URL instead, so open the auth
+  // session ourselves and watch for that URL.
+  async function connectNative() {
+    if (!request) return
+    const authUrl = await request.makeAuthUrlAsync(discovery)
+    const result = await WebBrowser.openAuthSessionAsync(authUrl, APP_RETURN_URL)
+    if (result.type !== 'success') return
+    const parsed = request.parseReturnUrl(result.url)
+    if (parsed.type === 'success' && parsed.params.code) {
+      await exchangeCode(parsed.params.code)
+    } else {
+      console.warn('Google Calendar connect failed:', parsed)
+    }
+  }
+
   return {
     isConnected: !!token,
     isLoading,
-    connect: () => promptAsync(),
+    connect: () => (Platform.OS === 'web' ? promptAsync() : connectNative()),
     disconnect: () => disconnect.mutate(),
     accessToken: token?.access_token,
   }

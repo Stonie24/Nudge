@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect, useRef } from 'react'
 import {
   View,
   TouchableOpacity,
@@ -15,8 +15,10 @@ import {
   useCompleteRecurring,
   useUncompleteRecurring,
   useScheduleForToday,
+  usePendingTodayTasks,
 } from '../../hooks/useToday'
 import { useCompleteTask, useUncompleteTask, useUpdateTask } from '../../hooks/useTasks'
+import { useStreak } from '../../hooks/useStreak'
 import { useLayout } from '../../hooks/useLayout'
 import { useTheme } from '../../lib/ThemeContext'
 import { TagPicker } from '../../components/TagPicker'
@@ -24,8 +26,14 @@ import { KanbanBoard } from '../../components/KanbanBoard'
 import { AddTaskSheet } from '../../components/Addtasksheet'
 import { TaskDetailSheet } from '../../components/TaskDetailSheet'
 import { SwipeableRow } from '../../components/SwipeableRow'
+import { QuickAddRow } from '../../components/QuickAddRow'
+import { ProgressRing } from '../../components/ProgressRing'
+import { DueBadge } from '../../components/DueBadge'
 import { useUndoDelete } from '../../lib/UndoDeleteContext'
-import { useEntranceAnimation, useCheckboxAnimation, usePressAnimation, triggerHaptic } from '../../hooks/useAnimation'
+import { UndoToast } from '../../components/UndoToast'
+import { SuggestionsCard } from '../../components/SuggestionsCard'
+import { useSuggestions } from '../../hooks/useSuggestions'
+import { useEntranceAnimation, useCheckboxAnimation, triggerHaptic } from '../../hooks/useAnimation'
 import type { Colors } from '../../lib/theme'
 import { space, radius } from '../../lib/theme'
 import { displayFont } from '../../lib/fonts'
@@ -57,6 +65,7 @@ function TaskItem({
   onComplete,
   onUncomplete,
   onDelete,
+  onMoveToBacklog,
   onUpdateTag,
   onOpenDetail,
   colors,
@@ -67,6 +76,7 @@ function TaskItem({
   onComplete: (id: string) => void
   onUncomplete: (id: string) => void
   onDelete: (task: Task) => void
+  onMoveToBacklog: (task: Task) => void
   onUpdateTag: (id: string, tag?: string) => void
   onOpenDetail: (task: Task) => void
   colors: Colors
@@ -91,7 +101,11 @@ function TaskItem({
 
   return (
     <Animated.View style={{ opacity, transform: [{ translateY }] }}>
-      <SwipeableRow onDelete={() => onDelete(task)}>
+      <SwipeableRow
+        onDelete={() => onDelete(task)}
+        // Recurring tasks live on the board every day, so they have no backlog.
+        onSwipeRight={task.recurring ? undefined : () => onMoveToBacklog(task)}
+      >
         <View style={styles.taskRow}>
           <TouchableOpacity
             style={styles.checkboxWrap}
@@ -122,6 +136,7 @@ function TaskItem({
                 <Text style={styles.recurringBadgeText}>daily</Text>
               </View>
             )}
+            <DueBadge task={task} done={isDone} />
           </TouchableOpacity>
           <TagPicker value={task.tag} onChange={tag => onUpdateTag(task.id, tag)} />
         </View>
@@ -132,21 +147,100 @@ function TaskItem({
 
 export default function TodayScreen() {
   const [sheetOpen, setSheetOpen] = useState(false)
+  const [sheetTitle, setSheetTitle] = useState('')
+  const [quickTitle, setQuickTitle] = useState('')
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
   const { isDesktop } = useLayout()
   const { colors } = useTheme()
   const styles = useMemo(() => createStyles(colors), [colors])
-  const addBtn = usePressAnimation()
 
-  const { data: tasks, isLoading } = useTodayTasks()
+  const { data: serverTasks, isLoading } = useTodayTasks()
+  const pendingAdds = usePendingTodayTasks()
+  const { requestDelete, hiddenTaskIds } = useUndoDelete()
+
+  // Swipe right → back to the backlog (clears the board day and due date).
+  // The row hides immediately; the write runs in the background, with an
+  // undo toast that puts the board day and due date back.
+  const [backlogHiddenIds, setBacklogHiddenIds] = useState<ReadonlySet<string>>(() => new Set())
+  const [backlogUndo, setBacklogUndo] = useState<Task | null>(null)
+  const backlogTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Smart suggestions: overdue / left-over / due-soon backlog tasks.
+  const boardIds = useMemo(() => new Set(serverTasks?.map(t => t.id) ?? []), [serverTasks])
+  const suggestionExcludes = useMemo(
+    () => new Set([...hiddenTaskIds, ...backlogHiddenIds]),
+    [hiddenTaskIds, backlogHiddenIds]
+  )
+  const {
+    suggestions,
+    justScheduled,
+    add: addSuggestion,
+    addAll: addAllSuggestions,
+    dismiss: dismissSuggestion,
+  } = useSuggestions(boardIds, suggestionExcludes)
+
+  // Show just-added tasks immediately, before the server confirms them
+  const tasks = useMemo(() => {
+    const unsaved = [...pendingAdds, ...justScheduled].filter(t => !hiddenTaskIds.has(t.id))
+    const all = unsaved.length === 0 ? serverTasks : (() => {
+      const serverIds = new Set(serverTasks?.map(t => t.id))
+      return [...(serverTasks ?? []), ...unsaved.filter(t => !serverIds.has(t.id))]
+    })()
+    return backlogHiddenIds.size ? all?.filter(t => !backlogHiddenIds.has(t.id)) : all
+  }, [serverTasks, pendingAdds, justScheduled, hiddenTaskIds, backlogHiddenIds])
   const { data: completions } = useTodayCompletions()
+  const { streak } = useStreak()
 
   const completeRecurring = useCompleteRecurring()
   const uncompleteRecurring = useUncompleteRecurring()
   const completeTask = useCompleteTask()
   const uncompleteTask = useUncompleteTask()
-  const { requestDelete } = useUndoDelete()
   const updateTask = useUpdateTask()
+
+  function setBacklogHidden(id: string, hidden: boolean) {
+    setBacklogHiddenIds(prev => {
+      const next = new Set(prev)
+      if (hidden) next.add(id); else next.delete(id)
+      return next
+    })
+  }
+
+  function moveToBacklog(task: Task) {
+    if (task.recurring) return
+    setBacklogHidden(task.id, true)
+    // tag is always written by updateTask, so pass the current one through.
+    updateTask.mutate(
+      { id: task.id, tag: task.tag, scheduled_date: null, due_date: null },
+      { onError: () => setBacklogHidden(task.id, false) }
+    )
+    if (backlogTimer.current) clearTimeout(backlogTimer.current)
+    setBacklogUndo(task)
+    backlogTimer.current = setTimeout(() => setBacklogUndo(null), 4000)
+  }
+
+  function undoMoveToBacklog() {
+    const task = backlogUndo
+    if (!task) return
+    if (backlogTimer.current) clearTimeout(backlogTimer.current)
+    setBacklogUndo(null)
+    updateTask.mutate({
+      id: task.id,
+      tag: task.tag,
+      scheduled_date: task.scheduled_date ?? null,
+      due_date: task.due_date ?? null,
+    })
+    setBacklogHidden(task.id, false)
+  }
+
+  // Once the server list no longer has a moved task, stop tracking it.
+  useEffect(() => {
+    if (!backlogHiddenIds.size || !serverTasks) return
+    const onServer = new Set(serverTasks.map(t => t.id))
+    const stale = [...backlogHiddenIds].filter(id => !onServer.has(id) && id !== backlogUndo?.id)
+    if (stale.length) setBacklogHiddenIds(prev => new Set([...prev].filter(id => !stale.includes(id))))
+  }, [serverTasks, backlogHiddenIds, backlogUndo])
+
+  useEffect(() => () => { if (backlogTimer.current) clearTimeout(backlogTimer.current) }, [])
 
   const completedTodayIds = new Set(completions?.map(c => c.task_id) ?? [])
   const todayTaskIds = tasks?.map(t => t.id) ?? []
@@ -192,20 +286,28 @@ export default function TodayScreen() {
         <Text style={styles.date}>{formatDate()}</Text>
       </View>
       <View style={styles.nudgeBanner}>
-        <Text style={styles.nudgeText}>{getNudgeMessage(total, completed)}</Text>
+        <ProgressRing completed={completed} total={total} />
+        <View style={styles.nudgeBody}>
+          <Text style={styles.nudgeText}>{getNudgeMessage(total, completed)}</Text>
+          {streak > 0 && (
+            <View style={styles.streakRow}>
+              <Icon name="streak" size={13} color={colors.accent} strokeWidth={2} />
+              <Text style={styles.streakText}>{streak}-day streak</Text>
+            </View>
+          )}
+        </View>
       </View>
-      <Animated.View style={{ transform: [{ scale: addBtn.scale }] }}>
-        <TouchableOpacity
-          style={styles.addBtn}
-          onPress={() => setSheetOpen(true)}
-          onPressIn={addBtn.onPressIn}
-          onPressOut={addBtn.onPressOut}
-          activeOpacity={1}
-        >
-          <Icon name="plus" size={16} color={colors.btnPrimaryText} strokeWidth={2.2} />
-          <Text style={styles.addBtnText}>Add task</Text>
-        </TouchableOpacity>
-      </Animated.View>
+      <QuickAddRow
+        title={quickTitle}
+        onChangeTitle={setQuickTitle}
+        onOpenSheet={() => { setSheetTitle(quickTitle.trim()); setSheetOpen(true) }}
+      />
+      <SuggestionsCard
+        suggestions={suggestions}
+        onAdd={addSuggestion}
+        onAddAll={addAllSuggestions}
+        onDismiss={dismissSuggestion}
+      />
     </View>
   )
 
@@ -233,6 +335,9 @@ export default function TodayScreen() {
           data={pending}
           keyExtractor={item => item.id}
           contentContainerStyle={styles.content}
+          // First tap on a task / the "more" button works while typing a quick-add
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
           ListHeaderComponent={
             <View>
               {header}
@@ -247,6 +352,7 @@ export default function TodayScreen() {
               onComplete={() => handleComplete(item)}
               onUncomplete={() => handleUncomplete(item)}
               onDelete={requestDelete}
+              onMoveToBacklog={moveToBacklog}
               onUpdateTag={(id, tag) => updateTask.mutate({ id, tag })}
               onOpenDetail={t => setSelectedTaskId(t.id)}
               colors={colors}
@@ -265,6 +371,7 @@ export default function TodayScreen() {
                     onComplete={() => handleComplete(task)}
                     onUncomplete={() => handleUncomplete(task)}
                     onDelete={requestDelete}
+                    onMoveToBacklog={moveToBacklog}
                     onUpdateTag={(id, tag) => updateTask.mutate({ id, tag })}
                     onOpenDetail={t => setSelectedTaskId(t.id)}
                     colors={colors}
@@ -275,7 +382,10 @@ export default function TodayScreen() {
             ) : null
           }
           ListEmptyComponent={
-            !isLoading ? (
+            // The list's data is only the pending tasks, so it's "empty" once
+            // everything is ticked off. Done tasks still render in the footer,
+            // so only show the empty message when there are no tasks at all.
+            !isLoading && done.length === 0 ? (
               <Text style={styles.emptyText}>Nothing here yet — add something above.</Text>
             ) : null
           }
@@ -286,6 +396,14 @@ export default function TodayScreen() {
         visible={sheetOpen}
         onClose={() => setSheetOpen(false)}
         todayTaskIds={todayTaskIds}
+        initialTitle={sheetTitle}
+        onAdded={() => setQuickTitle('')}
+      />
+
+      <UndoToast
+        visible={!!backlogUndo}
+        message={backlogUndo ? `Moved "${backlogUndo.title}" to backlog` : ''}
+        onUndo={undoMoveToBacklog}
       />
 
       <TaskDetailSheet
@@ -314,15 +432,12 @@ function createStyles(c: Colors) {
     nudgeBanner: {
       backgroundColor: c.accentBg, borderRadius: radius.md,
       padding: space.md, marginBottom: space.xl,
+      flexDirection: 'row', alignItems: 'center', gap: space.lg,
     },
+    nudgeBody: { flex: 1, gap: space.xs },
     nudgeText: { fontSize: 14, color: c.accentText, fontWeight: '400', lineHeight: 20 },
-    addBtn: {
-      flexDirection: 'row', gap: space.xs,
-      height: 52, backgroundColor: c.btnPrimary,
-      borderRadius: radius.pill, alignItems: 'center',
-      justifyContent: 'center', marginBottom: space.xxl,
-    },
-    addBtnText: { color: c.btnPrimaryText, fontSize: 15, fontWeight: '500' },
+    streakRow: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
+    streakText: { fontSize: 12, color: c.accent, fontWeight: '600' },
     sectionLabel: {
       fontSize: 11, fontWeight: '600', color: c.textMuted,
       letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: space.sm,

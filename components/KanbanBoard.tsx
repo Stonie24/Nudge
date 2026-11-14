@@ -9,6 +9,7 @@ import { AppText as Text } from './AppText'
 import { getTagColor } from '../lib/tagColor'
 import { useTheme } from '../lib/ThemeContext'
 import { TagPicker } from './TagPicker'
+import { DueBadge } from './DueBadge'
 import type { Colors } from '../lib/theme'
 import { space, radius, shadow } from '../lib/theme'
 import type { Task } from '../types'
@@ -51,9 +52,13 @@ function KanbanCard({
         </Text>
       </View>
       <View style={styles.cardBottom}>
-        <Text style={styles.cardDate}>
-          {new Date(task.created_at).toLocaleDateString('en-SE', { month: 'short', day: 'numeric' })}
-        </Text>
+        {task.due_date && !task.recurring ? (
+          <DueBadge task={task} done={task.completed} />
+        ) : (
+          <Text style={styles.cardDate}>
+            {new Date(task.created_at).toLocaleDateString('en-SE', { month: 'short', day: 'numeric' })}
+          </Text>
+        )}
         {onUpdateTag && (
           <TagPicker
             value={task.tag}

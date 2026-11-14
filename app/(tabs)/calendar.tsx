@@ -7,6 +7,7 @@ import {
   ScrollView,
   Platform,
 } from 'react-native'
+import { router } from 'expo-router'
 import { AppText as Text } from '../../components/AppText'
 import { Icon } from '../../components/Icon'
 import { useNudgeEvents, useGoogleEvents, useAppleEvents } from '../../hooks/useCalendar'
@@ -17,7 +18,7 @@ import { useTheme } from '../../lib/ThemeContext'
 import { CalendarView } from '../../components/CalendarView'
 import { DaySheet } from '../../components/DaySheet'
 import type { Colors } from '../../lib/theme'
-import { space, radius, shadow } from '../../lib/theme'
+import { space, radius } from '../../lib/theme'
 import { displayFont } from '../../lib/fonts'
 import type { CalendarEvent, Task } from '../../types'
 
@@ -60,7 +61,7 @@ export default function CalendarScreen() {
   const styles = useMemo(() => createStyles(colors), [colors])
 
   const { start, end } = getRangeForDate(currentDate, mode)
-  const { isConnected, connect, disconnect, accessToken } = useGoogleCalendarAuth()
+  const { isConnected, accessToken } = useGoogleCalendarAuth()
 
   const { data: nudgeEvents = [] } = useNudgeEvents(start, end)
   const { data: googleEvents = [] } = useGoogleEvents(start, end, accessToken)
@@ -172,54 +173,19 @@ export default function CalendarScreen() {
           )}
         </View>
 
-        {/* Integrations */}
-        <View style={styles.integrations}>
-          <Text style={styles.integrationsTitle}>Calendar integrations</Text>
-
-          {/* Google Calendar */}
-          <View style={styles.integrationRow}>
-            <View style={styles.integrationInfo}>
-              <View style={[styles.integrationIcon, { backgroundColor: '#E8F0FE' }]}>
-                <Text style={styles.integrationIconText}>G</Text>
-              </View>
-              <View>
-                <Text style={styles.integrationName}>Google Calendar</Text>
-                <Text style={styles.integrationStatus}>
-                  {isConnected ? 'Connected' : 'Not connected'}
-                </Text>
-              </View>
-            </View>
-            <TouchableOpacity
-              style={[styles.integrationBtn, isConnected && styles.integrationBtnDanger]}
-              onPress={isConnected ? disconnect : connect}
-              activeOpacity={0.7}
-            >
-              <Text style={[styles.integrationBtnText, isConnected && styles.integrationBtnTextDanger]}>
-                {isConnected ? 'Disconnect' : 'Connect'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Apple Calendar (iOS only) */}
-          {Platform.OS === 'ios' && (
-            <View style={styles.integrationRow}>
-              <View style={styles.integrationInfo}>
-                <View style={[styles.integrationIcon, { backgroundColor: '#FFF3E0' }]}>
-                  <Icon name="calendar" size={18} color="#FF9500" strokeWidth={2} />
-                </View>
-                <View>
-                  <Text style={styles.integrationName}>Apple Calendar</Text>
-                  <Text style={styles.integrationStatus}>
-                    Auto-synced on iOS
-                  </Text>
-                </View>
-              </View>
-              <View style={styles.integrationConnected}>
-                <Text style={styles.integrationConnectedText}>Active</Text>
-              </View>
-            </View>
-          )}
-        </View>
+        {/* Integrations now live in Settings — nudge there if Google isn't connected */}
+        {!isConnected && (
+          <TouchableOpacity
+            style={styles.connectHint}
+            onPress={() => router.push('/settings')}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.connectHintText}>
+              Connect Google Calendar in Settings to see your events here
+            </Text>
+            <Icon name="chevron" size={16} color={colors.textFaint} strokeWidth={1.8} />
+          </TouchableOpacity>
+        )}
 
       </ScrollView>
 
@@ -276,47 +242,17 @@ function createStyles(c: Colors) {
     legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
     legendDot: { width: 8, height: 8, borderRadius: 4 },
     legendText: { fontSize: 12, color: c.textMuted },
-    integrations: {
-      backgroundColor: c.surface,
-      borderRadius: radius.lg,
-      borderWidth: 1,
-      borderColor: c.border,
-      padding: space.lg,
-      gap: space.xs,
-      ...shadow.sm,
-    },
-    integrationsTitle: {
-      fontSize: 11, fontWeight: '600', color: c.textMuted,
-      letterSpacing: 0.8, textTransform: 'uppercase',
-      marginBottom: space.md,
-    },
-    integrationRow: {
+    connectHint: {
       flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingVertical: space.sm,
-      borderBottomWidth: 1,
-      borderBottomColor: c.borderLight,
+      gap: space.sm,
+      paddingVertical: space.md,
+      paddingHorizontal: space.lg,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: c.borderLight,
+      backgroundColor: c.surfaceMuted,
     },
-    integrationInfo: { flexDirection: 'row', alignItems: 'center', gap: space.md },
-    integrationIcon: {
-      width: 36, height: 36, borderRadius: radius.md,
-      alignItems: 'center', justifyContent: 'center',
-    },
-    integrationIconText: { fontSize: 16, fontWeight: '700', color: '#4285F4' },
-    integrationName: { fontSize: 14, fontWeight: '500', color: c.text },
-    integrationStatus: { fontSize: 12, color: c.textMuted, marginTop: 1 },
-    integrationBtn: {
-      paddingVertical: space.sm, paddingHorizontal: space.md,
-      borderRadius: radius.pill, borderWidth: 1, borderColor: c.border,
-    },
-    integrationBtnDanger: { borderColor: c.dangerBg },
-    integrationBtnText: { fontSize: 13, color: c.text, fontWeight: '500' },
-    integrationBtnTextDanger: { color: c.danger },
-    integrationConnected: {
-      paddingVertical: space.sm, paddingHorizontal: space.md,
-      borderRadius: radius.pill, backgroundColor: c.accentBg,
-    },
-    integrationConnectedText: { fontSize: 13, color: c.accentText, fontWeight: '500' },
+    connectHintText: { flex: 1, fontSize: 13, color: c.textMuted },
   })
 }

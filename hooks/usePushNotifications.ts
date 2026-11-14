@@ -54,7 +54,8 @@ async function scheduleDaily(time: NudgeTime) {
   })
 }
 
-async function cancelScheduled() {
+/** Cancels the daily nudge on this device (also used when deleting an account). */
+export async function cancelScheduled() {
   await Notifications.cancelScheduledNotificationAsync(NUDGE_IDENTIFIER).catch(() => {})
 }
 

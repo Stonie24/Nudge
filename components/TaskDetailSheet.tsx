@@ -8,7 +8,6 @@ import {
   ScrollView,
   StyleSheet,
   Switch,
-  ActivityIndicator,
 } from 'react-native'
 import { AppText as Text } from './AppText'
 import { Icon } from './Icon'
@@ -17,24 +16,17 @@ import { useCompleteTask, useUncompleteTask, useUpdateTask } from '../hooks/useT
 import { useCompleteRecurring, useUncompleteRecurring } from '../hooks/useToday'
 import { useTheme } from '../lib/ThemeContext'
 import { useUndoDelete } from '../lib/UndoDeleteContext'
+import { showAlert } from '../lib/alert'
 import type { Colors } from '../lib/theme'
 import { space, radius, shadow } from '../lib/theme'
 import type { Task } from '../types'
+import { toDateStr, addDays, parseDateStr, getDueInfo } from '../lib/dueDate'
 
-function toDateStr(date: Date): string {
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, '0')
-  const d = String(date.getDate()).padStart(2, '0')
-  return `${y}-${m}-${d}`
-}
+// How many upcoming days the due-date strip offers (no native date picker needed).
+const DUE_STRIP_DAYS = 21
 
-function dueDateLabel(scheduledDate: string | undefined): string {
-  if (!scheduledDate) return 'No due date'
-  const today = toDateStr(new Date())
-  const tomorrow = toDateStr(new Date(Date.now() + 86400000))
-  if (scheduledDate === today) return 'Today'
-  if (scheduledDate === tomorrow) return 'Tomorrow'
-  return new Date(scheduledDate + 'T00:00:00').toLocaleDateString('en-SE', { month: 'short', day: 'numeric' })
+function boardDateLabel(scheduledDate: string): string {
+  return parseDateStr(scheduledDate).toLocaleDateString('en-SE', { month: 'short', day: 'numeric' })
 }
 
 export function TaskDetailSheet({
@@ -53,7 +45,10 @@ export function TaskDetailSheet({
   const [title, setTitle] = useState('')
   const [tag, setTag] = useState<string | undefined>()
   const [recurring, setRecurring] = useState(false)
-  const [dueDate, setDueDate] = useState<string | undefined>()
+  // scheduled_date: the day the task sits on the Today board.
+  const [boardDate, setBoardDate] = useState<string | undefined>()
+  // due_date: the deadline, independent of when it's on the board.
+  const [dueDate, setDueDate] = useState<string | null>(null)
   const [notes, setNotes] = useState('')
 
   const completeTask = useCompleteTask()
@@ -68,7 +63,8 @@ export function TaskDetailSheet({
     setTitle(task.title)
     setTag(task.tag)
     setRecurring(task.recurring)
-    setDueDate(task.scheduled_date)
+    setBoardDate(task.scheduled_date)
+    setDueDate(task.due_date ?? null)
     setNotes(task.notes ?? '')
   }, [task])
 
@@ -76,13 +72,15 @@ export function TaskDetailSheet({
 
   const isDone = task.recurring ? !!completedToday : task.completed
   const today = toDateStr(new Date())
-  const tomorrow = toDateStr(new Date(Date.now() + 86400000))
+  const tomorrow = addDays(today, 1)
+  const dueInfo = getDueInfo(dueDate, { done: isDone, today })
 
   const dirty =
     title.trim() !== task.title ||
     tag !== task.tag ||
     recurring !== task.recurring ||
-    dueDate !== task.scheduled_date ||
+    boardDate !== task.scheduled_date ||
+    dueDate !== (task.due_date ?? null) ||
     notes !== (task.notes ?? '')
 
   function handleToggleDone() {
@@ -94,15 +92,21 @@ export function TaskDetailSheet({
     }
   }
 
-  async function handleSave() {
+  function handleSave() {
     if (!task || !title.trim()) return
-    await updateTask.mutateAsync({
+    // Don't wait for the server: the change shows everywhere at once (see
+    // usePendingEdits) and is queued while offline, so close right away.
+    const savedTitle = title.trim()
+    updateTask.mutate({
       id: task.id,
       title: title.trim(),
       tag,
       recurring,
-      scheduled_date: recurring ? null : (dueDate ?? null),
+      scheduled_date: recurring ? null : (boardDate ?? null),
+      due_date: recurring ? null : dueDate,
       notes,
+    }, {
+      onError: () => showAlert("Couldn't save changes", `Your changes to "${savedTitle}" weren't saved. Please try again.`),
     })
     onClose()
   }
@@ -170,34 +174,99 @@ export function TaskDetailSheet({
             <View style={styles.field}>
               <Text style={styles.fieldLabel}>Due date</Text>
               {recurring ? (
-                <Text style={styles.fieldHint}>Repeating tasks don't need a due date</Text>
+                <Text style={styles.fieldHint}>Repeating tasks don't have a due date</Text>
+              ) : (
+                <>
+                  <View style={styles.dueDateRow}>
+                    {[
+                      { label: 'Today', value: today },
+                      { label: 'Tomorrow', value: tomorrow },
+                      { label: 'In a week', value: addDays(today, 7) },
+                      { label: 'None', value: null },
+                    ].map(opt => {
+                      const active = dueDate === opt.value
+                      return (
+                        <TouchableOpacity
+                          key={opt.label}
+                          style={[styles.dueChip, active && styles.dueChipActive]}
+                          onPress={() => setDueDate(opt.value)}
+                          activeOpacity={0.7}
+                          accessibilityRole="button"
+                          accessibilityState={{ selected: active }}
+                          accessibilityLabel={`Due ${opt.label.toLowerCase()}`}
+                        >
+                          <Text style={[styles.dueChipText, active && styles.dueChipTextActive]}>{opt.label}</Text>
+                        </TouchableOpacity>
+                      )
+                    })}
+                  </View>
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.dayStrip}
+                    keyboardShouldPersistTaps="handled"
+                  >
+                    {Array.from({ length: DUE_STRIP_DAYS }, (_, i) => addDays(today, i)).map(day => {
+                      const d = parseDateStr(day)
+                      const active = dueDate === day
+                      return (
+                        <TouchableOpacity
+                          key={day}
+                          style={[styles.dayCell, active && styles.dayCellActive]}
+                          onPress={() => setDueDate(day)}
+                          activeOpacity={0.7}
+                          accessibilityRole="button"
+                          accessibilityState={{ selected: active }}
+                          accessibilityLabel={d.toLocaleDateString('en-SE', { weekday: 'long', month: 'long', day: 'numeric' })}
+                        >
+                          <Text style={[styles.dayCellWeekday, active && styles.dayCellTextActive]}>
+                            {d.toLocaleDateString('en-SE', { weekday: 'short' })}
+                          </Text>
+                          <Text style={[styles.dayCellNumber, active && styles.dayCellTextActive]}>{d.getDate()}</Text>
+                        </TouchableOpacity>
+                      )
+                    })}
+                  </ScrollView>
+                  {dueInfo && (
+                    <Text style={[styles.fieldHint, dueInfo.tone === 'overdue' && styles.fieldHintDanger]}>
+                      {dueInfo.label}
+                    </Text>
+                  )}
+                </>
+              )}
+            </View>
+
+            <View style={styles.field}>
+              <Text style={styles.fieldLabel}>On my board</Text>
+              {recurring ? (
+                <Text style={styles.fieldHint}>Repeating tasks are on the board every day</Text>
               ) : (
                 <View style={styles.dueDateRow}>
                   <TouchableOpacity
-                    style={[styles.dueChip, dueDate === today && styles.dueChipActive]}
-                    onPress={() => setDueDate(today)}
+                    style={[styles.dueChip, boardDate === today && styles.dueChipActive]}
+                    onPress={() => setBoardDate(today)}
                     activeOpacity={0.7}
                   >
-                    <Text style={[styles.dueChipText, dueDate === today && styles.dueChipTextActive]}>Today</Text>
+                    <Text style={[styles.dueChipText, boardDate === today && styles.dueChipTextActive]}>Today</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.dueChip, dueDate === tomorrow && styles.dueChipActive]}
-                    onPress={() => setDueDate(tomorrow)}
+                    style={[styles.dueChip, boardDate === tomorrow && styles.dueChipActive]}
+                    onPress={() => setBoardDate(tomorrow)}
                     activeOpacity={0.7}
                   >
-                    <Text style={[styles.dueChipText, dueDate === tomorrow && styles.dueChipTextActive]}>Tomorrow</Text>
+                    <Text style={[styles.dueChipText, boardDate === tomorrow && styles.dueChipTextActive]}>Tomorrow</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.dueChip, !dueDate && styles.dueChipActive]}
-                    onPress={() => setDueDate(undefined)}
+                    style={[styles.dueChip, !boardDate && styles.dueChipActive]}
+                    onPress={() => setBoardDate(undefined)}
                     activeOpacity={0.7}
                   >
-                    <Text style={[styles.dueChipText, !dueDate && styles.dueChipTextActive]}>None</Text>
+                    <Text style={[styles.dueChipText, !boardDate && styles.dueChipTextActive]}>Backlog</Text>
                   </TouchableOpacity>
                 </View>
               )}
-              {!recurring && dueDate && dueDate !== today && dueDate !== tomorrow && (
-                <Text style={styles.fieldHint}>Due {dueDateLabel(dueDate)}</Text>
+              {!recurring && boardDate && boardDate !== today && boardDate !== tomorrow && (
+                <Text style={styles.fieldHint}>On the board {boardDateLabel(boardDate)}</Text>
               )}
             </View>
 
@@ -217,13 +286,10 @@ export function TaskDetailSheet({
             <TouchableOpacity
               style={[styles.saveBtn, (!title.trim() || !dirty) && styles.saveBtnDisabled]}
               onPress={handleSave}
-              disabled={!title.trim() || !dirty || updateTask.isPending}
+              disabled={!title.trim() || !dirty}
               activeOpacity={0.85}
             >
-              {updateTask.isPending
-                ? <ActivityIndicator color={colors.btnPrimaryText} />
-                : <Text style={styles.saveBtnText}>Save changes</Text>
-              }
+              <Text style={styles.saveBtnText}>Save changes</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete} activeOpacity={0.7}>
@@ -320,8 +386,25 @@ function createStyles(c: Colors) {
     },
     dueDateRow: {
       flexDirection: 'row',
+      flexWrap: 'wrap',
       gap: space.sm,
     },
+    fieldHintDanger: { color: c.danger, fontWeight: '600' },
+    dayStrip: { gap: space.xs, paddingVertical: space.sm },
+    dayCell: {
+      width: 44,
+      paddingVertical: space.sm,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: c.border,
+      backgroundColor: c.surface,
+      alignItems: 'center',
+      gap: 2,
+    },
+    dayCellActive: { backgroundColor: c.btnPrimary, borderColor: c.btnPrimary },
+    dayCellWeekday: { fontSize: 10, color: c.textMuted, fontWeight: '500', textTransform: 'uppercase' },
+    dayCellNumber: { fontSize: 15, color: c.text, fontWeight: '600' },
+    dayCellTextActive: { color: c.btnPrimaryText },
     dueChip: {
       paddingVertical: space.sm,
       paddingHorizontal: space.md,

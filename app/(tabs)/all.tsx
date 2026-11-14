@@ -16,6 +16,8 @@ import { useTodayCompletions, useCompleteRecurring, useUncompleteRecurring } fro
 import { useLayout } from '../../hooks/useLayout'
 import { useTheme } from '../../lib/ThemeContext'
 import { TagBadge } from '../../components/TagPicker'
+import { DueBadge } from '../../components/DueBadge'
+import { compareDueDates } from '../../lib/dueDate'
 import { KanbanBoard } from '../../components/KanbanBoard'
 import { AddBacklogTaskSheet } from '../../components/AddBacklogTaskSheet'
 import { TaskDetailSheet } from '../../components/TaskDetailSheet'
@@ -29,7 +31,9 @@ import { displayFont } from '../../lib/fonts'
 import type { Task } from '../../types'
 
 type Filter = 'all' | 'pending' | 'completed'
-type Sort = 'newest' | 'oldest'
+type Sort = 'newest' | 'oldest' | 'due'
+
+const SORT_LABELS: Record<Sort, string> = { newest: 'Newest', oldest: 'Oldest', due: 'Due date' }
 
 function TaskItem({ task, isDone, onComplete, onUncomplete, onDelete, onOpenDetail, colors, index = 0 }: {
   task: Task
@@ -84,6 +88,7 @@ function TaskItem({ task, isDone, onComplete, onUncomplete, onDelete, onOpenDeta
               {task.title}
             </Text>
             {task.tag && <TagBadge tag={task.tag} />}
+            <DueBadge task={task} done={isDone} />
           </TouchableOpacity>
           <Text style={styles.taskDate}>
             {new Date(task.created_at).toLocaleDateString('en-SE', { month: 'short', day: 'numeric' })}
@@ -138,8 +143,14 @@ export default function AllTasksScreen() {
     if (filter === 'completed') result = result.filter(t => t.completed)
     if (selectedTag) result = result.filter(t => t.tag === selectedTag)
     result.sort((a, b) => {
-      const diff = new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      return sort === 'newest' ? diff : -diff
+      const newestFirst = new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      if (sort === 'due') {
+        // Earliest due first (overdue naturally on top), no due date last;
+        // done tasks after open ones so finished deadlines don't crowd the top.
+        if (a.completed !== b.completed) return a.completed ? 1 : -1
+        return compareDueDates(a.due_date, b.due_date) || newestFirst
+      }
+      return sort === 'newest' ? newestFirst : -newestFirst
     })
     return result
   }, [tasks, search, filter, sort, selectedTag])
@@ -258,7 +269,7 @@ export default function AllTasksScreen() {
       </View>
       <View style={styles.sortRow}>
         <Text style={styles.sortLabel}>Sort:</Text>
-        {(['newest', 'oldest'] as Sort[]).map(s => (
+        {(Object.keys(SORT_LABELS) as Sort[]).map(s => (
           <TouchableOpacity
             key={s}
             style={[styles.sortBtn, sort === s && styles.sortBtnActive]}
@@ -266,7 +277,7 @@ export default function AllTasksScreen() {
             activeOpacity={0.7}
           >
             <Text style={[styles.sortBtnText, sort === s && styles.sortBtnTextActive]}>
-              {s.charAt(0).toUpperCase() + s.slice(1)}
+              {SORT_LABELS[s]}
             </Text>
           </TouchableOpacity>
         ))}

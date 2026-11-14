@@ -8,6 +8,8 @@ export type Task = {
   completed_at?: string
   recurring: boolean
   scheduled_date?: string
+  /** Optional deadline ('YYYY-MM-DD'), separate from scheduled_date. Never set on recurring tasks. */
+  due_date?: string | null
   notes?: string
 }
 
