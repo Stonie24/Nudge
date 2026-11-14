@@ -9,6 +9,7 @@ import {
   StyleSheet,
   Switch,
 } from 'react-native'
+import { router } from 'expo-router'
 import { AppText as Text } from './AppText'
 import { Icon } from './Icon'
 import { TagPicker } from './TagPicker'
@@ -165,6 +166,19 @@ export function TaskDetailSheet({
                 {isDone ? 'Marked done' : 'Mark done'}
               </Text>
             </TouchableOpacity>
+
+            {/* Focus mode works through today's board, so offer it for unfinished tasks on it. */}
+            {!isDone && (task.recurring || task.scheduled_date === today) && (
+              <TouchableOpacity
+                style={styles.focusBtn}
+                onPress={() => { onClose(); router.push({ pathname: '/focus', params: { task: task.id } }) }}
+                activeOpacity={0.75}
+                accessibilityRole="button"
+              >
+                <Icon name="today" size={14} color={colors.textSecondary} strokeWidth={2} />
+                <Text style={styles.focusBtnText}>Focus on this task</Text>
+              </TouchableOpacity>
+            )}
 
             {/* Repeating tasks have no checklist for now: items would need a daily reset. */}
             {!recurring && (
@@ -381,6 +395,11 @@ function createStyles(c: Colors) {
       backgroundColor: c.accent,
       borderColor: c.accent,
     },
+    focusBtn: {
+      flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.xs,
+      alignSelf: 'center', paddingVertical: space.sm, paddingHorizontal: space.lg, marginTop: -space.sm, marginBottom: space.sm,
+    },
+    focusBtnText: { fontSize: 14, color: c.textSecondary, fontWeight: '500', textDecorationLine: 'underline' },
     doneBtnText: {
       fontSize: 14,
       fontWeight: '600',

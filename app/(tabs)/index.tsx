@@ -303,6 +303,18 @@ export default function TodayScreen() {
                 <Text style={styles.streakText}>{streak}-day streak</Text>
               </View>
             )}
+            {pending.length > 0 && (
+              <TouchableOpacity
+                style={styles.weekLink}
+                onPress={() => router.push('/focus')}
+                accessibilityRole="link"
+                accessibilityLabel="Start focus mode"
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Text style={styles.weekLinkText}>Focus</Text>
+                <Icon name="chevron" size={12} color={colors.accentText} strokeWidth={2.2} />
+              </TouchableOpacity>
+            )}
             <TouchableOpacity
               style={styles.weekLink}
               onPress={() => router.push('/week')}
