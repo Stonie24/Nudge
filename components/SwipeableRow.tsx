@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef } from 'react'
 import { Animated, PanResponder, Platform, StyleSheet, View } from 'react-native'
 import { Icon } from './Icon'
 import { AppText as Text } from './AppText'
@@ -43,7 +43,6 @@ export function SwipeableRow({
   onDeleteRef.current = onDelete
   const onSwipeRightRef = useRef(onSwipeRight)
   onSwipeRightRef.current = onSwipeRight
-  const [swiping, setSwiping] = useState(false)
   // On web the browser still fires a 'click' after a drag ends, which
   // react-native-web treats as a press on whatever is under the pointer
   // (e.g. opening the task). Swallow that one click after any drag.
@@ -58,19 +57,31 @@ export function SwipeableRow({
     if (Platform.OS !== 'web') return
     const node = containerRef.current as unknown as HTMLElement | null
     if (!node?.addEventListener) return
-    let downX = 0, downY = 0
-    const onPointerDown = (e: PointerEvent) => { downX = e.clientX; downY = e.clientY }
+    // Track the furthest the pointer got from where it went down, so a drag
+    // that returns to its start before release still isn't a tap.
+    let downX = 0, downY = 0, maxDist = 0, down = false
+    const onPointerDown = (e: PointerEvent) => { downX = e.clientX; downY = e.clientY; maxDist = 0; down = true }
+    const onPointerMove = (e: PointerEvent) => {
+      if (down) maxDist = Math.max(maxDist, Math.hypot(e.clientX - downX, e.clientY - downY))
+    }
+    const onPointerUp = () => { down = false }
     const onClick = (e: MouseEvent) => {
-      const moved = Math.hypot(e.clientX - downX, e.clientY - downY) > TAP_SLOP
+      const moved = maxDist > TAP_SLOP
+      maxDist = 0
       if (!suppressClick.current && !moved) return
       suppressClick.current = false
       e.stopPropagation()
       e.preventDefault()
     }
     node.addEventListener('pointerdown', onPointerDown, true)
+    // move/up on window: the pointer often leaves the row mid-drag
+    window.addEventListener('pointermove', onPointerMove, true)
+    window.addEventListener('pointerup', onPointerUp, true)
     node.addEventListener('click', onClick, true)
     return () => {
       node.removeEventListener('pointerdown', onPointerDown, true)
+      window.removeEventListener('pointermove', onPointerMove, true)
+      window.removeEventListener('pointerup', onPointerUp, true)
       node.removeEventListener('click', onClick, true)
     }
   }, [])
@@ -83,7 +94,6 @@ export function SwipeableRow({
     onPanResponderGrant: () => {
       armed.current = false
       suppressClick.current = true
-      setSwiping(true)
     },
     onPanResponderMove: (_, g) => {
       const canRight = !!onSwipeRightRef.current
@@ -105,14 +115,16 @@ export function SwipeableRow({
           toValue: (left ? -1 : 1) * (width.current || 500),
           duration: 180,
           useNativeDriver,
-        }).start(() => {
+        }).start(({ finished }) => {
           triggerHaptic('medium')
+          // The user released past the threshold, so the action stands even
+          // if a new touch interrupted the slide-out.
           if (left) onDeleteRef.current()
           else onSwipeRightRef.current?.()
           // The row normally unmounts once the task leaves the cache; reset
-          // in case it's reused (e.g. after undo restores the same task).
-          translateX.setValue(0)
-          setSwiping(false)
+          // in case it's reused (e.g. after undo restores the same task),
+          // unless a new drag already took over the position.
+          if (finished) translateX.setValue(0)
         })
       } else {
         reset()
@@ -130,7 +142,7 @@ export function SwipeableRow({
       tension: 160,
       friction: 18,
       useNativeDriver,
-    }).start(() => setSwiping(false))
+    }).start()
   }
 
   const iconOpacity = translateX.interpolate({
@@ -163,15 +175,32 @@ export function SwipeableRow({
         if (e.nativeEvent.actionName === 'swipeRight') onSwipeRight?.()
       }}
     >
-      {swiping && (
-        <Animated.View style={[styles.action, { opacity: deleteBgOpacity }]}>
-          <Animated.View style={{ opacity: iconOpacity }}>
-            <Icon name="trash" size={20} color={colors.danger} />
-          </Animated.View>
+      {/*
+        The action backgrounds are always mounted (invisible at rest, faded in
+        by the drag) rather than added when a swipe starts. Mounting them
+        mid-gesture broke after a cancelled swipe: an interrupted spring-back
+        hid them again during the next swipe, and on native, views mounted
+        after a native-driver animation could stay stuck at opacity 0.
+      */}
+      <Animated.View
+        testID="swipe-delete-action"
+        style={[styles.action, { opacity: deleteBgOpacity }]}
+        pointerEvents="none"
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+      >
+        <Animated.View style={{ opacity: iconOpacity }}>
+          <Icon name="trash" size={20} color={colors.danger} />
         </Animated.View>
-      )}
-      {swiping && onSwipeRight && (
-        <Animated.View style={[styles.rightAction, { opacity: rightBgOpacity }]}>
+      </Animated.View>
+      {onSwipeRight && (
+        <Animated.View
+          testID="swipe-right-action"
+          style={[styles.rightAction, { opacity: rightBgOpacity }]}
+          pointerEvents="none"
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+        >
           <Animated.View style={[styles.rightActionContent, { opacity: rightIconOpacity }]}>
             <Icon name="list" size={18} color={colors.accentText} strokeWidth={2} />
             <Text style={styles.rightActionText}>Backlog</Text>
