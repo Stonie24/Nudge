@@ -3,7 +3,7 @@ import { useQuery, useMutation, useMutationState, useQueryClient } from '@tansta
 import { supabase } from '../lib/supabase'
 import { resumableMutation, taskWriteScope } from '../lib/resumableMutation'
 import { usePendingTicks, applyTaskTicks, applyCompletionTicks } from './usePendingTicks'
-import { usePendingEdits, applyTodayEdits } from './usePendingEdits'
+import { usePendingEdits, applyTodayEdits, applyTaskEdits } from './usePendingEdits'
 import type { Task, DailyCompletion } from '../types'
 
 function today(): string {
@@ -183,9 +183,14 @@ export function usePendingTodayTasks(): Task[] {
     },
   })
   const ticks = usePendingTicks()
-  // useMutationState keeps `pending` referentially stable while nothing changes
-  return useMemo(
-    () => applyTaskTicks(pending.filter((t): t is Task => t !== null), ticks),
-    [pending, ticks]
-  )
+  const edits = usePendingEdits()
+  // useMutationState keeps `pending` referentially stable while nothing changes.
+  // Queued edits apply here too, so a task added and then renamed (or moved
+  // off today) while offline shows its latest state, not what it was added as.
+  return useMemo(() => {
+    const today_ = today()
+    const added = pending.filter((t): t is Task => t !== null)
+    const edited = applyTaskEdits(added, edits).filter(t => t.recurring || t.scheduled_date === today_)
+    return applyTaskTicks(edited, ticks)
+  }, [pending, ticks, edits])
 }

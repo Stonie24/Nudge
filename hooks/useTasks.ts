@@ -4,6 +4,7 @@ import { resumableMutation, taskWriteScope } from '../lib/resumableMutation'
 import { useMemo } from 'react'
 import { usePendingTicks, applyTaskTicks } from './usePendingTicks'
 import { usePendingEdits, applyTaskEdits } from './usePendingEdits'
+import { toDateStr } from '../lib/dueDate'
 import type { Task } from '../types'
 
 export function useTasks() {
@@ -58,20 +59,29 @@ export function useAddTask() {
   })
 }
 
-/** Backlog tasks still being added (or queued offline), shown before the server has them. */
+// Keys of mutations that create a task with a client-generated id.
+const ADD_KEYS = new Set(['addTask', 'addTodayTask'])
+
+/**
+ * Tasks still being added (or queued offline), from the backlog sheet or from
+ * quick-add / the Add Task sheet, shown in All tasks before the server has them.
+ */
 function usePendingBacklogAdds(): Task[] {
   const pending = useMutationState({
-    filters: { mutationKey: addTask.mutationKey, status: 'pending' },
+    filters: { status: 'pending', predicate: m => ADD_KEYS.has(String(m.options.mutationKey?.[0])) },
     select: (m): Task | null => {
-      const v = m.state.variables as AddTaskVars | undefined
+      const v = m.state.variables as (AddTaskVars & { recurring?: boolean }) | undefined
       if (!v?.id) return null
+      const toToday = m.options.mutationKey?.[0] === 'addTodayTask'
+      const recurring = toToday && !!v.recurring
       return {
         id: v.id,
         user_id: '',
         title: v.title,
         tag: v.tag,
         completed: false,
-        recurring: false,
+        recurring,
+        scheduled_date: toToday && !recurring ? toDateStr(new Date(m.state.submittedAt || Date.now())) : undefined,
         created_at: new Date(m.state.submittedAt || Date.now()).toISOString(),
       }
     },
