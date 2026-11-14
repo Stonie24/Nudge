@@ -1,10 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
-import { resumableMutation } from '../lib/resumableMutation'
+import { resumableMutation, taskWriteScope } from '../lib/resumableMutation'
+import { useMemo } from 'react'
+import { usePendingTicks, applyTaskTicks } from './usePendingTicks'
 import type { Task } from '../types'
 
 export function useTasks() {
-  return useQuery<Task[]>({
+  const query = useQuery<Task[]>({
     queryKey: ['tasks'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -15,6 +17,10 @@ export function useTasks() {
       return data
     },
   })
+  // Ticks show instantly, before the server confirms them
+  const ticks = usePendingTicks()
+  const data = useMemo(() => applyTaskTicks(query.data, ticks), [query.data, ticks])
+  return { ...query, data }
 }
 
 const addTask = resumableMutation('addTask', async ({ title, tag }: { title: string; tag?: string }) => {
@@ -27,7 +33,7 @@ const addTask = resumableMutation('addTask', async ({ title, tag }: { title: str
     .single()
   if (error) throw error
   return data
-})
+}, taskWriteScope)
 
 export function useAddTask() {
   const queryClient = useQueryClient()
@@ -43,7 +49,7 @@ const completeTask = resumableMutation('completeTask', async (id: string) => {
     .update({ completed: true, completed_at: new Date().toISOString() })
     .eq('id', id)
   if (error) throw error
-})
+}, taskWriteScope)
 
 export function useCompleteTask() {
   const queryClient = useQueryClient()
@@ -59,7 +65,7 @@ const uncompleteTask = resumableMutation('uncompleteTask', async (id: string) =>
     .update({ completed: false, completed_at: null })
     .eq('id', id)
   if (error) throw error
-})
+}, taskWriteScope)
 
 export function useUncompleteTask() {
   const queryClient = useQueryClient()
@@ -75,7 +81,7 @@ const deleteTask = resumableMutation('deleteTask', async (id: string) => {
     .delete()
     .eq('id', id)
   if (error) throw error
-})
+}, taskWriteScope)
 
 export function useDeleteTask() {
   const queryClient = useQueryClient()
@@ -107,7 +113,7 @@ const updateTask = resumableMutation('updateTask', async ({ id, tag, title, recu
     .update(updates)
     .eq('id', id)
   if (error) throw error
-})
+}, taskWriteScope)
 
 export function useUpdateTask() {
   const queryClient = useQueryClient()

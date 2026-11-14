@@ -1,0 +1,42 @@
+name: EAS Build
+
+# Manual "Build" button: GitHub → Actions → EAS Build → Run workflow.
+# Starts a development build on EAS for the chosen branch and platform; the
+# install link appears on expo.dev (open it on the phone once it finishes).
+# Only needed when native code changes — everything else ships as an EAS Update.
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: Platform to build
+        type: choice
+        options: [android, ios, all]
+        default: android
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - run: npm ci
+
+      # --no-wait: the build runs on EAS servers, so don't burn Actions minutes waiting
+      - name: Start build
+        run: |
+          eas build \
+            --profile development \
+            --platform "${{ inputs.platform }}" \
+            --non-interactive \
+            --no-wait
