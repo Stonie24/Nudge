@@ -7,6 +7,7 @@ import {
   SafeAreaView,
   Animated,
 } from 'react-native'
+import { router } from 'expo-router'
 import { AppText as Text } from '../../components/AppText'
 import { Icon } from '../../components/Icon'
 import {
@@ -295,12 +296,24 @@ export default function TodayScreen() {
         <ProgressRing completed={completed} total={total} />
         <View style={styles.nudgeBody}>
           <Text style={styles.nudgeText}>{getNudgeMessage(total, completed)}</Text>
-          {streak > 0 && (
-            <View style={styles.streakRow}>
-              <Icon name="streak" size={13} color={colors.accent} strokeWidth={2} />
-              <Text style={styles.streakText}>{streak}-day streak</Text>
-            </View>
-          )}
+          <View style={styles.bannerFooter}>
+            {streak > 0 && (
+              <View style={styles.streakRow}>
+                <Icon name="streak" size={13} color={colors.accent} strokeWidth={2} />
+                <Text style={styles.streakText}>{streak}-day streak</Text>
+              </View>
+            )}
+            <TouchableOpacity
+              style={styles.weekLink}
+              onPress={() => router.push('/week')}
+              accessibilityRole="link"
+              accessibilityLabel="See this week's overview"
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Text style={styles.weekLinkText}>This week</Text>
+              <Icon name="chevron" size={12} color={colors.accentText} strokeWidth={2.2} />
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
       <QuickAddRow
@@ -443,6 +456,9 @@ function createStyles(c: Colors) {
     nudgeBody: { flex: 1, gap: space.xs },
     nudgeText: { fontSize: 14, color: c.accentText, fontWeight: '400', lineHeight: 20 },
     streakRow: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
+    bannerFooter: { flexDirection: 'row', alignItems: 'center', gap: space.md, flexWrap: 'wrap' },
+    weekLink: { flexDirection: 'row', alignItems: 'center', gap: 2 },
+    weekLinkText: { fontSize: 12, color: c.accentText, fontWeight: '600', textDecorationLine: 'underline' },
     streakText: { fontSize: 12, color: c.accent, fontWeight: '600' },
     sectionLabel: {
       fontSize: 11, fontWeight: '600', color: c.textMuted,

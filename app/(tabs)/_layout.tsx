@@ -52,6 +52,8 @@ export default function TabsLayout() {
           tabBarIcon: ({ color }) => <TabIcon name="list" color={color} />,
         }}
       />
+      {/* Weekly overview: opened from Today's progress card, not shown in the tab bar */}
+      <Tabs.Screen name="week" options={{ href: null, title: 'This week' }} />
       <Tabs.Screen
         name="settings"
         options={{
