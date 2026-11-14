@@ -305,13 +305,20 @@ export function TaskDetailSheet({
               />
             </View>
 
+            {/*
+              Checklist changes are already saved as they happen, so with
+              nothing else to save this button is "Done" and just closes the
+              sheet, rather than sitting disabled as if the checklist hadn't
+              been saved. Only an empty title blocks it.
+            */}
             <TouchableOpacity
-              style={[styles.saveBtn, (!title.trim() || !dirty) && styles.saveBtnDisabled]}
-              onPress={handleSave}
-              disabled={!title.trim() || !dirty}
+              style={[styles.saveBtn, !title.trim() && styles.saveBtnDisabled]}
+              onPress={dirty ? handleSave : onClose}
+              disabled={!title.trim()}
               activeOpacity={0.85}
+              accessibilityRole="button"
             >
-              <Text style={styles.saveBtnText}>Save changes</Text>
+              <Text style={styles.saveBtnText}>{dirty ? 'Save changes' : 'Done'}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete} activeOpacity={0.7}>
