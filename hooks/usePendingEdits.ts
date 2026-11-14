@@ -3,12 +3,12 @@ import { useMutationState } from '@tanstack/react-query'
 import { toDateStr } from '../lib/dueDate'
 import type { Task } from '../types'
 
-// Edits (rename, tag, dates, notes, "put on today") that are in flight or
+// Edits (rename, tag, dates, notes, checklist, "put on today") that are in flight or
 // queued offline, including writes restored after a restart. Read straight
 // from the mutation cache, like usePendingTicks, so the UI shows them at once
 // and a background refetch can't revert them before the write lands.
 
-type Edit = Partial<Pick<Task, 'title' | 'tag' | 'recurring' | 'scheduled_date' | 'due_date' | 'notes'>>
+type Edit = Partial<Pick<Task, 'title' | 'tag' | 'recurring' | 'scheduled_date' | 'due_date' | 'notes' | 'checklist'>>
 export type PendingEdits = ReadonlyMap<string, Edit>
 
 type UpdateVars = {
@@ -19,6 +19,7 @@ type UpdateVars = {
   scheduled_date?: string | null
   due_date?: string | null
   notes?: string
+  checklist?: Task['checklist']
 }
 
 const EDIT_KEYS = new Set(['updateTask', 'scheduleForToday'])
@@ -48,6 +49,7 @@ export function usePendingEdits(): PendingEdits {
       if (v.scheduled_date !== undefined) edit.scheduled_date = v.scheduled_date ?? undefined
       if (v.due_date !== undefined) edit.due_date = v.due_date
       if (v.notes !== undefined) edit.notes = v.notes || undefined
+      if (v.checklist !== undefined) edit.checklist = v.checklist
       edits.set(v.id, { ...edits.get(v.id), ...edit })
     }
     return edits

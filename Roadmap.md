@@ -46,7 +46,7 @@ Token-level reskin (color, type, spacing, icons, elevation) plus a few new piece
 ## v0.23 — Power features ← we are here
 - [x] Optional due dates on tasks (overdue indicator, sort by due date)
 - [x] Swipe right on a Today task to move it back to the backlog (clears its due date, with undo)
-- [ ] Subtasks / checklists inside a task (flat checklist, progress shown on task card)
+- [x] Subtasks / checklists inside a task (flat checklist, progress shown on task card)
 - [x] Smart daily suggestions (surface overdue + due-soon backlog items automatically)
 - [ ] Weekly overview screen (tasks completed, active tags, streak summary)
 - [ ] Focus mode (one task at a time, full screen, optional timer)
