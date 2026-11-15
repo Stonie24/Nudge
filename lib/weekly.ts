@@ -156,3 +156,36 @@ export function formatWeekRange(start: string, end: string): string {
     ? `${s.getDate()}–${e.getDate()} ${month(e)}`
     : `${s.getDate()} ${month(s)} – ${e.getDate()} ${month(e)}`
 }
+
+/**
+ * One plain sentence about the week, e.g. "Your best day was Friday (3 done),
+ * and Health was the tag you did most." Null for an empty week.
+ */
+export function getWeekInsight(stats: WeekStats, { isCurrentWeek }: { isCurrentWeek: boolean }): string | null {
+  if (stats.total === 0 || !stats.bestDay) return null
+  const dayName = (date: string) => new Date(date + 'T00:00:00').toLocaleDateString('en-SE', { weekday: 'long' })
+
+  if (isCurrentWeek && stats.elapsedDays === 1) {
+    return `A good start: ${stats.total} done on ${dayName(stats.bestDay.date)}.`
+  }
+
+  const best = stats.bestDay
+  const first = isCurrentWeek
+    ? `So far, ${dayName(best.date)} is your best day (${best.total} done)`
+    : `Your best day was ${dayName(best.date)} (${best.total} done)`
+
+  // Second half, in order of preference: every habit every day > top tag > most consistent habit.
+  let second: string | null = null
+  if (stats.habits.length > 0 && stats.elapsedDays >= 2 && stats.perfectHabitDays === stats.elapsedDays) {
+    second = isCurrentWeek ? 'and you’ve done every habit every day' : 'and you did every habit every day'
+  } else {
+    const topTag = stats.tags.find(t => t.tag !== 'No tag')
+    if (topTag && topTag.count >= 2) {
+      second = `and ${topTag.tag} was the tag you did most`
+    } else {
+      const steady = [...stats.habits].sort((a, b) => b.doneCount - a.doneCount)[0]
+      if (steady && steady.doneCount >= 2) second = `and ${steady.task.title} was your most consistent habit`
+    }
+  }
+  return second ? `${first}, ${second}.` : `${first}.`
+}
