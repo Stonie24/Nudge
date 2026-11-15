@@ -3,7 +3,7 @@
     "experiments": {
       "lazyBundling": true
     },
-    "name": "nudge",
+    "name": "Nudge",
     "slug": "nudge",
     "version": "1.0.0",
     "runtimeVersion": {
@@ -15,14 +15,18 @@
     "scheme": "nudge",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.stonie24.nudge",
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -51,6 +55,12 @@
         "expo-image-picker",
         {
           "photosPermission": "Nudge uses your photo library to let you set a profile picture."
+        }
+      ],
+      [
+        "expo-calendar",
+        {
+          "calendarPermission": "Nudge shows the events in your calendar next to your tasks. Your calendar stays on your device."
         }
       ]
     ],
