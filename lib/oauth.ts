@@ -4,6 +4,7 @@ import * as QueryParams from 'expo-auth-session/build/QueryParams'
 import { Platform } from 'react-native'
 import { supabase } from './supabase'
 import type { Session } from '@supabase/supabase-js'
+import { canUseNativeAppleSignIn, signInWithAppleNative } from './appleAuth'
 
 WebBrowser.maybeCompleteAuthSession()
 
@@ -15,7 +16,7 @@ WebBrowser.maybeCompleteAuthSession()
 // allowlist.
 const redirectTo = AuthSession.makeRedirectUri({ path: 'callback' })
 
-export type OAuthProvider = 'google'
+export type OAuthProvider = 'google' | 'apple'
 
 // The same redirect URL can reach createSessionFromUrl from more than one
 // place at once — the direct call below, the Linking listener in
@@ -76,6 +77,12 @@ export async function createSessionFromUrl(url: string): Promise<Session | null>
  * the tokens in the URL into a session.
  */
 export async function signInWithOAuth(provider: OAuthProvider) {
+  // On iPhone, Apple sign-in uses Apple's native sheet (required by App Store
+  // guideline 4.8 and nicer: Face ID, Hide My Email) instead of a web page.
+  if (provider === 'apple' && canUseNativeAppleSignIn()) {
+    return signInWithAppleNative()
+  }
+
   if (Platform.OS === 'web') {
     const { error } = await supabase.auth.signInWithOAuth({
       provider,

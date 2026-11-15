@@ -54,6 +54,8 @@ jobs:
           EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
           EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
           EXPO_PUBLIC_GOOGLE_CLIENT_ID: ${{ secrets.EXPO_PUBLIC_GOOGLE_CLIENT_ID }}
+          # A plain variable (not a secret): set to "true" once Sign in with Apple is set up
+          EXPO_PUBLIC_APPLE_SIGN_IN: ${{ vars.EXPO_PUBLIC_APPLE_SIGN_IN }}
           BRANCH: ${{ github.ref_name }}
         run: |
           eas update \

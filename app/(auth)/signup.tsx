@@ -16,6 +16,7 @@ import {
 } from 'react-native'
 import { AppText as Text } from '../../components/AppText'
 import { GoogleSignInButton } from '../../components/GoogleSignInButton'
+import { AppleSignInButton } from '../../components/AppleSignInButton'
 import { InlineFormError } from '../../components/InlineFormError'
 import { useTheme } from '../../lib/ThemeContext'
 import type { Colors } from '../../lib/theme'
@@ -29,7 +30,7 @@ export default function SignupScreen() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { loading: oauthLoading, signIn } = useOAuthSignIn(setError)
-  const anyLoading = loading || oauthLoading
+  const anyLoading = loading || !!oauthLoading
   const router = useRouter()
 
   const { colors } = useTheme()
@@ -154,9 +155,14 @@ export default function SignupScreen() {
           </Text>
 
           <GoogleSignInButton
-            loading={oauthLoading}
-            disabled={anyLoading && !oauthLoading}
+            loading={oauthLoading === 'google'}
+            disabled={anyLoading && oauthLoading !== 'google'}
             onPress={() => signIn('google')}
+          />
+          <AppleSignInButton
+            loading={oauthLoading === 'apple'}
+            disabled={anyLoading && oauthLoading !== 'apple'}
+            onPress={() => signIn('apple')}
           />
         </View>
 

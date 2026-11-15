@@ -26,7 +26,8 @@
       "bundleIdentifier": "com.stonie24.nudge",
       "config": {
         "usesNonExemptEncryption": false
-      }
+      },
+      "usesAppleSignIn": true
     },
     "android": {
       "adaptiveIcon": {
@@ -62,7 +63,8 @@
         {
           "calendarPermission": "Nudge shows the events in your calendar next to your tasks. Your calendar stays on your device."
         }
-      ]
+      ],
+      "expo-apple-authentication"
     ],
     "extra": {
       "router": {},

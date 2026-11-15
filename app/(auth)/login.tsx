@@ -8,6 +8,7 @@ import {
 } from 'react-native'
 import { AppText as Text } from '../../components/AppText'
 import { GoogleSignInButton } from '../../components/GoogleSignInButton'
+import { AppleSignInButton } from '../../components/AppleSignInButton'
 import { InlineFormError } from '../../components/InlineFormError'
 import { Link, useLocalSearchParams } from 'expo-router'
 import { supabase } from '../../lib/supabase'
@@ -32,10 +33,10 @@ export default function LoginScreen() {
   // Set by app/(auth)/callback.tsx when a web OAuth redirect comes back with an error.
   const { oauthError } = useLocalSearchParams<{ oauthError?: string }>()
   const [error, setError] = useState<string | null>(
-    oauthError ? "We couldn't finish signing you in with Google. Please try again." : null,
+    oauthError ? "We couldn't finish signing you in. Please try again." : null,
   )
   const { loading: oauthLoading, signIn } = useOAuthSignIn(setError)
-  const anyLoading = loading || devLoading || oauthLoading
+  const anyLoading = loading || devLoading || !!oauthLoading
 
   const { colors } = useTheme()
   const styles = useMemo(() => createStyles(colors), [colors])
@@ -132,9 +133,14 @@ export default function LoginScreen() {
           </TouchableOpacity>
 
           <GoogleSignInButton
-            loading={oauthLoading}
-            disabled={anyLoading && !oauthLoading}
+            loading={oauthLoading === 'google'}
+            disabled={anyLoading && oauthLoading !== 'google'}
             onPress={() => signIn('google')}
+          />
+          <AppleSignInButton
+            loading={oauthLoading === 'apple'}
+            disabled={anyLoading && oauthLoading !== 'apple'}
+            onPress={() => signIn('apple')}
           />
         </View>
 
