@@ -15,8 +15,11 @@ export function SuggestionsCard({
   onAdd,
   onAddAll,
   onDismiss,
+  room,
 }: {
   suggestions: Suggestion[]
+  /** Slots left today by your usual pace (null when not known yet). */
+  room?: number | null
   onAdd: (task: Task) => void
   onAddAll: () => void
   onDismiss: (task: Task) => void
@@ -28,7 +31,14 @@ export function SuggestionsCard({
   return (
     <View style={styles.card} accessibilityLabel="Suggested for today">
       <View style={styles.header}>
-        <Text style={styles.title}>Suggested for today</Text>
+        <View style={styles.titleWrap}>
+          <Text style={styles.title}>Suggested for today</Text>
+          {room !== null && room !== undefined && (
+            <Text style={styles.room}>
+              {room === 0 ? 'Your day looks full, so only overdue tasks' : `Room for ${room} more, based on your usual pace`}
+            </Text>
+          )}
+        </View>
         {suggestions.length > 1 && (
           <TouchableOpacity onPress={onAddAll} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} accessibilityRole="button">
             <Text style={styles.addAll}>Add all</Text>
@@ -41,7 +51,10 @@ export function SuggestionsCard({
           <View style={styles.rowText}>
             <Text style={styles.rowTitle} numberOfLines={2}>{task.title}</Text>
             <View style={styles.metaRow}>
-              <Text style={[styles.reason, reason === 'overdue' && styles.reasonOverdue]}>{label}</Text>
+              <View style={styles.reasonWrap}>
+                {reason === 'rhythm' && <Icon name="repeat" size={11} color={colors.accent} strokeWidth={2} />}
+                <Text style={[styles.reason, reason === 'overdue' && styles.reasonOverdue, reason === 'rhythm' && styles.reasonRhythm]}>{label}</Text>
+              </View>
               {task.tag && <TagBadge tag={task.tag} />}
             </View>
           </View>
@@ -85,6 +98,8 @@ function createStyles(c: Colors) {
       flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
       marginBottom: space.xs,
     },
+    titleWrap: { flex: 1, minWidth: 0, gap: 2 },
+    room: { fontSize: 12, color: c.textMuted },
     title: {
       fontSize: 11, fontWeight: '600', color: c.textMuted,
       letterSpacing: 0.8, textTransform: 'uppercase',
@@ -95,8 +110,11 @@ function createStyles(c: Colors) {
     rowText: { flex: 1, gap: 2 },
     rowTitle: { fontSize: 15, color: c.text, lineHeight: 21 },
     metaRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm, flexWrap: 'wrap' },
-    reason: { fontSize: 12, color: c.textSecondary, fontWeight: '500' },
+    reason: { fontSize: 12, color: c.textSecondary, fontWeight: '500', flexShrink: 1 },
     reasonOverdue: { color: c.danger, fontWeight: '600' },
+    reasonRhythm: { color: c.accentText },
+    // Icon and reason stay on one line; the text wraps beside the icon.
+    reasonWrap: { flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 1 },
     addBtn: {
       flexDirection: 'row', alignItems: 'center', gap: 4,
       backgroundColor: c.btnPrimary, borderRadius: radius.pill,

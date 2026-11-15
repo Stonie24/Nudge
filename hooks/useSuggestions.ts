@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useTasks } from './useTasks'
 import { useScheduleForToday } from './useToday'
 import { getSuggestions } from '../lib/suggestions'
+import { getPace, getRhythms, plannedToday } from '../lib/insights'
 import { toDateStr } from '../lib/dueDate'
 import type { Task } from '../types'
 
@@ -41,10 +42,20 @@ export function useSuggestions(boardIds: ReadonlySet<string>, excludeIds: Readon
     if (confirmed.length) setAdded(prev => new Set([...prev].filter(id => !confirmed.includes(id))))
   }, [boardIds, added])
 
+  // Learned from your own history (on the device): how many one-off tasks
+  // you usually finish on this weekday, and tags you tend to do on it.
+  const pace = useMemo(() => getPace(tasks, today), [tasks, today])
+  const rhythms = useMemo(() => getRhythms(tasks, today), [tasks, today])
+  const planned = useMemo(
+    () => plannedToday((tasks ?? []).filter(t => !t.recurring && (t.scheduled_date === today || added.has(t.id)))),
+    [tasks, today, added]
+  )
+  const room = pace ? Math.max(0, pace.typical - planned) : null
+
   const suggestions = useMemo(() => {
     const exclude = new Set([...excludeIds, ...dismissed, ...added, ...boardIds])
-    return getSuggestions(tasks, { today, excludeIds: exclude })
-  }, [tasks, today, excludeIds, dismissed, added, boardIds])
+    return getSuggestions(tasks, { today, excludeIds: exclude, rhythms, room })
+  }, [tasks, today, excludeIds, dismissed, added, boardIds, rhythms, room])
 
   const justScheduled = useMemo<Task[]>(
     () => (tasks ?? [])
@@ -72,5 +83,5 @@ export function useSuggestions(boardIds: ReadonlySet<string>, excludeIds: Readon
     })
   }, [today])
 
-  return { suggestions, justScheduled, add, addAll, dismiss }
+  return { suggestions, justScheduled, add, addAll, dismiss, pace, planned, room }
 }
