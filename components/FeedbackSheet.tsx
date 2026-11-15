@@ -13,6 +13,7 @@ import { AppText as Text } from './AppText'
 import { supabase } from '../lib/supabase'
 import { useTheme } from '../lib/ThemeContext'
 import { showAlert } from '../lib/alert'
+import { describeFunctionError } from '../lib/functionErrors'
 import type { Colors } from '../lib/theme'
 import { space, radius, shadow } from '../lib/theme'
 
@@ -51,7 +52,12 @@ export function FeedbackSheet({
         body: { title: title.trim() || undefined, body: body.trim() },
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       })
-      if (error || !data?.url) throw new Error(error?.message ?? 'Unknown error')
+      if (error) {
+        setLoading(false)
+        showAlert('Failed to send', await describeFunctionError(error, 'send feedback'))
+        return
+      }
+      if (!data?.url) throw new Error('No issue link in the response')
       reset()
       onClose()
       showAlert(
