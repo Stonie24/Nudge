@@ -19,7 +19,10 @@ import {
   usePendingTodayTasks,
 } from '../../hooks/useToday'
 import { useCompleteTask, useUncompleteTask, useUpdateTask } from '../../hooks/useTasks'
-import { useStreak } from '../../hooks/useStreak'
+import { useStreak, useRecentCompletions } from '../../hooks/useStreak'
+import { HabitRiskBadge } from '../../components/HabitRiskBadge'
+import { getSlippingHabits, getStreakSaver } from '../../lib/habits'
+import { toDateStr } from '../../lib/dueDate'
 import { useLayout } from '../../hooks/useLayout'
 import { useTheme } from '../../lib/ThemeContext'
 import { TagPicker } from '../../components/TagPicker'
@@ -76,6 +79,7 @@ function TaskItem({
   onMoveToBacklog,
   onUpdateTag,
   onOpenDetail,
+  riskLabel,
   colors,
   index = 0,
 }: {
@@ -87,6 +91,8 @@ function TaskItem({
   onMoveToBacklog: (task: Task) => void
   onUpdateTag: (id: string, tag?: string) => void
   onOpenDetail: (task: Task) => void
+  /** "Habits at risk" note, e.g. "Missed 2 of the last 3 days". */
+  riskLabel?: string
   colors: Colors
   index?: number
 }) {
@@ -144,6 +150,7 @@ function TaskItem({
                 <Text style={styles.recurringBadgeText}>daily</Text>
               </View>
             )}
+            {riskLabel && !isDone && <HabitRiskBadge label={riskLabel} />}
             {!task.recurring && (task.due_date || (task.checklist?.length ?? 0) > 0) && (
               <View style={styles.metaRow}>
                 <DueBadge task={task} done={isDone} />
@@ -205,6 +212,7 @@ export default function TodayScreen() {
   }, [serverTasks, pendingAdds, justScheduled, hiddenTaskIds, backlogHiddenIds])
   const { data: completions } = useTodayCompletions()
   const { streak } = useStreak()
+  const { data: recentCompletions } = useRecentCompletions()
 
   const completeRecurring = useCompleteRecurring()
   const uncompleteRecurring = useUncompleteRecurring()
@@ -273,6 +281,20 @@ export default function TodayScreen() {
     t.recurring ? completedTodayIds.has(t.id) : t.completed
   ) ?? []
 
+  // Habits at risk: slipping habits (missed 2 of the last 3 days) still open
+  // today, and in the evening a nudge when 1–2 habits stand between you and
+  // keeping your streak.
+  const riskLabels = useMemo(() => {
+    const habits = (tasks ?? []).filter(t => t.recurring && !completedTodayIds.has(t.id))
+    const slips = getSlippingHabits(habits, recentCompletions, toDateStr(new Date()))
+    return new Map([...slips].map(([id, slip]) => [id, slip.label]))
+  }, [tasks, recentCompletions, completedTodayIds])
+  const streakSaver = getStreakSaver({
+    habitsLeftToday: (tasks ?? []).filter(t => t.recurring && !completedTodayIds.has(t.id)).length,
+    streak,
+    hour: new Date().getHours(),
+  })
+
   function handleComplete(task: Task) {
     if (task.recurring) {
       completeRecurring.mutate(task.id)
@@ -309,11 +331,18 @@ export default function TodayScreen() {
               {paceMessage(pace.typical, pace.weekdayLabel, tasks?.filter(t => !t.recurring).length ?? 0)}
             </Text>
           )}
+          {streakSaver && (
+            <View style={styles.saverRow} accessibilityRole="text">
+              <Icon name="streak" size={13} color={colors.warning} strokeWidth={2} />
+              <Text style={styles.saverText}>{streakSaver}</Text>
+            </View>
+          )}
           <View style={styles.bannerFooter}>
-            {streak > 0 && (
+            {/* The streak reminder above already names the streak, so don't repeat it. */}
+            {streak > 0 && !streakSaver && (
               <View style={styles.streakRow}>
                 <Icon name="streak" size={13} color={colors.accent} strokeWidth={2} />
-                <Text style={styles.streakText}>{streak}-day streak</Text>
+                <Text style={styles.streakText}>{streak}{'\u2011'}day streak</Text>
               </View>
             )}
             {pending.length > 0 && (
@@ -371,6 +400,7 @@ export default function TodayScreen() {
                   onDelete={id => { const t = tasks?.find(x => x.id === id); if (t) requestDelete(t) }}
                   onUpdateTag={(id, tag) => updateTask.mutate({ id, tag })}
                   onOpenDetail={t => setSelectedTaskId(t.id)}
+                  riskLabels={riskLabels}
                 />
               : <Text style={styles.emptyText}>Nothing on the board yet — add something above.</Text>
           }
@@ -400,6 +430,7 @@ export default function TodayScreen() {
               onMoveToBacklog={moveToBacklog}
               onUpdateTag={(id, tag) => updateTask.mutate({ id, tag })}
               onOpenDetail={t => setSelectedTaskId(t.id)}
+              riskLabel={riskLabels.get(item.id)}
               colors={colors}
               index={index}
             />
@@ -483,6 +514,8 @@ function createStyles(c: Colors) {
     nudgeText: { fontSize: 14, color: c.accentText, fontWeight: '400', lineHeight: 20 },
     streakRow: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
     paceText: { fontSize: 12, color: c.accentText, lineHeight: 17, opacity: 0.85 },
+    saverRow: { flexDirection: 'row', alignItems: 'flex-start', gap: space.xs },
+    saverText: { fontSize: 12, fontWeight: '600', color: c.warning, lineHeight: 17, flexShrink: 1 },
     bannerFooter: { flexDirection: 'row', alignItems: 'center', gap: space.md, flexWrap: 'wrap' },
     weekLink: { flexDirection: 'row', alignItems: 'center', gap: 2 },
     weekLinkText: { fontSize: 12, color: c.accentText, fontWeight: '600', textDecorationLine: 'underline' },

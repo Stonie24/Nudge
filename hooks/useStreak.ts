@@ -13,7 +13,8 @@ function toDateStr(date: Date): string {
 // a reasonable v1 limit for a personal task app.
 const STREAK_WINDOW_DAYS = 120
 
-function useRecentCompletions() {
+/** Habit check-ins over the streak window (also used for "habits at risk"). */
+export function useRecentCompletions() {
   return useQuery({
     queryKey: ['completions', 'streak-window'],
     queryFn: async () => {

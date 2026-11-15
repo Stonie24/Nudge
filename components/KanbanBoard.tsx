@@ -11,6 +11,7 @@ import { useTheme } from '../lib/ThemeContext'
 import { TagPicker } from './TagPicker'
 import { DueBadge } from './DueBadge'
 import { ChecklistBadge } from './ChecklistBadge'
+import { HabitRiskBadge } from './HabitRiskBadge'
 import type { Colors } from '../lib/theme'
 import { space, radius, shadow } from '../lib/theme'
 import type { Task } from '../types'
@@ -22,6 +23,7 @@ function KanbanCard({
   onDelete,
   onUpdateTag,
   onOpenDetail,
+  riskLabel,
 }: {
   task: Task
   onComplete: (id: string) => void
@@ -29,6 +31,7 @@ function KanbanCard({
   onDelete: (id: string) => void
   onUpdateTag?: (id: string, tag?: string) => void
   onOpenDetail: (task: Task) => void
+  riskLabel?: string
 }) {
   const { colors } = useTheme()
   const styles = useMemo(() => createStyles(colors), [colors])
@@ -52,6 +55,7 @@ function KanbanCard({
           {task.title}
         </Text>
       </View>
+      {riskLabel && !task.completed && <HabitRiskBadge label={riskLabel} />}
       <View style={styles.cardBottom}>
         <View style={styles.cardMeta}>
           {task.due_date && !task.recurring ? (
@@ -81,6 +85,7 @@ export function KanbanBoard({
   onDelete,
   onUpdateTag,
   onOpenDetail,
+  riskLabels,
 }: {
   tasks: Task[]
   onComplete: (id: string) => void
@@ -88,6 +93,8 @@ export function KanbanBoard({
   onDelete: (id: string) => void
   onUpdateTag?: (id: string, tag?: string) => void
   onOpenDetail: (task: Task) => void
+  /** "Habits at risk" notes by task id (Today only). */
+  riskLabels?: ReadonlyMap<string, string>
 }) {
   const { colors, isDark } = useTheme()
   const styles = useMemo(() => createStyles(colors), [colors])
@@ -151,6 +158,7 @@ export function KanbanBoard({
                   onDelete={onDelete}
                   onUpdateTag={onUpdateTag}
                   onOpenDetail={onOpenDetail}
+                  riskLabel={riskLabels?.get(task.id)}
                 />
               ))}
             </ScrollView>
