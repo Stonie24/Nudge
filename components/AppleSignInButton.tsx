@@ -4,7 +4,7 @@ import * as AppleAuthentication from 'expo-apple-authentication'
 import Svg, { Path } from 'react-native-svg'
 import { AppText as Text } from './AppText'
 import { useTheme } from '../lib/ThemeContext'
-import { canUseNativeAppleSignIn, isAppleSignInAvailable } from '../lib/appleAuth'
+import { APPLE_SIGN_IN_ENABLED, canUseNativeAppleSignIn, isAppleSignInAvailable } from '../lib/appleAuth'
 import type { Colors } from '../lib/theme'
 import { radius } from '../lib/theme'
 
@@ -14,6 +14,7 @@ const HEIGHT = 52
  * "Continue with Apple". On iPhone this is Apple's own native button (always
  * within Apple's design rules); on web and Android it's a matching black
  * button that starts the browser sign-in. Same size as the Google button.
+ * Renders nothing unless EXPO_PUBLIC_APPLE_SIGN_IN=true.
  */
 export function AppleSignInButton({
   loading,
@@ -30,9 +31,11 @@ export function AppleSignInButton({
   const [nativeAvailable, setNativeAvailable] = useState<boolean | null>(native ? null : false)
 
   useEffect(() => {
-    if (native) isAppleSignInAvailable().then(setNativeAvailable)
+    if (native && APPLE_SIGN_IN_ENABLED) isAppleSignInAvailable().then(setNativeAvailable)
   }, [native])
 
+  // Hidden until Apple sign-in is set up (see lib/appleAuth.ts).
+  if (!APPLE_SIGN_IN_ENABLED) return null
   // iOS older than 13 has no Sign in with Apple: show nothing rather than a dead button.
   if (native && nativeAvailable === false) return null
   if (native && nativeAvailable === null) return <View style={{ height: HEIGHT }} />

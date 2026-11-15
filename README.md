@@ -45,6 +45,8 @@ You'll need a Supabase project. Create a `.env` file at the root:
 ```env
 EXPO_PUBLIC_SUPABASE_URL=your_supabase_url
 EXPO_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+# Optional: show "Continue with Apple" (only once Apple is set up in Apple Developer + Supabase)
+# EXPO_PUBLIC_APPLE_SIGN_IN=true
 ```
 
 Run on platform:
@@ -66,6 +68,7 @@ Every pushed branch is published as an [EAS Update](https://docs.expo.dev/eas-up
    - `EXPO_TOKEN` — the token from step 1
    - `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY` — same values as your `.env`
    - `EXPO_PUBLIC_GOOGLE_CLIENT_ID` — for Google sign-in
+   - Optional, under the **Variables** tab (it isn't secret): `EXPO_PUBLIC_APPLE_SIGN_IN` = `true` to show Sign in with Apple, once it's set up
 3. Make a new development build (needed once, since `expo-updates` is a native module): GitHub → **Actions → EAS Build → Run workflow**, pick the platform, then open the build on [expo.dev](https://expo.dev) from your phone and install it when it finishes. (Or locally: `eas build --profile development --platform android`.)
    The button runs non-interactively, so signing credentials must already exist on EAS — they do if you've built this platform before; otherwise run one `eas build` locally first. iOS also needs the device registered: `eas device:create`.
 

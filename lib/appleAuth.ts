@@ -5,6 +5,13 @@ import { supabase } from './supabase'
 import type { Session } from '@supabase/supabase-js'
 
 /**
+ * Off until Apple is set up (Apple Developer account + Supabase provider).
+ * Turn on by setting EXPO_PUBLIC_APPLE_SIGN_IN=true in .env, and as a GitHub
+ * Actions variable for EAS Updates. Read literally so Expo bakes it into the bundle.
+ */
+export const APPLE_SIGN_IN_ENABLED = process.env.EXPO_PUBLIC_APPLE_SIGN_IN === 'true'
+
+/**
  * Native Sign in with Apple (iOS only). Apple's own sheet, with Face ID and
  * "Hide My Email". Web and Android use the regular OAuth redirect in
  * lib/oauth.ts instead.
