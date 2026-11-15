@@ -17,6 +17,7 @@ import { useLayout } from '../../hooks/useLayout'
 import { useTheme } from '../../lib/ThemeContext'
 import { TagBadge } from '../../components/TagPicker'
 import { DueBadge } from '../../components/DueBadge'
+import { BacklogCleanupCard } from '../../components/BacklogCleanupCard'
 import { ChecklistBadge } from '../../components/ChecklistBadge'
 import { compareDueDates } from '../../lib/dueDate'
 import { KanbanBoard } from '../../components/KanbanBoard'
@@ -209,6 +210,7 @@ export default function AllTasksScreen() {
           </Animated.View>
         </View>
       </View>
+      <BacklogCleanupCard tasks={tasks} />
       <View style={styles.searchRow}>
         <Icon name="search" size={16} color={colors.textMuted} strokeWidth={2} style={styles.searchIcon} />
         <TextInput
