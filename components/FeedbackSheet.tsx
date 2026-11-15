@@ -81,7 +81,7 @@ export function FeedbackSheet({
 
           <Text style={styles.title}>Send feedback</Text>
           <Text style={styles.subtitle}>
-            Your message will be submitted as an issue on our GitHub tracker.
+            Your message is posted publicly as an issue on Nudge's GitHub page, so please don't include personal details.
           </Text>
 
           <View style={styles.fields}>
