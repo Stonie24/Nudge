@@ -8,7 +8,7 @@ import { useWeekStats } from '../../hooks/useWeekStats'
 import { useStreak } from '../../hooks/useStreak'
 import { useLayout } from '../../hooks/useLayout'
 import { getTagColor } from '../../lib/tagColor'
-import { weekStartOf, formatWeekRange, type DayStats, type WeekStats } from '../../lib/weekly'
+import { weekStartOf, formatWeekRange, getWeekInsight, type DayStats, type WeekStats } from '../../lib/weekly'
 import { addDays, parseDateStr } from '../../lib/dueDate'
 import type { Colors } from '../../lib/theme'
 import { space, radius } from '../../lib/theme'
@@ -76,6 +76,10 @@ export default function WeekScreen() {
           <Text style={styles.muted}>Loading…</Text>
         ) : (
           <>
+            {(() => {
+              const insight = getWeekInsight(stats, { isCurrentWeek: weeksBack === 0 })
+              return insight ? <Text style={styles.insight}>{insight}</Text> : null
+            })()}
             <View style={styles.tiles}>
               <StatTile
                 value={String(stats.total)}
@@ -306,6 +310,7 @@ function createStyles(c: Colors) {
     headerText: { flex: 1, minWidth: 0 },
     title: { fontSize: 28, fontWeight: '700', color: c.text, letterSpacing: -0.5, fontFamily: displayFont.bold },
     range: { fontSize: 14, color: c.textMuted, marginTop: space.xs },
+    insight: { fontSize: 16, lineHeight: 23, color: c.accentText, fontWeight: '500' },
     nav: { flexDirection: 'row', gap: space.sm },
     navBtn: {
       width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: c.border,
