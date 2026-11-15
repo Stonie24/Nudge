@@ -17,10 +17,17 @@ const ALLOWED_ORIGINS: Set<string> | null = (() => {
   return new Set(raw.split(',').map(o => o.trim()).filter(Boolean))
 })()
 
-/** Returns the echoed origin, '*' if no allowlist, or null to deny. */
+/**
+ * Returns the echoed origin, '*' if no allowlist (or no Origin), or null to deny.
+ *
+ * The allowlist only applies to browsers: they always send an Origin header
+ * on these requests. The iOS/Android apps don't send one at all, so treating
+ * a missing Origin as "not allowed" blocked every phone. Those requests still
+ * need a valid signed-in user's JWT (checked below), like any other.
+ */
 function resolveOrigin(req: Request): string | null {
-  const origin = req.headers.get('Origin') ?? ''
-  if (!ALLOWED_ORIGINS) return '*'
+  const origin = req.headers.get('Origin')
+  if (!ALLOWED_ORIGINS || !origin) return '*'
   if (ALLOWED_ORIGINS.has(origin)) return origin
   return null
 }
