@@ -17,6 +17,7 @@ import { useTasks } from '../../hooks/useTasks'
 import { useStreak } from '../../hooks/useStreak'
 import { useAvatarUpload } from '../../hooks/useAvatarUpload'
 import { useGoogleCalendarAuth } from '../../hooks/useGoogleCalendarAuth'
+import { useExportData } from '../../hooks/useExportData'
 import { useTheme } from '../../lib/ThemeContext'
 import { showAlert } from '../../lib/alert'
 import { getAvatarUrl } from '../../lib/avatar'
@@ -68,6 +69,7 @@ export default function SettingsScreen() {
   const [deleteOpen, setDeleteOpen] = useState(false)
   const { prefs, loading: notifLoading, enable, disable, changeTime } = useNudgeNotifications()
   const { uploading, pickAndUpload } = useAvatarUpload()
+  const exportData = useExportData()
   const {
     isConnected: googleConnected,
     isLoading: googleLoading,
@@ -85,6 +87,23 @@ export default function SettingsScreen() {
     } catch (err) {
       showAlert('Couldn\'t update photo', err instanceof Error ? err.message : 'Please try again.')
     }
+  }
+
+  function handleExportData() {
+    if (exportData.isPending) return
+    exportData.mutate(undefined, {
+      onSuccess: ({ doc, outcome }) => {
+        if (outcome !== 'downloaded') return
+        const { tasks: t, tags, daily_completions, events } = doc.counts
+        showAlert(
+          'Export ready',
+          `Saved ${t} tasks, ${tags} tags, ${daily_completions} habit check-ins and ${events} events to your downloads.`
+        )
+      },
+      onError: (err) => {
+        showAlert('Couldn\'t export your data', err instanceof Error ? err.message : 'Please try again.')
+      },
+    })
   }
 
   function handleDisconnectGoogle() {
@@ -197,6 +216,12 @@ export default function SettingsScreen() {
               <SettingRow
                 label="Change password"
                 onPress={() => showAlert('Coming soon', 'This feature is on the roadmap!')}
+                colors={colors}
+              />
+              <SettingRow
+                label="Export my data"
+                value={exportData.isPending ? 'Preparing…' : 'JSON'}
+                onPress={handleExportData}
                 colors={colors}
               />
             </View>
