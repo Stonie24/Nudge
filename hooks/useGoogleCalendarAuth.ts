@@ -15,8 +15,11 @@ const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? ''
 // client to `nudge://`, so it goes to the google-calendar-redirect edge
 // function, which bounces the browser on to APP_RETURN_URL. (The old
 // auth.expo.io proxy only worked in Expo Go, never in a dev or store build.)
+// On web it's the site's own address (http://localhost:8081 in development,
+// https://<site>.expo.app when hosted); each must be an authorized redirect
+// URI on the Google OAuth client.
 const REDIRECT_URI = Platform.OS === 'web'
-  ? 'http://localhost:8081'
+  ? (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8081')
   : `${SUPABASE_URL}/functions/v1/google-calendar-redirect`
 const APP_RETURN_URL = 'nudge://calendar-callback'
 

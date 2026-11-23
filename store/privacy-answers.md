@@ -13,22 +13,25 @@ These will block approval or the launch:
 
 1. **Sign in with Apple (App Store).** Apple's guideline 4.8 says an app that
    offers a third-party login (Nudge offers **Sign in with Google**) must also
-   offer an equivalent privacy-focused login, and Sign in with Apple is the
-   standard way to meet it. Apple commonly rejects apps without it. This needs
-   code (Supabase supports Apple as a login provider) and an Apple Developer
-   account. *Alternative:* hide the Google button in the iOS app.
+   offer an equivalent privacy-focused login. ✅ Built, but **switched off**
+   until Apple is set up: see the setup steps in PR #45 (Apple Developer
+   account, Supabase provider, a new iOS build), then set
+   `EXPO_PUBLIC_APPLE_SIGN_IN=true`.
 2. **Google OAuth verification (Google Calendar).** Read-only Calendar access
    (`calendar.readonly`) is a "sensitive" scope. Until Google verifies the
    OAuth app, only up to 100 test users can connect, and they see an
    "unverified app" warning. In Google Cloud console → **OAuth consent
-   screen**: add the privacy policy URL, app home page and logo, verify your
-   domain, and submit for verification (Google may ask for a short video of
-   the Calendar connect flow). Allow a few weeks. Sign in with Google itself
-   (name, email, picture) doesn't need this.
-3. **Account deletion link (Google Play).** Play requires a **web** link where
-   people can ask to delete their account, as well as the in-app option. Use
-   the privacy policy's section:
-   `…/store/privacy-policy.md#delete-your-account`.
+   screen**: add the home page (`https://<your-site>.expo.app`), the privacy
+   policy (`https://<your-site>.expo.app/privacy`) and a logo, verify the
+   domain in Google Search Console, and submit for verification (Google may
+   ask for a short video of the Calendar connect flow). Allow a few weeks.
+   Sign in with Google itself (name, email, picture) doesn't need this.
+   *If Google won't accept the `expo.app` address as your domain, you'll need
+   a domain of your own pointed at the site.*
+3. **Account deletion link (Google Play).** ✅ The web app has a public page
+   for it: `https://<your-site>.expo.app/delete-account`. Fill in
+   [legal-details.json](legal-details.json) first so it shows your contact
+   email.
 4. **A test account with data**, for both stores' reviewers. See
    [listing.md](listing.md#app-review-information).
 
@@ -68,10 +71,10 @@ counts as "collected".
 **Is all of the user data collected by your app encrypted in transit?** Yes.
 
 **Which of the following methods of account creation does your app support?**
-Username and password; OAuth (Sign in with Google).
+Username and password; OAuth (Sign in with Google, and Sign in with Apple once it's switched on).
 
 **Do you provide a way for users to request that their data is deleted?**
-Yes. Delete-account URL: `…/store/privacy-policy.md#delete-your-account`.
+Yes. Delete-account URL: `https://<your-site>.expo.app/delete-account`.
 
 ### Data types
 

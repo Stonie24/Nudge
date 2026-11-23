@@ -15,6 +15,7 @@ import {
   Alert,
 } from 'react-native'
 import { AppText as Text } from '../../components/AppText'
+import { legalHref } from '../../components/LegalPage'
 import { GoogleSignInButton } from '../../components/GoogleSignInButton'
 import { AppleSignInButton } from '../../components/AppleSignInButton'
 import { InlineFormError } from '../../components/InlineFormError'
@@ -151,7 +152,11 @@ export default function SignupScreen() {
           </TouchableOpacity>
 
           <Text style={styles.hint}>
-            By signing up you agree to our terms of service and privacy policy.
+            Read how Nudge handles your data in our{' '}
+            <Text style={styles.hintLink} onPress={() => router.push(legalHref('/privacy', '/signup'))} accessibilityRole="link">
+              privacy policy
+            </Text>
+            .
           </Text>
 
           <GoogleSignInButton
@@ -259,6 +264,10 @@ function createStyles(c: Colors) {
       textAlign: 'center',
       lineHeight: 16,
       marginTop: space.xs,
+    },
+    hintLink: {
+      color: c.textSecondary,
+      textDecorationLine: 'underline',
     },
     footer: {
       flexDirection: 'row',

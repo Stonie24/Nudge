@@ -1,16 +1,11 @@
 # Nudge Privacy Policy
 
-> **Before publishing, fill in the `[brackets]`:** your name, a contact email,
-> your country, the region of your Supabase project (Supabase dashboard →
-> Project Settings → General) and the date. Everything else describes what
-> the app actually does as of this version. If the app starts collecting
-> something new, update this page and the store privacy answers in
+> **Published on the web at `/privacy`** (the app's own web version), and
+> linked from the app. Your details in `[brackets]` are filled in from
+> [legal-details.json](legal-details.json) when the page is built: fill that
+> in, run `npm run legal` and commit. If the app starts collecting something
+> new, update this page and the store privacy answers in
 > [privacy-answers.md](privacy-answers.md).
->
-> **Where to host it:** both stores need a public web link. This repository is
-> public, so the simplest option is this file's GitHub page:
-> `https://github.com/Stonie24/Nudge/blob/main/store/privacy-policy.md`.
-> GitHub Pages or your own domain works too.
 
 **Effective date:** [date]
 
@@ -30,6 +25,7 @@ the choices you have. If you have questions, email [contact email].
 ### Your account
 - **Email address** and a **password** (stored securely by our login provider; I never see it).
 - If you **sign in with Google**: your name, email address and profile picture link, as shared by Google.
+- If you **sign in with Apple**: your email address (or a private relay address, if you choose Hide My Email) and your name, if you choose to share it.
 - An **account ID**, a random identifier that links your data to your account.
 - **Settings** saved with your account: whether you finished the intro, and your daily reminder on/off and time.
 
@@ -72,6 +68,7 @@ Nudge uses a few services to run. They process data only on my behalf, or when y
 |---|---|---|
 | **Supabase** | Sign-in, database and file storage (hosting) | Your account and everything you store in Nudge. Hosted in [Supabase region, e.g. EU (Frankfurt)]. |
 | **Google** (only if you use it) | Sign in with Google; reading your Google Calendar | What you approve on Google's consent screen |
+| **Apple** (only if you use it) | Sign in with Apple | What you approve on Apple's sign-in sheet |
 | **GitHub** (only if you send feedback) | Hosting feedback as public issues | Your feedback text and account ID |
 | **Expo** | Delivering app updates | Technical information such as your device type and app version when the app checks for updates |
 | **Apple / Google** | Delivering reminder notifications and the app itself | Handled by your phone's operating system |
@@ -96,6 +93,7 @@ If you're in the EU/EEA or the UK, you also have the right to access, correct, d
 ## Deleting your account
 
 - **In the app:** Settings → **Delete account** → **Delete my account**. This permanently deletes your account and everything in it right away.
+- **On the web:** sign in at [/delete-account](/delete-account) and follow the same steps.
 - **Without the app:** email [contact email] from the address on your account, with the subject "Delete my Nudge account", and I'll delete it within 30 days.
 
 ## Children

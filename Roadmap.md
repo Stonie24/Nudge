@@ -43,7 +43,7 @@ Token-level reskin (color, type, spacing, icons, elevation) plus a few new piece
 - [x] "Gentle nudges" reminder toggle + nudge time in Settings
 - [ ] "Export my data" option in Settings
 
-## v0.23 — Power features ← we are here
+## v0.23 — Power features ✅
 - [x] Optional due dates on tasks (overdue indicator, sort by due date)
 - [x] Swipe right on a Today task to move it back to the backlog (clears its due date, with undo)
 - [x] Subtasks / checklists inside a task (flat checklist, progress shown on task card)
@@ -59,11 +59,14 @@ Every suggestion says why it's shown; nothing is sent anywhere and nothing moves
 - [x] Backlog clean-up: tasks untouched for over a month get "Still want to do this?" with Add to today / Delete / Keep
 - [x] Weekly insight: one plain sentence at the top of the weekly overview ("Your best day was Friday, and Health was your most consistent tag")
 
-## v0.3 — Growth
+## v0.3 — Growth ← we are here
+- [x] Store listing text, privacy policy and store privacy answers (`store/`)
+- [x] Sign in with Apple (built; switched on once the Apple Developer account is set up)
+- [x] Public privacy policy and account deletion pages (`/privacy`, `/delete-account`)
 - [x] In-app account deletion (required by the App Store and Play Store)
 - [ ] iOS App Store submission
 - [ ] Android Play Store submission
-- [ ] Public web app
+- [x] Public web app, deployed to EAS Hosting from main
 - [ ] Waitlist / landing page updates
 - [ ] Public beta
 

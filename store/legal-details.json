@@ -1,0 +1,10 @@
+{
+  "_readme": "Your details for the privacy policy and the account deletion page. Fill these in, then run `npm run legal` and commit. Empty values stay as [brackets] on the pages.",
+  "yourName": "",
+  "contactEmail": "",
+  "country": "",
+  "supabaseRegion": "",
+  "backupDays": "",
+  "dataProtectionAuthority": "",
+  "effectiveDate": ""
+}
