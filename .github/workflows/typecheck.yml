@@ -20,3 +20,6 @@ jobs:
       - run: npm ci
 
       - run: npm run typecheck
+
+      # The /privacy and /delete-account pages must match store/*.md
+      - run: npm run legal:check

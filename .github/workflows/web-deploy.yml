@@ -1,0 +1,71 @@
+name: Web deploy
+
+# Publishes the web app (including the public /privacy and /delete-account
+# pages the stores link to) to EAS Hosting whenever main changes.
+# The site lives at https://<WEB_DOMAIN>.expo.app.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: web-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for Expo token
+        id: token
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "::notice::EXPO_TOKEN secret is not set — skipping web deploy."
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.token.outputs.present == 'true'
+
+      - uses: actions/setup-node@v4
+        if: steps.token.outputs.present == 'true'
+        with:
+          node-version: 20
+          cache: npm
+
+      - uses: expo/expo-github-action@v8
+        if: steps.token.outputs.present == 'true'
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - run: npm ci
+        if: steps.token.outputs.present == 'true'
+
+      - name: Build the web app
+        if: steps.token.outputs.present == 'true'
+        env:
+          # EXPO_PUBLIC_* values are baked into the web build
+          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+          EXPO_PUBLIC_GOOGLE_CLIENT_ID: ${{ secrets.EXPO_PUBLIC_GOOGLE_CLIENT_ID }}
+          EXPO_PUBLIC_APPLE_SIGN_IN: ${{ vars.EXPO_PUBLIC_APPLE_SIGN_IN }}
+        run: npm run web:export
+
+      - name: Deploy to EAS Hosting
+        if: steps.token.outputs.present == 'true'
+        env:
+          # Optional repository variable: the site's name (https://<name>.expo.app),
+          # used on the first deploy. It can't be changed afterwards.
+          WEB_DOMAIN: ${{ vars.WEB_DOMAIN }}
+        run: |
+          if [ -n "$WEB_DOMAIN" ]; then
+            eas deploy --prod --non-interactive --dev-domain "$WEB_DOMAIN"
+          else
+            eas deploy --prod --non-interactive
+          fi

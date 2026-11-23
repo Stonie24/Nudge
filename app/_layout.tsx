@@ -16,6 +16,7 @@ import { Platform, Alert } from 'react-native'
 import { OfflineBanner } from '../components/OfflineBanner'
 import { createSessionFromUrl } from '../lib/oauth'
 import { UndoDeleteProvider } from '../lib/UndoDeleteContext'
+import { consumePostLoginRedirect } from '../lib/postLoginRedirect'
 
 WebBrowser.maybeCompleteAuthSession()
 setupOnlineManager()
@@ -41,12 +42,15 @@ function AuthGate() {
     if (loading) return
     const inAuthGroup = segments[0] === '(auth)'
     const inOnboardingGroup = segments[0] === '(onboarding)'
+    // Privacy policy and account deletion are open to everyone, signed in or not.
+    if (segments[0] === '(public)') return
     if (!user && !inAuthGroup) {
       router.replace('/(auth)/login')
     } else if (user && needsOnboarding && !inOnboardingGroup) {
       router.replace('/(onboarding)/')
     } else if (user && !needsOnboarding && (inAuthGroup || inOnboardingGroup)) {
-      router.replace('/(tabs)/')
+      // e.g. /delete-account → sign in → Settings
+      router.replace((consumePostLoginRedirect() ?? '/(tabs)/') as never)
     }
   }, [user, loading, needsOnboarding]) // segments intentionally omitted — we only want to react to auth changes
 

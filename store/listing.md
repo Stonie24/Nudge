@@ -20,7 +20,7 @@ field, keep it under the limit shown.
 | **Secondary category** | Lifestyle |
 | **Age rating** | 4+ (answer "None" to every content question) |
 | **Price** | Free |
-| **Privacy Policy URL** | See [privacy-policy.md](privacy-policy.md) for where to host it |
+| **Privacy Policy URL** | `https://<your-site>.expo.app/privacy` (the web app's page, built from [privacy-policy.md](privacy-policy.md)) |
 | **Support URL** | `https://github.com/Stonie24/Nudge/issues` (or your own page/email) |
 | **Copyright** | `2026 [your name]` |
 

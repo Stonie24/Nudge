@@ -10,6 +10,7 @@ import {
   Platform,
 } from 'react-native'
 import { AppText as Text } from '../../components/AppText'
+import { legalHref } from '../../components/LegalPage'
 import { Icon } from '../../components/Icon'
 import { Avatar } from '../../components/Avatar'
 import { useAuth } from '../../hooks/useAuth'
@@ -27,6 +28,7 @@ import type { NudgeTime } from '../../hooks/usePushNotifications'
 import type { Colors } from '../../lib/theme'
 import { space, radius, shadow } from '../../lib/theme'
 import { displayFont } from '../../lib/fonts'
+import { useRouter } from 'expo-router'
 
 function SettingRow({
   label,
@@ -60,6 +62,7 @@ function SettingRow({
 
 export default function SettingsScreen() {
   const { user, signOut, deleteAccount } = useAuth()
+  const router = useRouter()
   const { data: tasks } = useTasks()
   const { streak } = useStreak()
   const { isDark, toggle, colors } = useTheme()
@@ -304,6 +307,11 @@ export default function SettingsScreen() {
               <SettingRow
                 label="Send feedback"
                 onPress={() => setFeedbackOpen(true)}
+                colors={colors}
+              />
+              <SettingRow
+                label="Privacy policy"
+                onPress={() => router.push(legalHref('/privacy', '/settings'))}
                 colors={colors}
               />
             </View>

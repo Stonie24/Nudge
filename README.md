@@ -57,6 +57,28 @@ npm run android  # Android emulator
 npm run web      # Browser
 ```
 
+## Web app and public pages
+
+The web version of Nudge, including the public **/privacy** and
+**/delete-account** pages the app stores link to, is hosted on
+[EAS Hosting](https://docs.expo.dev/eas/hosting/introduction/) at
+`https://<name>.expo.app`. The **Web deploy** workflow
+(`.github/workflows/web-deploy.yml`) publishes it whenever main changes.
+
+**One-time setup**
+
+1. Choose the site's name (`<name>.expo.app`; it can't be changed later) and
+   add it in GitHub → Settings → Secrets and variables → Actions →
+   **Variables** as `WEB_DOMAIN`. Then run **Actions → Web deploy → Run
+   workflow**. (Or locally: `npm run web:deploy`, which asks for the name.)
+2. Supabase → **Authentication → URL Configuration → Redirect URLs**: add
+   `https://<name>.expo.app/callback`, so Google sign-in works on the site.
+3. Google Cloud console → **Credentials** → the web OAuth client →
+   **Authorized redirect URIs**: add `https://<name>.expo.app`, so connecting
+   Google Calendar works on the site.
+
+To build the site locally: `npm run web:export` (output in `dist/`).
+
 ## Testing on your phone (over-the-air updates)
 
 Every pushed branch is published as an [EAS Update](https://docs.expo.dev/eas-update/introduction/) on an update branch with the same name (see `.github/workflows/eas-update.yml`), so you can try it on a phone without a computer.

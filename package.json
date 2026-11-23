@@ -7,7 +7,11 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "legal": "node scripts/build-legal.js",
+    "legal:check": "node scripts/build-legal.js --check",
+    "web:export": "node scripts/export-web.js",
+    "web:deploy": "npm run web:export && npx eas-cli deploy --prod"
   },
   "dependencies": {
     "@expo-google-fonts/karla": "^0.4.2",
